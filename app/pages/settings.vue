@@ -13,7 +13,17 @@ const themes = computed(() => [
   { value: 'system', label: t('settings.system'), icon: Monitor },
 ])
 
-const notifications = ref(true)
+const notifications = ref(false)
+
+async function toggleNotifications() {
+  if (!notifications.value) {
+    if (!('Notification' in window)) return
+    const permission = await Notification.requestPermission()
+    notifications.value = permission === 'granted'
+  } else {
+    notifications.value = false
+  }
+}
 </script>
 
 <template>
@@ -76,7 +86,7 @@ const notifications = ref(true)
             :variant="notifications ? 'default' : 'outline'"
             size="sm"
             class="gap-2 text-xs"
-            @click="notifications = !notifications"
+            @click="toggleNotifications"
           >
             <Bell v-if="notifications" class="h-3.5 w-3.5" />
             <BellOff v-else class="h-3.5 w-3.5" />
