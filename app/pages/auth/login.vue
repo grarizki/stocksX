@@ -51,21 +51,21 @@ async function quickLogin(user: typeof DUMMY_USERS[number]) {
     <!-- Back to landing nav -->
     <nav class="flex items-center justify-between border-b border-border/40 px-4 py-3">
       <NuxtLink :to="localePath('/')" class="flex items-center gap-2">
-        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500">
           <span class="text-xs font-bold text-primary-foreground">SL</span>
         </div>
         <span class="font-bold tracking-tight">Stox<span class="text-blue-500">Lyz</span></span>
       </NuxtLink>
       <NuxtLink :to="localePath('/')" class="text-sm text-muted-foreground hover:text-foreground">
-        ← Back
+        Back
       </NuxtLink>
     </nav>
 
     <div class="flex flex-1 items-center justify-center px-4">
       <div class="w-full max-w-sm py-8">
       <div class="mb-8 text-center">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary" aria-hidden="true">
-          <span class="text-lg font-bold text-primary-foreground">SX</span>
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500" aria-hidden="true">
+          <span class="text-lg font-bold text-primary-foreground">SL</span>
         </div>
         <h1 class="text-2xl font-bold">{{ $t('auth.welcomeBack') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">{{ $t('auth.signInSubtitle') }}</p>

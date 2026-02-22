@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap } from 'lucide-vue-next'
+import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap, ArrowUp, Sun, Moon } from 'lucide-vue-next'
 
 definePageMeta({ layout: false })
 
@@ -7,6 +7,10 @@ useHead({ title: 'StoxLyz — Indonesian Stock Market Intelligence' })
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const colorMode = useColorMode()
+function toggleColorMode() {
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+}
 
 const features = computed(() => [
   { icon: TrendingUp, title: t('landing.feature1Title'), desc: t('landing.feature1Desc') },
@@ -36,6 +40,16 @@ const trendingStocks = [
 
 const newsItems = [75, 55, 85, 60]
 
+const showScrollTop = ref(false)
+
+function onScroll() {
+  showScrollTop.value = window.scrollY > window.innerHeight * 0.8
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 const activeRow = ref(0)
 
 const animatedCount = ref(0)
@@ -52,9 +66,12 @@ onMounted(() => {
     activeRow.value = (activeRow.value + 1) % trendingStocks.length
   }, 1200)
 
+  window.addEventListener('scroll', onScroll, { passive: true })
+
   onUnmounted(() => {
     clearInterval(countInterval)
     clearInterval(rowInterval)
+    window.removeEventListener('scroll', onScroll)
   })
 })
 </script>
@@ -65,7 +82,7 @@ onMounted(() => {
     <header class="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div class="flex items-center gap-2">
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
             <span class="text-sm font-bold text-primary-foreground">SL</span>
           </div>
           <span class="text-lg font-bold tracking-tight">
@@ -74,6 +91,14 @@ onMounted(() => {
         </div>
 
         <div class="flex items-center gap-2">
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            :aria-label="colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+            @click="toggleColorMode"
+          >
+            <Sun v-if="colorMode.value === 'dark'" class="h-4 w-4" />
+            <Moon v-else class="h-4 w-4" />
+          </button>
           <NuxtLink :to="localePath('/auth/login')">
             <Button size="sm" class="gap-1.5 bg-white text-blue-700 hover:bg-blue-50">
               {{ $t('landing.getStarted') }}
@@ -125,8 +150,8 @@ onMounted(() => {
         <!-- Stats row -->
         <div class="mt-16 flex flex-col items-center justify-center gap-8 sm:flex-row">
           <div v-for="stat in stats" :key="stat.label" class="text-center">
-            <p class="text-3xl font-bold tabular-nums">{{ stat.value }}</p>
-            <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
+            <p class="text-3xl font-bold tabular-nums text-blue-700">{{ stat.value }}</p>
+            <p class="text-sm text-muted-foreground text-blue-700">{{ stat.label }}</p>
           </div>
         </div>
       </div>
@@ -291,7 +316,7 @@ onMounted(() => {
                 </Button>
               </a>
               <NuxtLink :to="localePath('/auth/login')" class="w-full md:w-auto">
-                <Button size="lg" variant="outline" class="w-full gap-2 border-white/30 text-blue-700 hover:bg-blue-50">
+                <Button size="lg" variant="outline" class="w-full gap-2 bg-white text-blue-700 hover:bg-blue-50">
                   <Star class="h-4 w-4" />
                   {{ $t('landing.signUpFree') }}
                 </Button>
@@ -318,6 +343,18 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- Scroll-to-top -->
+    <Transition name="fade-up">
+      <button
+        v-if="showScrollTop"
+        aria-label="Back to top"
+        class="fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        @click="scrollToTop"
+      >
+        <ArrowUp class="h-4 w-4" />
+      </button>
+    </Transition>
+
     <!-- Footer -->
     <footer class="border-t border-border/40 py-8">
       <div class="mx-auto max-w-6xl px-4">
@@ -331,11 +368,20 @@ onMounted(() => {
           <p class="text-center text-xs text-muted-foreground">
             {{ $t('landing.footerDisclaimer') }}
           </p>
-          <NuxtLink :to="localePath('/auth/login')" class="text-sm text-muted-foreground hover:text-foreground">
-            {{ $t('landing.footerSignIn') }}
-          </NuxtLink>
         </div>
       </div>
     </footer>
   </div>
 </template>
+
+<style scoped>
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+</style>

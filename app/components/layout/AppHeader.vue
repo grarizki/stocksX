@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search, LogIn, LogOut, User, Shield } from 'lucide-vue-next'
+import { Search, LogIn, LogOut, User, Shield, Sun, Moon } from 'lucide-vue-next'
 import { useEventListener } from '@vueuse/core'
 import { roleVariant } from '~/composables/useRoleVariant'
 
@@ -9,6 +9,10 @@ const switchLocalePath = useSwitchLocalePath()
 const userStore = useUserStore()
 
 const showSearch = ref(false)
+const colorMode = useColorMode()
+function toggleColorMode() {
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+}
 
 // ⌘K / Ctrl+K opens search
 useEventListener('keydown', (e: KeyboardEvent) => {
@@ -58,6 +62,18 @@ async function handleLanguageSwitch() {
 
       <!-- Right side actions -->
       <div class="ml-auto flex items-center gap-2 lg:ml-0">
+        <!-- Dark/Light Toggle -->
+        <Button
+          variant="ghost"
+          size="icon"
+          class="shrink-0"
+          :aria-label="colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          @click="toggleColorMode"
+        >
+          <Sun v-if="colorMode.value === 'dark'" class="h-4 w-4" aria-hidden="true" />
+          <Moon v-else class="h-4 w-4" aria-hidden="true" />
+        </Button>
+
         <!-- i18n Toggle -->
         <Button
           variant="ghost"
