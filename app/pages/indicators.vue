@@ -51,7 +51,7 @@ const viewMode = ref<'grid' | 'table'>('grid')
         v-for="indicator in allIndicators"
         :key="indicator.id"
         :indicator="indicator"
-        class="stagger-item"
+        class="animate-slide-up"
       />
     </div>
 

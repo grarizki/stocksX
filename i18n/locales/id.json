@@ -10,8 +10,7 @@
     "profile": "Profil",
     "adminPanel": "Panel Admin",
     "userMenu": "Menu pengguna",
-    "openSearch": "Buka pencarian",
-    "demo": "Demo"
+    "openSearch": "Buka pencarian"
   },
   "home": {
     "community": "Komunitas",
@@ -23,7 +22,7 @@
     "latestNews": "Berita Terbaru",
     "seeAll": "Lihat semua",
     "marketOpen": "Pasar Buka",
-    "ihsgComposite": "Komposit IHSG",
+    "ihsgComposite": "Komunitas Saham Terbaik",
     "trendingNow": "Sedang Tren",
     "topMovers": "Penggerak Utama",
     "gainers": "Naik",
@@ -134,7 +133,8 @@
     "signInLink": "Masuk",
     "showPassword": "Tampilkan kata sandi",
     "hidePassword": "Sembunyikan kata sandi",
-    "registerError": "Registrasi gagal. Silakan coba lagi."
+    "registerError": "Registrasi gagal. Silakan coba lagi.",
+    "demoAccounts": "atau coba akun demo"
   },
   "profile": {
     "title": "Profil",
@@ -160,20 +160,42 @@
     "colStatus": "Status",
     "statusActive": "aktif"
   },
-  "demo": {
-    "title": "Demo",
-    "subtitle": "Jelajahi StoxLyz dengan akun bawaan. Klik \"Masuk sebagai\" untuk langsung beralih akun.",
-    "accounts": "Akun Demo",
-    "routes": "Halaman yang Tersedia",
-    "currentSession": "Sesi Aktif",
-    "loginAs": "Masuk sebagai",
-    "copy": "Salin",
-    "accessAll": "Publik",
-    "accessAuth": "Perlu login",
-    "accessAdmin": "Admin saja"
-  },
   "disclaimer": {
     "title": "Disclaimer Investasi",
     "text": "Informasi yang disajikan bukan merupakan rekomendasi atau ajakan untuk membeli atau menjual efek. Keputusan investasi sepenuhnya merupakan tanggung jawab investor. Data yang ditampilkan bersifat informatif dan dapat berbeda dengan kondisi pasar aktual. Investasi di pasar modal mengandung risiko. Pastikan Anda memahami risiko sebelum berinvestasi. Diawasi oleh Otoritas Jasa Keuangan (OJK)."
+  },
+  "landing": {
+    "getStarted": "Mulai sekarang",
+    "marketBadge": "Pasar IDX buka · IHSG live",
+    "heroTitle": "Pasar Saham Indonesia",
+    "heroHighlight": "Cerdas, Mudah, Real-time",
+    "heroDesc": "Pantau IHSG, kelola watchlist, baca berita pasar terkurasi, dan tetap unggul dengan indikator ekonomi real-time — semua dalam satu tempat.",
+    "startFree": "Mulai gratis",
+    "viewDemo": "Lihat demo",
+    "stat1Label": "Saham Tercatat IDX",
+    "stat2Label": "Anggota Aktif",
+    "stat3Label": "Pantau Pasar",
+    "featuresTitle": "Semua yang Anda butuhkan untuk investasi lebih cerdas",
+    "featuresSubtitle": "Dibangun untuk investor ritel Indonesia yang ingin selalu unggul.",
+    "feature1Title": "Data Pasar Real-time",
+    "feature1Desc": "Kuotasi IHSG live, notifikasi harga, dan cakupan IDX lengkap di semua sektor.",
+    "feature2Title": "Analitik Berbasis AI",
+    "feature2Desc": "Dapatkan analisis AI premium untuk saham apapun — sentimen pasar, sinyal risiko, dan ringkasan cerdas khusus investor Indonesia.",
+    "feature3Title": "Berita Pasar Terkurasi",
+    "feature3Desc": "Berita dari media keuangan Indonesia terpercaya, disaring berdasarkan relevansi.",
+    "feature4Title": "Watchlist Cerdas",
+    "feature4Desc": "Buat watchlist saham pribadi dan pantau pilihan Anda hanya dalam satu pandangan.",
+    "communityBadge": "Komunitas Aktif",
+    "communityTitle": "{n}+ investor sudah memantau lebih cerdas",
+    "communityDesc": "Bergabunglah dengan komunitas Telegram kami untuk sinyal pasar real-time, diskusi saham, dan analisis dari sesama investor Indonesia.",
+    "joinTelegram": "Gabung Telegram",
+    "signUpFree": "Daftar gratis",
+    "ctaTitle": "Siap pantau saham Anda?",
+    "ctaDesc": "Gratis. Tanpa kartu kredit. Coba langsung dengan akun demo.",
+    "ctaButton": "Mulai sekarang",
+    "footerDisclaimer": "Hanya untuk tujuan informasi. Bukan saran investasi. Diawasi OJK.",
+    "footerSignIn": "Masuk →",
+    "mockTrending": "Sedang Tren",
+    "mockNews": "Berita Terbaru"
   }
 }

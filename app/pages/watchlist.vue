@@ -1,23 +1,26 @@
 <script setup lang="ts">
 import { ArrowUpDown } from 'lucide-vue-next'
 import { useWatchlistStore } from '~/stores/watchlist'
-import { useStocks } from '~/composables/useStocks'
+import type { Stock } from '~/data/stocks'
 
 const { t } = useI18n()
 
 useHead({ title: computed(() => `${t('watchlist.title')} - StoxLyz`) })
 
 const watchlistStore = useWatchlistStore()
-const { getStock } = useStocks()
 
 type SortOption = 'default' | 'alpha' | 'change' | 'marketCap'
 const sortBy = ref<SortOption>('default')
 
-const watchedStocks = computed(() => {
-  const stocks = watchlistStore.items
-    .map(ticker => getStock(ticker))
-    .filter(Boolean) as NonNullable<ReturnType<typeof getStock>>[]
+const tickersQuery = computed(() => watchlistStore.items.join(','))
 
+const { data: fetchedStocks, status } = useApiFetch<Stock[]>('/api/stocks/quotes', {
+  query: computed(() => ({ tickers: tickersQuery.value })),
+  watch: [tickersQuery],
+})
+
+const watchedStocks = computed<Stock[]>(() => {
+  const stocks = fetchedStocks.value ?? []
   switch (sortBy.value) {
     case 'alpha':
       return [...stocks].sort((a, b) => a.ticker.localeCompare(b.ticker))
@@ -41,7 +44,7 @@ const watchedStocks = computed(() => {
         </p>
       </div>
 
-      <DropdownMenu v-if="watchedStocks.length > 0">
+      <DropdownMenu v-if="watchlistStore.items.length > 0">
         <DropdownMenuTrigger as-child>
           <Button variant="outline" size="sm" class="h-8 gap-1.5 text-xs">
             <ArrowUpDown class="h-3 w-3" />
@@ -57,12 +60,17 @@ const watchedStocks = computed(() => {
       </DropdownMenu>
     </div>
 
-    <div v-if="watchedStocks.length > 0" class="space-y-2">
+    <!-- Loading skeleton -->
+    <div v-if="status === 'pending' && watchlistStore.items.length > 0" class="space-y-2">
+      <div v-for="i in watchlistStore.items.length" :key="i" class="h-16 animate-pulse rounded-lg border border-border/30 bg-muted/20" />
+    </div>
+
+    <div v-else-if="watchedStocks.length > 0" class="space-y-2">
       <WatchlistCard
         v-for="stock in watchedStocks"
         :key="stock.ticker"
         :stock="stock"
-        class="stagger-item"
+        class="animate-slide-up"
         @remove="(ticker) => watchlistStore.removeFromWatchlist(ticker)"
       />
     </div>

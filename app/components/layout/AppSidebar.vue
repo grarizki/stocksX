@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Newspaper, Settings, LogIn, LogOut, FlaskConical } from 'lucide-vue-next'
+import { Home, Newspaper, Settings, LogIn, LogOut } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -7,14 +7,19 @@ const localePath = useLocalePath()
 const userStore = useUserStore()
 
 const navItems = computed(() => [
-  { label: t('nav.home'), icon: Home, to: '/' },
+  { label: t('nav.home'), icon: Home, to: '/home' },
   { label: t('nav.news'), icon: Newspaper, to: '/news' },
 ])
 
 const isActive = (to: string) => {
   const path = route.path.replace(/^\/(id|en)/, '') || '/'
-  if (to === '/') return path === '/'
+  if (to === '/home') return path === '/home'
   return path.startsWith(to)
+}
+
+async function handleLogout() {
+  userStore.logout()
+  await navigateTo(localePath('/auth/login'))
 }
 
 const initials = computed(() => {
@@ -58,18 +63,6 @@ const initials = computed(() => {
         {{ t('nav.settings') }}
       </NuxtLink>
 
-      <NuxtLink
-        :to="localePath('/demo')"
-        :title="t('nav.demo')"
-        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-        :class="isActive('/demo')
-          ? 'bg-accent text-accent-foreground'
-          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'"
-      >
-        <FlaskConical class="h-4 w-4" />
-        {{ t('nav.demo') }}
-      </NuxtLink>
-
       <!-- Logged out: show Login link -->
       <NuxtLink
         v-if="!userStore.isLoggedIn"
@@ -96,7 +89,7 @@ const initials = computed(() => {
         <button
           class="text-muted-foreground transition-colors hover:text-foreground"
           :title="t('nav.logout')"
-          @click="userStore.logout()"
+          @click="handleLogout"
         >
           <LogOut class="h-4 w-4" />
         </button>

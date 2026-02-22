@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('id-ID').format(value)
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
 }
 
 export function formatCompact(value: number): string {
@@ -33,5 +33,5 @@ export function timeAgo(date: string): string {
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  return past.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+  return past.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
 }

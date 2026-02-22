@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { sectors } from '@/data/sectors'
+type SectorData = {
+  id: string
+  name: string
+  etfTicker: string
+  change: number
+  price: number
+  marketCap: number
+}
+
+const { data: sectors, status } = useApiFetch<SectorData[]>('/api/sectors/performance')
 
 const visible = ref(false)
 const activeSector = ref<string | null>(null)
 
-onMounted(() => {
-  visible.value = true
-})
+onMounted(() => { visible.value = true })
 
 function getBarWidth(change: number) {
   return `${Math.min(Math.abs(change) * 20, 100)}%`
@@ -17,7 +24,12 @@ function getBarWidth(change: number) {
   <section>
     <h2 class="mb-3 text-lg font-bold">{{ $t('home.sectorPerformance') }}</h2>
 
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+    <!-- Skeleton -->
+    <div v-if="status === 'pending'" class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div v-for="i in 11" :key="i" class="h-24 animate-pulse rounded-xl border border-border/20 bg-muted/20" />
+    </div>
+
+    <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
       <button
         v-for="(sector, i) in sectors"
         :key="sector.id"
@@ -32,7 +44,6 @@ function getBarWidth(change: number) {
         :style="{ transitionDelay: `${i * 40}ms` }"
         @click="activeSector = activeSector === sector.id ? null : sector.id"
       >
-        <!-- Background intensity indicator -->
         <div
           class="absolute inset-0 opacity-[0.07]"
           :class="sector.change >= 0 ? 'bg-emerald-500' : 'bg-rose-500'"
@@ -46,7 +57,6 @@ function getBarWidth(change: number) {
           {{ sector.change >= 0 ? '+' : '' }}{{ sector.change.toFixed(2) }}%
         </p>
 
-        <!-- Mini progress bar -->
         <div class="relative mt-2 h-1 overflow-hidden rounded-full bg-muted/30">
           <div
             class="h-full rounded-full transition-all duration-700"
@@ -56,7 +66,7 @@ function getBarWidth(change: number) {
         </div>
 
         <p class="relative mt-1.5 text-[10px] text-muted-foreground">
-          {{ sector.stockCount }} {{ $t('home.stocks') }}  &middot;  {{ sector.marketCap }}
+          {{ sector.etfTicker }}
         </p>
       </button>
     </div>

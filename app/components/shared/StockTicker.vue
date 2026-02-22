@@ -13,8 +13,8 @@ const props = defineProps<{
     class="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent/50"
   >
     <!-- Logo -->
-    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold">
-      {{ stock.logo }}
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-bold">
+      {{ stock.ticker.slice(0, 2) }}
     </div>
 
     <!-- Info -->
@@ -30,7 +30,7 @@ const props = defineProps<{
 
     <!-- Price -->
     <div v-if="showPrice" class="text-right">
-      <p class="text-sm font-bold">{{ stock.price.toLocaleString('id-ID') }}</p>
+      <p class="text-sm font-bold">${{ stock.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
       <SharedPriceChange
         :change="stock.change"
         :change-percent="stock.changePercent"

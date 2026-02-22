@@ -47,7 +47,7 @@ async function toggleNotifications() {
 
     <div class="space-y-6">
       <!-- Theme -->
-      <Card class="glass-card p-4">
+      <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
         <h2 class="mb-3 text-sm font-semibold">{{ $t('settings.appearance') }}</h2>
         <div class="flex gap-2">
           <Button
@@ -66,7 +66,7 @@ async function toggleNotifications() {
       </Card>
 
       <!-- Language -->
-      <Card class="glass-card p-4">
+      <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
         <h2 class="mb-3 text-sm font-semibold">{{ $t('settings.language') }}</h2>
         <div class="flex gap-2">
           <Button
@@ -93,7 +93,7 @@ async function toggleNotifications() {
       </Card>
 
       <!-- Notifications -->
-      <Card class="glass-card p-4">
+      <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-sm font-semibold">{{ $t('settings.notifications') }}</h2>
@@ -114,7 +114,7 @@ async function toggleNotifications() {
       </Card>
 
       <!-- Legal -->
-      <Card class="glass-card p-4">
+      <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
         <h2 class="mb-3 text-sm font-semibold">{{ $t('settings.legal') }}</h2>
         <div class="space-y-2">
           <div class="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2">

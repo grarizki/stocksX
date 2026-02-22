@@ -67,7 +67,7 @@
   }
 }
 
-/* Page transitions */
+/* Page transitions — class names are required by Nuxt */
 .page-enter-active,
 .page-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -80,19 +80,6 @@
   opacity: 0;
   transform: translateY(-8px);
 }
-
-/* Staggered animation helper */
-.stagger-item {
-  animation: slide-up 0.3s ease-out both;
-}
-.stagger-item:nth-child(1) { animation-delay: 0ms; }
-.stagger-item:nth-child(2) { animation-delay: 50ms; }
-.stagger-item:nth-child(3) { animation-delay: 100ms; }
-.stagger-item:nth-child(4) { animation-delay: 150ms; }
-.stagger-item:nth-child(5) { animation-delay: 200ms; }
-.stagger-item:nth-child(6) { animation-delay: 250ms; }
-.stagger-item:nth-child(7) { animation-delay: 300ms; }
-.stagger-item:nth-child(8) { animation-delay: 350ms; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -107,17 +94,7 @@
   border-radius: 3px;
 }
 
-/* Glass morphism card */
-.glass-card {
-  @apply backdrop-blur-xl bg-card/80 border border-border/50;
-}
-
-/* Bottom nav safe area */
-.pb-safe {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-}
-
-/* Hide scrollbar for horizontal scroll */
+/* Hide scrollbar — pseudo-element selectors can't be expressed in Tailwind */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -126,20 +103,7 @@
   scrollbar-width: none;
 }
 
-/* Marquee animation */
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-}
-.animate-paused {
-  animation: marquee 30s linear infinite;
-  animation-play-state: paused;
-}
-
-/* Tabular nums for counters */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
+/* Safe-area bottom padding — env() + max() not expressible in Tailwind */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }

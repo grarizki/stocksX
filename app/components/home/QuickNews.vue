@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ChevronRight, Clock, Newspaper } from 'lucide-vue-next'
-import { useNews } from '@/composables/useNews'
 import { timeAgo } from '@/lib/utils'
 
-const { getNews } = useNews()
-const latestNews = computed(() => getNews().slice(0, 4))
+const { data: articles, status } = useApiFetch('/api/news', { query: { limit: 4 } })
 </script>
 
 <template>
@@ -22,11 +20,18 @@ const latestNews = computed(() => getNews().slice(0, 4))
       </NuxtLink>
     </div>
 
-    <div class="space-y-2">
-      <NuxtLink
-        v-for="(article, i) in latestNews"
+    <!-- Skeleton -->
+    <div v-if="status === 'pending'" class="space-y-2">
+      <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-xl border border-border/30 bg-muted/20" />
+    </div>
+
+    <div v-else class="space-y-2">
+      <a
+        v-for="(article, i) in (articles as any[])"
         :key="article.id"
-        :to="`/news/${article.id}`"
+        :href="article.url"
+        target="_blank"
+        rel="noopener noreferrer"
         class="group flex gap-3 rounded-xl border border-border/30 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-border/60 hover:bg-accent/20 hover:shadow-md active:scale-[0.99]"
       >
         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-xs font-bold text-muted-foreground transition-colors group-hover:bg-blue-500/10 group-hover:text-blue-400">
@@ -49,7 +54,7 @@ const latestNews = computed(() => getNews().slice(0, 4))
         </div>
 
         <ChevronRight class="mt-1 h-4 w-4 shrink-0 text-muted-foreground/40 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground/60" />
-      </NuxtLink>
+      </a>
     </div>
   </section>
 </template>

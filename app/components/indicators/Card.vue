@@ -6,7 +6,7 @@ defineProps<{ indicator: EconomicIndicator }>()
 </script>
 
 <template>
-  <Card class="glass-card p-4">
+  <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
     <div class="mb-2 flex items-center justify-between">
       <span class="text-xs font-medium text-muted-foreground">{{ indicator.name }}</span>
       <component

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NewsArticle } from '@/data/news'
+import type { NewsArticle } from '@/composables/useNews'
 import { timeAgo } from '@/lib/utils'
 
 defineProps<{ article: NewsArticle }>()
@@ -8,8 +8,10 @@ const loaded = ref(false)
 </script>
 
 <template>
-  <NuxtLink
-    :to="`/news/${article.id}`"
+  <a
+    :href="article.url"
+    target="_blank"
+    rel="noopener noreferrer"
     class="flex gap-3 rounded-lg border border-border/50 bg-card/50 p-3 transition-colors hover:bg-accent/20"
   >
     <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
@@ -34,5 +36,5 @@ const loaded = ref(false)
         <span class="text-[10px] text-muted-foreground">{{ timeAgo(article.date) }}</span>
       </div>
     </div>
-  </NuxtLink>
+  </a>
 </template>

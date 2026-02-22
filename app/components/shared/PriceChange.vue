@@ -35,7 +35,7 @@ const sizeClasses = computed(() => {
     <TrendingUp v-if="isPositive && showIcon" class="h-3.5 w-3.5" />
     <TrendingDown v-else-if="isNegative && showIcon" class="h-3.5 w-3.5" />
     <Minus v-else-if="showIcon" class="h-3.5 w-3.5" />
-    <span>{{ change >= 0 ? '+' : '' }}{{ change.toLocaleString('id-ID') }}</span>
+    <span>{{ change >= 0 ? '+' : '' }}{{ change.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
     <span>({{ formatPercent(changePercent) }})</span>
   </div>
 </template>

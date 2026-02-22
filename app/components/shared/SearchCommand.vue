@@ -1,30 +1,34 @@
 <script setup lang="ts">
-import { Search, Newspaper } from 'lucide-vue-next'
-import { newsArticles } from '@/data/news'
+import { Search, Newspaper, ExternalLink } from 'lucide-vue-next'
 
 const { t } = useI18n()
-const localePath = useLocalePath()
 
 const open = defineModel<boolean>('open', { default: false })
 
 const searchQuery = ref('')
-const router = useRouter()
+const debouncedQuery = ref('stock market')
 
-const filteredNews = computed(() => {
-  if (!searchQuery.value) return newsArticles.slice(0, 8)
-  const q = searchQuery.value.toLowerCase()
-  return newsArticles.filter(
-    n => n.title.toLowerCase().includes(q) || n.summary.toLowerCase().includes(q)
-  ).slice(0, 8)
+let debounceTimer: ReturnType<typeof setTimeout>
+watch(searchQuery, (val) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    debouncedQuery.value = val || 'stock market'
+  }, 350)
 })
 
-function selectArticle(id: string) {
+const { data: newsData } = useApiFetch('/api/news', {
+  query: computed(() => ({ q: debouncedQuery.value, limit: 8 })),
+  watch: [debouncedQuery],
+})
+
+const filteredNews = computed(() => (newsData.value as any[]) ?? [])
+
+function openArticle(url: string) {
   open.value = false
   searchQuery.value = ''
-  router.push(localePath(`/news/${id}`))
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-// Keyboard shortcut
 onMounted(() => {
   const handler = (e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -51,13 +55,14 @@ onMounted(() => {
           :key="article.id"
           :value="article.id"
           class="flex cursor-pointer items-start gap-3"
-          @select="selectArticle(article.id)"
+          @select="openArticle(article.url)"
         >
           <Newspaper class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <div class="flex-1 overflow-hidden">
             <p class="truncate text-sm font-medium">{{ article.title }}</p>
-            <p class="truncate text-xs text-muted-foreground">{{ article.source }} · {{ article.category }}</p>
+            <p class="truncate text-xs text-muted-foreground">{{ article.source }}</p>
           </div>
+          <ExternalLink class="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
         </CommandItem>
       </CommandGroup>
     </CommandList>

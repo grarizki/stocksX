@@ -18,7 +18,7 @@ const stats = computed(() => [
 </script>
 
 <template>
-  <Card class="glass-card p-4">
+  <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
     <h3 class="mb-3 text-sm font-semibold">{{ $t('stock.keyStats') }}</h3>
     <div class="grid grid-cols-2 gap-3">
       <div

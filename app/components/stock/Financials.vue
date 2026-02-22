@@ -17,7 +17,7 @@ const quarters = computed(() => {
 </script>
 
 <template>
-  <Card class="glass-card p-4">
+  <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
     <h3 class="mb-3 text-sm font-semibold">{{ $t('stock.financials') }}</h3>
 
     <Table>

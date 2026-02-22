@@ -10,8 +10,7 @@
     "profile": "Profile",
     "adminPanel": "Admin Panel",
     "userMenu": "User menu",
-    "openSearch": "Open search",
-    "demo": "Demo"
+    "openSearch": "Open search"
   },
   "home": {
     "community": "Community",
@@ -134,7 +133,8 @@
     "signInLink": "Sign in",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "registerError": "Registration failed. Please try again."
+    "registerError": "Registration failed. Please try again.",
+    "demoAccounts": "or try a demo account"
   },
   "profile": {
     "title": "Profile",
@@ -160,20 +160,42 @@
     "colStatus": "Status",
     "statusActive": "active"
   },
-  "demo": {
-    "title": "Demo",
-    "subtitle": "Explore StoxLyz with pre-built accounts. Click \"Login as\" to instantly switch accounts.",
-    "accounts": "Demo Accounts",
-    "routes": "Available Routes",
-    "currentSession": "Current Session",
-    "loginAs": "Login as",
-    "copy": "Copy",
-    "accessAll": "Public",
-    "accessAuth": "Login required",
-    "accessAdmin": "Admin only"
-  },
   "disclaimer": {
     "title": "Investment Disclaimer",
     "text": "The information presented does not constitute a recommendation or solicitation to buy or sell securities. Investment decisions are entirely the responsibility of the investor. The data displayed is informational and may differ from actual market conditions. Investing in the capital market involves risk. Make sure you understand the risks before investing. Supervised by the Financial Services Authority (OJK)."
+  },
+  "landing": {
+    "getStarted": "Get started",
+    "marketBadge": "IDX market is open · IHSG live",
+    "heroTitle": "Indonesian Stock Market",
+    "heroHighlight": "Intelligence, Simplified",
+    "heroDesc": "Track IHSG, monitor your watchlist, read curated market news, and stay ahead with real-time economic indicators — all in one place.",
+    "startFree": "Start for free",
+    "viewDemo": "View demo",
+    "stat1Label": "IDX Listed Stocks",
+    "stat2Label": "Active Members",
+    "stat3Label": "Market Coverage",
+    "featuresTitle": "Everything you need to invest smarter",
+    "featuresSubtitle": "Built for Indonesian retail investors who want an edge.",
+    "feature1Title": "Real-time Market Data",
+    "feature1Desc": "Live IHSG quotes, price alerts, and full IDX coverage across all sectors.",
+    "feature2Title": "AI-Powered Insights",
+    "feature2Desc": "Get premium AI analysis on any stock — sentiment, risk signals, and smart summaries tailored for Indonesian investors.",
+    "feature3Title": "Curated Market News",
+    "feature3Desc": "Aggregated news from trusted Indonesian financial media, filtered by relevance.",
+    "feature4Title": "Smart Watchlist",
+    "feature4Desc": "Build your personal stock watchlist and monitor your picks with one glance.",
+    "communityBadge": "Active Community",
+    "communityTitle": "{n}+ investors already tracking smarter",
+    "communityDesc": "Join our Telegram community for real-time market signals, stock discussions, and analysis from fellow Indonesian investors.",
+    "joinTelegram": "Join Telegram",
+    "signUpFree": "Sign up free",
+    "ctaTitle": "Ready to track your stocks?",
+    "ctaDesc": "It's free. No credit card required. Try it with a demo account instantly.",
+    "ctaButton": "Get started now",
+    "footerDisclaimer": "For informational purposes only. Not investment advice. Supervised by OJK.",
+    "footerSignIn": "Sign in →",
+    "mockTrending": "Trending Now",
+    "mockNews": "Latest News"
   }
 }

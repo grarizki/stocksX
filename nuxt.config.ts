@@ -40,7 +40,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'StoxLyz - Indonesian Stock Market',
+      title: 'StoxLyz - Your Trusted Market',
       htmlAttrs: { lang: 'id' },
       meta: [
         { name: 'description', content: 'Indonesian stock market information for retail investors' },

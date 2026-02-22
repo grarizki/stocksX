@@ -48,7 +48,7 @@ onMounted(() => {
         <div class="mb-4 flex items-center gap-3">
           <div class="flex items-center gap-1.5">
             <Users class="h-3.5 w-3.5 text-muted-foreground" />
-            <span class="text-sm font-bold tabular-nums">{{ memberCount.toLocaleString('id-ID') }}</span>
+            <span class="text-sm font-bold tabular-nums">{{ memberCount.toLocaleString('en-US') }}</span>
             <span class="text-xs text-muted-foreground">{{ $t('home.members') }}</span>
           </div>
           <div class="flex items-center gap-1">

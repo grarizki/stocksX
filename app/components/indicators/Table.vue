@@ -5,7 +5,7 @@ defineProps<{ indicators: EconomicIndicator[] }>()
 </script>
 
 <template>
-  <Card class="glass-card overflow-hidden">
+  <Card class="backdrop-blur-xl bg-card/80 border border-border/50 overflow-hidden">
     <Table>
       <TableHeader>
         <TableRow>

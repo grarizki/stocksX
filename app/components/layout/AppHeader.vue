@@ -18,9 +18,9 @@ useEventListener('keydown', (e: KeyboardEvent) => {
   }
 })
 
-function handleLogout() {
+async function handleLogout() {
   userStore.logout()
-  navigateTo(localePath('/auth/login'))
+  await navigateTo(localePath('/auth/login'))
 }
 
 async function handleLanguageSwitch() {
@@ -31,10 +31,10 @@ async function handleLanguageSwitch() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 border-b border-border/50 glass-card">
+  <header class="sticky top-0 z-50 border-b border-border/50 backdrop-blur-xl bg-card/80">
     <div class="flex h-14 items-center gap-4 px-4">
       <!-- Logo -->
-      <NuxtLink :to="localePath('/')" :aria-label="$t('nav.home')" class="flex shrink-0 items-center gap-2 lg:w-56 lg:px-3">
+      <NuxtLink :to="localePath('/home')" :aria-label="$t('nav.home')" class="flex shrink-0 items-center gap-2 lg:w-56 lg:px-3">
         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary" aria-hidden="true">
           <span class="text-sm font-bold text-primary-foreground">SL</span>
         </div>

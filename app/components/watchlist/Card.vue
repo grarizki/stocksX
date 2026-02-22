@@ -10,8 +10,8 @@ defineEmits<{ remove: [ticker: string] }>()
 <template>
   <div class="flex items-center gap-3 rounded-lg border border-border/50 bg-card/50 p-3 transition-colors hover:bg-accent/20">
     <NuxtLink :to="`/stocks/${stock.ticker}`" class="flex flex-1 items-center gap-3">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold">
-        {{ stock.logo }}
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-[11px] font-bold">
+        {{ stock.ticker.slice(0, 2) }}
       </div>
       <div class="flex-1 overflow-hidden">
         <div class="flex items-center gap-2">

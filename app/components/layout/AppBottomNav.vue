@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Newspaper, LogIn, FlaskConical } from 'lucide-vue-next'
+import { Home, Newspaper, LogIn } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -7,14 +7,13 @@ const localePath = useLocalePath()
 const userStore = useUserStore()
 
 const navItems = computed(() => [
-  { label: t('nav.home'), icon: Home, to: '/' },
+  { label: t('nav.home'), icon: Home, to: '/home' },
   { label: t('nav.news'), icon: Newspaper, to: '/news' },
-  { label: t('nav.demo'), icon: FlaskConical, to: '/demo' },
 ])
 
 const isActive = (to: string) => {
   const path = route.path.replace(/^\/(id|en)/, '') || '/'
-  if (to === '/') return path === '/'
+  if (to === '/home') return path === '/home'
   return path.startsWith(to)
 }
 
@@ -35,7 +34,7 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 glass-card pb-safe">
+  <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 backdrop-blur-xl bg-card/80 pb-safe">
     <div class="flex items-center justify-around px-2 pt-2">
       <NuxtLink
         v-for="item in navItems"

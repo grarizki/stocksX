@@ -23,7 +23,7 @@ async function handleRegister() {
 
   try {
     await userStore.setProfile({ name: name.value, email: email.value, role: 'user' })
-    navigateTo(localePath('/'))
+    navigateTo(localePath('/home'))
   }
   catch {
     error.value = t('auth.registerError')
