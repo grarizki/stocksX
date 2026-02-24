@@ -7,6 +7,7 @@ useHead({ title: 'StoxLyz — Indonesian Stock Market Intelligence' })
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const userStore = useUserStore()
 const colorMode = useColorMode()
 function toggleColorMode() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
@@ -99,9 +100,9 @@ onMounted(() => {
             <Sun v-if="colorMode.value === 'dark'" class="h-4 w-4" />
             <Moon v-else class="h-4 w-4" />
           </button>
-          <NuxtLink :to="localePath('/auth/login')">
+          <NuxtLink :to="userStore.isLoggedIn ? localePath('/home') : localePath('/auth/login')">
             <Button size="sm" class="gap-1.5 bg-white text-blue-700 hover:bg-blue-50">
-              {{ $t('landing.getStarted') }}
+              {{ userStore.isLoggedIn ? $t('nav.home') : $t('landing.getStarted') }}
             </Button>
           </NuxtLink>
         </div>
@@ -134,13 +135,13 @@ onMounted(() => {
         </p>
 
         <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <NuxtLink :to="localePath('/auth/login')">
+          <NuxtLink :to="userStore.isLoggedIn ? localePath('/home') : localePath('/auth/login')">
             <Button size="lg" class="gap-2 px-8 bg-white text-blue-700 hover:bg-blue-50">
-              {{ $t('landing.startFree') }}
+              {{ userStore.isLoggedIn ? $t('nav.home') : $t('landing.startFree') }}
               <ArrowRight class="h-4 w-4" />
             </Button>
           </NuxtLink>
-          <NuxtLink :to="localePath('/auth/login')">
+          <NuxtLink v-if="!userStore.isLoggedIn" :to="localePath('/auth/login')">
             <Button variant="ghost" size="lg" class="gap-2 px-8">
               {{ $t('landing.viewDemo') }}
             </Button>
@@ -315,10 +316,10 @@ onMounted(() => {
                   {{ $t('landing.joinTelegram') }}
                 </Button>
               </a>
-              <NuxtLink :to="localePath('/auth/login')" class="w-full md:w-auto">
+              <NuxtLink :to="userStore.isLoggedIn ? localePath('/home') : localePath('/auth/login')" class="w-full md:w-auto">
                 <Button size="lg" variant="outline" class="w-full gap-2 bg-white text-blue-700 hover:bg-blue-50">
                   <Star class="h-4 w-4" />
-                  {{ $t('landing.signUpFree') }}
+                  {{ userStore.isLoggedIn ? $t('nav.home') : $t('landing.signUpFree') }}
                 </Button>
               </NuxtLink>
             </div>
@@ -334,9 +335,9 @@ onMounted(() => {
         <p class="mb-8 text-muted-foreground">
           {{ $t('landing.ctaDesc') }}
         </p>
-        <NuxtLink :to="localePath('/auth/login')">
+        <NuxtLink :to="userStore.isLoggedIn ? localePath('/home') : localePath('/auth/login')">
           <Button size="lg" class="bg-white text-blue-700 hover:bg-blue-50">
-            {{ $t('landing.ctaButton') }}
+            {{ userStore.isLoggedIn ? $t('nav.home') : $t('landing.ctaButton') }}
             <ChevronRight class="h-4 w-4" />
           </Button>
         </NuxtLink>
