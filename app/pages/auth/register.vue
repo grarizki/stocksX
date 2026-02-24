@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: 'blank' })
 
 const { t } = useI18n()
 useHead({ title: computed(() => `${t('auth.createAccount')} - StoxLyz`) })

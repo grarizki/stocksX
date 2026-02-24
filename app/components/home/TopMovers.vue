@@ -106,7 +106,7 @@ const hoveredIdx = ref<number | null>(null)
 
         <!-- Price & Change -->
         <div class="text-right">
-          <p class="text-sm font-bold tabular-nums">${{ stock.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+          <p class="text-sm font-bold tabular-nums">{{ stock.price.toLocaleString('id-ID') }}</p>
           <p
             class="text-xs font-semibold tabular-nums"
             :class="stock.changePercent >= 0 ? 'text-gain' : 'text-loss'"

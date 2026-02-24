@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Newspaper, Settings, LogIn, LogOut } from 'lucide-vue-next'
+import { Home, Newspaper, BarChart2, TrendingUp, Settings, LogIn, LogOut, Building2 } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -8,7 +8,10 @@ const userStore = useUserStore()
 
 const navItems = computed(() => [
   { label: t('nav.home'), icon: Home, to: '/home' },
+  { label: t('nav.stocks'), icon: TrendingUp, to: '/stocks' },
   { label: t('nav.news'), icon: Newspaper, to: '/news' },
+  { label: t('nav.indicators'), icon: BarChart2, to: '/indicators' },
+  { label: t('nav.broker'), icon: Building2, to: '/broker' },
 ])
 
 const isActive = (to: string) => {

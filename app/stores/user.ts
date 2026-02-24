@@ -22,6 +22,7 @@ export const useUserStore = defineStore('user', () => {
   const language = ref<'id' | 'en'>('id')
   const notifications = ref<boolean>(true)
   const profile = ref<UserProfile | null>(null)
+  const authReady = ref(false)
 
   const isLoggedIn = computed(() => profile.value !== null)
   const isSuperAdmin = computed(() => profile.value?.role === 'superadmin')
@@ -56,14 +57,16 @@ export const useUserStore = defineStore('user', () => {
   const loadToken = async () => {
     if (!import.meta.client) return
     const token = localStorage.getItem(TOKEN_KEY)
-    if (!token) return
-    const payload = await verifyToken(token)
-    if (payload) {
-      profile.value = { name: payload.name, email: payload.sub, role: payload.role }
+    if (token) {
+      const payload = await verifyToken(token)
+      if (payload) {
+        profile.value = { name: payload.name, email: payload.sub, role: payload.role }
+      }
+      else {
+        localStorage.removeItem(TOKEN_KEY)
+      }
     }
-    else {
-      localStorage.removeItem(TOKEN_KEY)
-    }
+    authReady.value = true
   }
 
   loadPrefs()
@@ -114,6 +117,7 @@ export const useUserStore = defineStore('user', () => {
     language,
     notifications,
     profile,
+    authReady,
     isLoggedIn,
     isSuperAdmin,
     isAdmin,

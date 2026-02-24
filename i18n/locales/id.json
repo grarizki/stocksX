@@ -1,9 +1,11 @@
 {
   "nav": {
     "home": "Beranda",
+    "stocks": "Saham",
     "watchlist": "Daftar Pantau",
     "news": "Berita",
     "indicators": "Indikator",
+    "broker": "Broker",
     "settings": "Pengaturan",
     "login": "Masuk",
     "logout": "Keluar",
@@ -59,6 +61,17 @@
     "relatedStocks": "Saham Terkait",
     "addToWatchlist": "Tambah ke daftar pantau",
     "removeFromWatchlist": "Hapus dari daftar pantau"
+  },
+  "stocks": {
+    "title": "Saham",
+    "subtitle": "Jelajahi semua saham yang terdaftar di IDX",
+    "listed": "terdaftar",
+    "up": "naik",
+    "down": "turun",
+    "searchPlaceholder": "Cari nama atau kode saham...",
+    "sortPrice": "Harga",
+    "sortVolume": "Volume",
+    "noResults": "Tidak ada saham yang cocok dengan pencarian Anda."
   },
   "watchlist": {
     "title": "Daftar Pantau",

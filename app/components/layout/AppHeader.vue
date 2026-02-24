@@ -39,7 +39,7 @@ async function handleLanguageSwitch() {
     <div class="flex h-14 items-center gap-4 px-4">
       <!-- Logo -->
       <NuxtLink :to="localePath('/home')" :aria-label="$t('nav.home')" class="flex shrink-0 items-center gap-2 lg:w-56 lg:px-3">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary" aria-hidden="true">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500" aria-hidden="true">
           <span class="text-sm font-bold text-primary-foreground">SL</span>
         </div>
         <span class="text-lg font-bold tracking-tight">
@@ -61,7 +61,18 @@ async function handleLanguageSwitch() {
       </div>
 
       <!-- Right side actions -->
-      <div class="ml-auto flex items-center gap-2 lg:ml-0">
+      <div class="ml-auto flex items-center gap-1 lg:ml-0">
+        <!-- Mobile search icon (hidden on desktop where inline bar exists) -->
+        <Button
+          variant="ghost"
+          size="icon"
+          class="shrink-0 lg:hidden"
+          :aria-label="$t('nav.openSearch')"
+          @click="showSearch = true"
+        >
+          <Search class="h-4 w-4" aria-hidden="true" />
+        </Button>
+
         <!-- Dark/Light Toggle -->
         <Button
           variant="ghost"

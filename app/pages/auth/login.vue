@@ -2,7 +2,7 @@
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-vue-next'
 import { roleVariant } from '~/composables/useRoleVariant'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: 'blank' })
 
 const { t } = useI18n()
 useHead({ title: computed(() => `${t('auth.signIn')} - StoxLyz`) })

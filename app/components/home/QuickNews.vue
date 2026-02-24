@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ChevronRight, Clock, Newspaper } from 'lucide-vue-next'
 import { timeAgo } from '@/lib/utils'
+import { DUMMY_NEWS } from '@/data/newsData'
 
-const { data: articles, status } = useApiFetch('/api/news', { query: { limit: 4 } })
+const articles = DUMMY_NEWS.slice(0, 4)
 </script>
 
 <template>
@@ -20,14 +21,9 @@ const { data: articles, status } = useApiFetch('/api/news', { query: { limit: 4 
       </NuxtLink>
     </div>
 
-    <!-- Skeleton -->
-    <div v-if="status === 'pending'" class="space-y-2">
-      <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-xl border border-border/30 bg-muted/20" />
-    </div>
-
-    <div v-else class="space-y-2">
+    <div class="space-y-2">
       <a
-        v-for="(article, i) in (articles as any[])"
+        v-for="(article, i) in articles"
         :key="article.id"
         :href="article.url"
         target="_blank"

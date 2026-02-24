@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+const DEFAULT_WATCHLIST = ['BBCA.JK', 'BBRI.JK', 'TLKM.JK', 'ASII.JK', 'BMRI.JK']
+
 export const useWatchlistStore = defineStore('watchlist', () => {
   const items = ref<string[]>([])
 
@@ -12,8 +14,10 @@ export const useWatchlistStore = defineStore('watchlist', () => {
           items.value = JSON.parse(stored)
         } catch (err) {
           console.warn('[watchlist store] Failed to parse watchlist from storage:', err)
-          items.value = []
+          items.value = [...DEFAULT_WATCHLIST]
         }
+      } else {
+        items.value = [...DEFAULT_WATCHLIST]
       }
     }
   }

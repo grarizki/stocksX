@@ -1,4 +1,16 @@
-const DUMMY_NEWS = [
+export type NewsArticle = {
+  id: string
+  title: string
+  summary: string
+  source: string
+  url: string
+  date: string
+  imageUrl: string
+  relatedTickers: string[]
+  category: string
+}
+
+export const DUMMY_NEWS: NewsArticle[] = [
   {
     id: 'news-1',
     title: 'IHSG Menguat 0.6% Didorong Saham Perbankan dan Energi',
@@ -165,10 +177,3 @@ const DUMMY_NEWS = [
     category: 'corporate',
   },
 ]
-
-export default defineEventHandler((event) => {
-  const query = getQuery(event)
-  const limit = Number(query.limit ?? 20)
-
-  return DUMMY_NEWS.slice(0, limit)
-})

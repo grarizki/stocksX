@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap, ArrowUp, Sun, Moon } from 'lucide-vue-next'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: 'blank' })
 
 useHead({ title: 'StoxLyz — Indonesian Stock Market Intelligence' })
 
@@ -361,7 +361,7 @@ onMounted(() => {
       <div class="mx-auto max-w-6xl px-4">
         <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div class="flex items-center gap-2">
-            <div class="flex h-6 w-6 items-center justify-center rounded bg-primary">
+            <div class="flex h-6 w-6 items-center justify-center rounded bg-blue-500">
               <span class="text-xs font-bold text-primary-foreground">SL</span>
             </div>
             <span class="font-semibold">Stox<span class="text-blue-500">Lyz</span></span>

@@ -1,16 +1,7 @@
-import { yf } from '../../utils/yf'
-
-const INDEX_TICKERS = ['^JKSE', '^JKLQ45', '^JKIDX']
-
-export default defineEventHandler(async () => {
-  const results = await yf.quote(INDEX_TICKERS)
-  const quotes = Array.isArray(results) ? results : [results]
-
-  return quotes.map((q) => ({
-    ticker: q.symbol,
-    name: q.longName ?? q.shortName ?? q.symbol,
-    price: q.regularMarketPrice ?? 0,
-    change: q.regularMarketChange ?? 0,
-    changePercent: q.regularMarketChangePercent ?? 0,
-  }))
+export default defineEventHandler(() => {
+  return [
+    { ticker: '^JKSE', name: 'IDX Composite', price: 7_125.48, change: 42.31, changePercent: 0.60 },
+    { ticker: '^JKLQ45', name: 'LQ45', price: 912.34, change: -3.21, changePercent: -0.35 },
+    { ticker: '^JKIDX', name: 'IDX30', price: 498.76, change: 1.85, changePercent: 0.37 },
+  ]
 })

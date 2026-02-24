@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { timeAgo } from '@/lib/utils'
+import { DUMMY_NEWS } from '@/data/newsData'
 
 const props = defineProps<{ ticker: string }>()
 
-const { data: articles, status } = useApiFetch('/api/news', {
-  query: { q: props.ticker, limit: 3 },
-})
+// Filter news relevant to this ticker (by relatedTickers or title mention)
+const tickerCode = computed(() => props.ticker.replace('.JK', ''))
+
+const articles = computed(() =>
+  DUMMY_NEWS.filter(
+    (a) =>
+      a.relatedTickers.includes(props.ticker) ||
+      a.title.includes(tickerCode.value) ||
+      a.summary.includes(tickerCode.value),
+  ).slice(0, 3),
+)
 </script>
 
 <template>
   <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
     <h3 class="mb-3 text-sm font-semibold">{{ $t('stock.relatedNews') }}</h3>
 
-    <div v-if="status === 'pending'" class="space-y-3">
-      <div v-for="i in 3" :key="i" class="h-12 animate-pulse rounded-lg bg-muted/30" />
-    </div>
-
-    <div v-else class="space-y-3">
+    <div v-if="articles.length" class="space-y-3">
       <a
-        v-for="article in (articles as any[])"
+        v-for="article in articles"
         :key="article.id"
         :href="article.url"
         target="_blank"
@@ -32,5 +37,7 @@ const { data: articles, status } = useApiFetch('/api/news', {
         </div>
       </a>
     </div>
+
+    <p v-else class="text-xs text-muted-foreground">No related news found.</p>
   </Card>
 </template>

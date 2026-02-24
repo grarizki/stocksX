@@ -64,7 +64,7 @@ export default defineNuxtConfig({
         { innerHTML: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">' },
       ],
     },
-    pageTransition: { name: 'page', mode: 'out-in' },
+    pageTransition: false,
   },
 
   nitro: {

@@ -15,8 +15,8 @@
       <LayoutAppSidebar class="hidden lg:flex" />
 
       <!-- Main Content -->
-      <main id="main-content" class="flex-1 pb-20 lg:pb-4">
-        <div class="mx-auto max-w-4xl px-4 py-4 lg:px-6">
+      <main id="main-content" class="min-w-0 flex-1 pb-20 lg:pb-6">
+        <div class="mx-auto max-w-2xl px-4 py-4 lg:max-w-3xl lg:px-6">
           <slot />
         </div>
       </main>

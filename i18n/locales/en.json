@@ -1,9 +1,11 @@
 {
   "nav": {
     "home": "Home",
+    "stocks": "Stocks",
     "watchlist": "Watchlist",
     "news": "News",
     "indicators": "Indicators",
+    "broker": "Broker",
     "settings": "Settings",
     "login": "Login",
     "logout": "Logout",
@@ -59,6 +61,17 @@
     "relatedStocks": "Related Stocks",
     "addToWatchlist": "Add to watchlist",
     "removeFromWatchlist": "Remove from watchlist"
+  },
+  "stocks": {
+    "title": "Stocks",
+    "subtitle": "Browse all IDX-listed stocks",
+    "listed": "listed",
+    "up": "up",
+    "down": "down",
+    "searchPlaceholder": "Search by name or ticker...",
+    "sortPrice": "Price",
+    "sortVolume": "Volume",
+    "noResults": "No stocks match your search."
   },
   "watchlist": {
     "title": "Watchlist",

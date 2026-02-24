@@ -6,9 +6,9 @@ const { data: indices, status } = useApiFetch('/api/market/indices')
 type IndexItem = { ticker: string; name: string; price: number; change: number; changePercent: number }
 
 const INDEX_META: Record<string, { label: string; icon: typeof Activity; color: string }> = {
-  '^GSPC': { label: 'S&P 500', icon: Activity, color: 'from-blue-500/20 to-cyan-500/20' },
-  '^IXIC': { label: 'NASDAQ', icon: TrendingUp, color: 'from-emerald-500/20 to-green-500/20' },
-  '^DJI':  { label: 'Dow Jones', icon: TrendingUp, color: 'from-violet-500/20 to-purple-500/20' },
+  'IHSG':  { label: 'IHSG',     icon: Activity,   color: 'from-blue-500/20 to-cyan-500/20' },
+  'LQ45':  { label: 'LQ45',     icon: TrendingUp,  color: 'from-emerald-500/20 to-green-500/20' },
+  'IDX30': { label: 'IDX30',    icon: TrendingUp,  color: 'from-violet-500/20 to-purple-500/20' },
 }
 
 const primaryIndex = computed<IndexItem | null>(() => (indices.value as IndexItem[])?.[0] ?? null)
@@ -35,14 +35,14 @@ watch(primaryIndex, (idx) => {
 onMounted(() => { visible.value = true })
 
 function formatPrice(val: number) {
-  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 </script>
 
 <template>
   <section>
     <!-- Hero card -->
-    <div class="relative mb-4 overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-blue-500/10 via-card to-purple-500/10 p-5">
+    <div class="relative mb-3 overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-blue-500/10 via-card to-purple-500/10 p-4 sm:p-5">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(59,130,246,0.08),transparent_60%)]" />
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(139,92,246,0.06),transparent_60%)]" />
 
@@ -55,10 +55,12 @@ function formatPrice(val: number) {
         </div>
 
         <template v-if="primaryIndex">
-          <div class="flex items-end gap-3">
+          <div class="flex flex-wrap items-end gap-3">
             <div>
-              <p class="text-xs text-muted-foreground">S&amp;P 500</p>
-              <p class="text-4xl font-extrabold tracking-tight tabular-nums">
+              <p class="text-xs text-muted-foreground">
+                {{ INDEX_META[primaryIndex.ticker]?.label ?? primaryIndex.ticker }}
+              </p>
+              <p class="text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl">
                 {{ formatPrice(counter) }}
               </p>
             </div>
@@ -92,9 +94,9 @@ function formatPrice(val: number) {
     </div>
 
     <!-- Secondary index cards -->
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
       <template v-if="status === 'pending'">
-        <div v-for="i in 2" :key="i" class="h-20 animate-pulse rounded-xl bg-muted/30" />
+        <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-xl bg-muted/30" />
       </template>
       <template v-else>
         <div
@@ -111,9 +113,11 @@ function formatPrice(val: number) {
             >
               <component :is="INDEX_META[item.ticker]?.icon ?? Activity" class="h-3 w-3 text-foreground/70" />
             </div>
-            <span class="text-[10px] font-medium text-muted-foreground">{{ INDEX_META[item.ticker]?.label ?? item.ticker }}</span>
+            <span class="text-[10px] font-medium text-muted-foreground">
+              {{ INDEX_META[item.ticker]?.label ?? item.ticker }}
+            </span>
           </div>
-          <p class="text-lg font-bold tabular-nums leading-none">{{ formatPrice(item.price) }}</p>
+          <p class="text-base font-bold tabular-nums leading-none sm:text-lg">{{ formatPrice(item.price) }}</p>
           <p class="mt-1 text-xs font-semibold" :class="item.changePercent >= 0 ? 'text-gain' : 'text-loss'">
             {{ item.changePercent >= 0 ? '+' : '' }}{{ item.changePercent.toFixed(2) }}%
           </p>
