@@ -9,8 +9,8 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo(localePath('/'))
   }
 
-  // Redirect logged-in users away from auth/landing pages to home dashboard
-  if (userStore.isLoggedIn && (isAuthPage || isLandingPage)) {
+  // Redirect logged-in users away from auth pages to home dashboard
+  if (userStore.isLoggedIn && isAuthPage) {
     return navigateTo(localePath('/home'))
   }
 })

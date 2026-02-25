@@ -46,6 +46,18 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Indonesian stock market information for retail investors' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#09090b' },
+        // Open Graph
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: 'https://stoxlyz.com' },
+        { property: 'og:site_name', content: 'StoxLyz' },
+        { property: 'og:title', content: 'StoxLyz - Your Trusted Market' },
+        { property: 'og:description', content: 'Indonesian stock market information for retail investors' },
+        { property: 'og:locale', content: 'id_ID' },
+        { property: 'og:locale:alternate', content: 'en_US' },
+        // Twitter / X Card
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:title', content: 'StoxLyz - Your Trusted Market' },
+        { name: 'twitter:description', content: 'Indonesian stock market information for retail investors' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
