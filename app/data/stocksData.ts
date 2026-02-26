@@ -12,17 +12,16 @@ export type StockDetail = Stock & {
   prevClose: number
   dayHigh: number
   dayLow: number
-  /** Day Trade multiplier, e.g. 5 means 5x. Undefined = not eligible */
   dayTradeMultiplier?: number
-  /** Trading Limit (TL) haircut percentage, e.g. 10 means 10%. Undefined = not eligible */
   tradingLimitHaircut?: number
+  notations?: string[]
 }
 
 export const STOCKS_DATA: Record<string, StockDetail> = {
   'BBCA.JK': {
     ticker: 'BBCA.JK', name: 'Bank Central Asia Tbk', sector: 'Financials',
     price: 9350, change: 75, changePercent: 0.81,
-    volume: 32_500_000, marketCap: 1_150_000_000_000_000,
+    volume: 32_500_000, frequency: 72_222, marketCap: 1_150_000_000_000_000,
     pe: 24.5, pbv: 4.2, dividendYield: 1.1,
     high52w: 10_200, low52w: 8_500, about: 'Bank Central Asia (BCA) is the largest private bank in Indonesia by assets.',
     employees: 24_000, website: 'https://www.bca.co.id', industry: 'Banking', country: 'Indonesia',
@@ -33,7 +32,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'BBRI.JK': {
     ticker: 'BBRI.JK', name: 'Bank Rakyat Indonesia Tbk', sector: 'Financials',
     price: 4_180, change: -40, changePercent: -0.95,
-    volume: 78_000_000, marketCap: 680_000_000_000_000,
+    volume: 78_000_000, frequency: 173_333, marketCap: 680_000_000_000_000,
     pe: 13.2, pbv: 2.1, dividendYield: 4.2,
     high52w: 5_900, low52w: 3_990, about: 'Bank Rakyat Indonesia (BRI) is the largest bank in Indonesia focused on micro and small businesses.',
     employees: 80_000, website: 'https://www.bri.co.id', industry: 'Banking', country: 'Indonesia',
@@ -44,7 +43,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'BMRI.JK': {
     ticker: 'BMRI.JK', name: 'Bank Mandiri Tbk', sector: 'Financials',
     price: 6_250, change: 125, changePercent: 2.04,
-    volume: 45_000_000, marketCap: 580_000_000_000_000,
+    volume: 45_000_000, frequency: 100_000, marketCap: 580_000_000_000_000,
     pe: 11.8, pbv: 1.9, dividendYield: 3.8,
     high52w: 7_200, low52w: 5_500, about: 'Bank Mandiri is a state-owned bank and the largest bank in Indonesia by total assets.',
     employees: 38_000, website: 'https://www.bankmandiri.co.id', industry: 'Banking', country: 'Indonesia',
@@ -55,7 +54,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'TLKM.JK': {
     ticker: 'TLKM.JK', name: 'Telkom Indonesia Tbk', sector: 'Infrastructure',
     price: 2_750, change: -25, changePercent: -0.9,
-    volume: 55_000_000, marketCap: 272_000_000_000_000,
+    volume: 55_000_000, frequency: 122_222, marketCap: 272_000_000_000_000,
     pe: 14.5, pbv: 2.8, dividendYield: 5.3,
     high52w: 3_900, low52w: 2_680, about: 'Telkom Indonesia is the largest state-owned telecommunications company in Indonesia.',
     employees: 27_000, website: 'https://www.telkom.co.id', industry: 'Telecommunications', country: 'Indonesia',
@@ -66,7 +65,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'ASII.JK': {
     ticker: 'ASII.JK', name: 'Astra International Tbk', sector: 'Consumer Cyclicals',
     price: 4_480, change: 60, changePercent: 1.36,
-    volume: 22_000_000, marketCap: 180_000_000_000_000,
+    volume: 22_000_000, frequency: 48_889, marketCap: 180_000_000_000_000,
     pe: 12.1, pbv: 1.4, dividendYield: 3.5,
     high52w: 5_150, low52w: 4_100, about: 'Astra International is a large Indonesian conglomerate with business interests in automotive, financial services, heavy equipment, and more.',
     employees: 245_000, website: 'https://www.astra.co.id', industry: 'Auto & Truck Manufacturers', country: 'Indonesia',
@@ -77,7 +76,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'BYAN.JK': {
     ticker: 'BYAN.JK', name: 'Bayan Resources Tbk', sector: 'Energy',
     price: 18_500, change: 500, changePercent: 2.78,
-    volume: 5_200_000, marketCap: 175_000_000_000_000,
+    volume: 5_200_000, frequency: 11_556, marketCap: 175_000_000_000_000,
     pe: 8.3, pbv: 5.1, dividendYield: 6.2,
     high52w: 22_000, low52w: 14_500, about: 'Bayan Resources is one of the largest coal mining companies in Indonesia.',
     employees: 5_200, website: 'https://www.bayan.com.sg', industry: 'Coal', country: 'Indonesia',
@@ -87,7 +86,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'UNVR.JK': {
     ticker: 'UNVR.JK', name: 'Unilever Indonesia Tbk', sector: 'Consumer Non-Cyclicals',
     price: 1_800, change: -15, changePercent: -0.83,
-    volume: 18_000_000, marketCap: 69_000_000_000_000,
+    volume: 18_000_000, frequency: 40_000, marketCap: 69_000_000_000_000,
     pe: 21.0, pbv: 10.5, dividendYield: 4.9,
     high52w: 3_100, low52w: 1_740, about: 'Unilever Indonesia manufactures and distributes consumer goods including home care, personal care, and food products.',
     employees: 5_000, website: 'https://www.unilever.co.id', industry: 'Personal Products', country: 'Indonesia',
@@ -97,7 +96,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'ICBP.JK': {
     ticker: 'ICBP.JK', name: 'Indofood CBP Sukses Makmur Tbk', sector: 'Consumer Non-Cyclicals',
     price: 10_050, change: 200, changePercent: 2.03,
-    volume: 8_500_000, marketCap: 116_000_000_000_000,
+    volume: 8_500_000, frequency: 18_889, marketCap: 116_000_000_000_000,
     pe: 16.8, pbv: 3.2, dividendYield: 2.4,
     high52w: 11_200, low52w: 9_000, about: 'Indofood CBP is a leading consumer food company in Indonesia, known for its Indomie instant noodle brand.',
     employees: 39_000, website: 'https://www.icbp.co.id', industry: 'Packaged Foods', country: 'Indonesia',
@@ -107,7 +106,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'KLBF.JK': {
     ticker: 'KLBF.JK', name: 'Kalbe Farma Tbk', sector: 'Health Care',
     price: 1_550, change: -10, changePercent: -0.64,
-    volume: 30_000_000, marketCap: 72_000_000_000_000,
+    volume: 30_000_000, frequency: 66_667, marketCap: 72_000_000_000_000,
     pe: 22.3, pbv: 3.8, dividendYield: 2.1,
     high52w: 1_900, low52w: 1_480, about: 'Kalbe Farma is the largest pharmaceutical company in Southeast Asia, producing prescription drugs, consumer health products, and nutritional food.',
     employees: 17_000, website: 'https://www.kalbe.co.id', industry: 'Drug Manufacturers', country: 'Indonesia',
@@ -117,7 +116,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'HMSP.JK': {
     ticker: 'HMSP.JK', name: 'H.M. Sampoerna Tbk', sector: 'Consumer Non-Cyclicals',
     price: 680, change: 5, changePercent: 0.74,
-    volume: 25_000_000, marketCap: 79_000_000_000_000,
+    volume: 25_000_000, frequency: 55_556, marketCap: 79_000_000_000_000,
     pe: 15.4, pbv: 4.6, dividendYield: 6.5,
     high52w: 840, low52w: 640, about: 'H.M. Sampoerna is the largest cigarette manufacturer in Indonesia, a subsidiary of Philip Morris International.',
     employees: 28_000, website: 'https://www.sampoerna.com', industry: 'Tobacco', country: 'Indonesia',
@@ -127,17 +126,18 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'GOTO.JK': {
     ticker: 'GOTO.JK', name: 'GoTo Gojek Tokopedia Tbk', sector: 'Technology',
     price: 62, change: -3, changePercent: -4.61,
-    volume: 3_200_000_000, marketCap: 64_000_000_000_000,
+    volume: 3_200_000_000, frequency: 7_111_111, marketCap: 64_000_000_000_000,
     pe: 0, pbv: 1.1, dividendYield: 0,
     high52w: 98, low52w: 55, about: 'GoTo is Indonesia\'s largest technology group, combining ride-hailing, e-commerce, and digital payments.',
     employees: 11_000, website: 'https://www.gotogroup.com', industry: 'Internet Services', country: 'Indonesia',
     eps: -8, beta: 1.45, avgVolume: 2_800_000_000,
     openPrice: 65, prevClose: 65, dayHigh: 66, dayLow: 61,
+    notations: ['E', 'S'],
   },
   'BBNI.JK': {
     ticker: 'BBNI.JK', name: 'Bank Negara Indonesia Tbk', sector: 'Financials',
     price: 4_540, change: 90, changePercent: 2.02,
-    volume: 33_000_000, marketCap: 168_000_000_000_000,
+    volume: 33_000_000, frequency: 73_333, marketCap: 168_000_000_000_000,
     pe: 9.8, pbv: 1.3, dividendYield: 3.6,
     high52w: 5_475, low52w: 4_100, about: 'Bank Negara Indonesia (BNI) is one of the largest state-owned banks in Indonesia.',
     employees: 26_000, website: 'https://www.bni.co.id', industry: 'Banking', country: 'Indonesia',
@@ -147,7 +147,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'INDF.JK': {
     ticker: 'INDF.JK', name: 'Indofood Sukses Makmur Tbk', sector: 'Consumer Non-Cyclicals',
     price: 6_975, change: 75, changePercent: 1.09,
-    volume: 11_000_000, marketCap: 63_000_000_000_000,
+    volume: 11_000_000, frequency: 24_444, marketCap: 63_000_000_000_000,
     pe: 9.5, pbv: 1.0, dividendYield: 3.8,
     high52w: 7_950, low52w: 6_250, about: 'Indofood is Indonesia\'s largest food company, producing noodles, flour, cooking oil, and other consumer staples.',
     employees: 75_000, website: 'https://www.indofood.com', industry: 'Packaged Foods', country: 'Indonesia',
@@ -157,7 +157,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'SMGR.JK': {
     ticker: 'SMGR.JK', name: 'Semen Indonesia Tbk', sector: 'Basic Materials',
     price: 3_740, change: -60, changePercent: -1.58,
-    volume: 9_500_000, marketCap: 22_000_000_000_000,
+    volume: 9_500_000, frequency: 21_111, marketCap: 22_000_000_000_000,
     pe: 12.0, pbv: 0.9, dividendYield: 2.7,
     high52w: 5_200, low52w: 3_650, about: 'Semen Indonesia is the largest cement manufacturer in Indonesia and Southeast Asia.',
     employees: 13_000, website: 'https://www.semenindonesia.com', industry: 'Construction Materials', country: 'Indonesia',
@@ -167,7 +167,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'MNCN.JK': {
     ticker: 'MNCN.JK', name: 'Media Nusantara Citra Tbk', sector: 'Consumer Cyclicals',
     price: 960, change: 15, changePercent: 1.59,
-    volume: 14_000_000, marketCap: 14_000_000_000_000,
+    volume: 14_000_000, frequency: 31_111, marketCap: 14_000_000_000_000,
     pe: 10.2, pbv: 1.3, dividendYield: 4.2,
     high52w: 1_250, low52w: 880, about: 'Media Nusantara Citra is one of the largest media groups in Indonesia, operating television, radio, and digital media.',
     employees: 8_000, website: 'https://www.mncgroup.com', industry: 'Entertainment', country: 'Indonesia',
@@ -177,7 +177,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'CPIN.JK': {
     ticker: 'CPIN.JK', name: 'Charoen Pokphand Indonesia Tbk', sector: 'Consumer Non-Cyclicals',
     price: 4_700, change: 50, changePercent: 1.08,
-    volume: 7_000_000, marketCap: 77_000_000_000_000,
+    volume: 7_000_000, frequency: 15_556, marketCap: 77_000_000_000_000,
     pe: 17.5, pbv: 3.1, dividendYield: 1.8,
     high52w: 5_700, low52w: 4_200, about: 'Charoen Pokphand Indonesia is the largest poultry company in Indonesia, producing animal feed, day-old chicks, and processed chicken.',
     employees: 35_000, website: 'https://www.cp.co.id', industry: 'Agricultural Products', country: 'Indonesia',
@@ -187,7 +187,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'ADRO.JK': {
     ticker: 'ADRO.JK', name: 'Alamtri Resources Indonesia Tbk', sector: 'Energy',
     price: 1_580, change: -30, changePercent: -1.86,
-    volume: 42_000_000, marketCap: 50_000_000_000_000,
+    volume: 42_000_000, frequency: 93_333, marketCap: 50_000_000_000_000,
     pe: 4.9, pbv: 0.8, dividendYield: 12.5,
     high52w: 2_200, low52w: 1_480, about: 'Adaro Energy is one of the largest coal mining companies in Indonesia with integrated operations from mining to power generation.',
     employees: 8_500, website: 'https://www.adaro.com', industry: 'Coal', country: 'Indonesia',
@@ -197,7 +197,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'PTBA.JK': {
     ticker: 'PTBA.JK', name: 'Bukit Asam Tbk', sector: 'Energy',
     price: 2_920, change: 80, changePercent: 2.82,
-    volume: 15_000_000, marketCap: 33_000_000_000_000,
+    volume: 15_000_000, frequency: 33_333, marketCap: 33_000_000_000_000,
     pe: 6.2, pbv: 1.5, dividendYield: 11.8,
     high52w: 3_700, low52w: 2_600, about: 'Bukit Asam is a state-owned coal mining company in Indonesia, one of the largest coal producers in Southeast Asia.',
     employees: 7_200, website: 'https://www.ptba.co.id', industry: 'Coal', country: 'Indonesia',
@@ -207,7 +207,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'INKP.JK': {
     ticker: 'INKP.JK', name: 'Indah Kiat Pulp & Paper Tbk', sector: 'Basic Materials',
     price: 7_200, change: -100, changePercent: -1.37,
-    volume: 4_500_000, marketCap: 42_000_000_000_000,
+    volume: 4_500_000, frequency: 10_000, marketCap: 42_000_000_000_000,
     pe: 5.8, pbv: 0.6, dividendYield: 0.5,
     high52w: 10_000, low52w: 6_800, about: 'Indah Kiat Pulp & Paper is one of the largest pulp and paper manufacturers in the world, based in Indonesia.',
     employees: 12_000, website: 'https://www.asiapulppaper.com', industry: 'Paper Products', country: 'Indonesia',
@@ -217,7 +217,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'EXCL.JK': {
     ticker: 'EXCL.JK', name: 'XL Axiata Tbk', sector: 'Infrastructure',
     price: 1_840, change: 20, changePercent: 1.1,
-    volume: 12_000_000, marketCap: 19_500_000_000_000,
+    volume: 12_000_000, frequency: 26_667, marketCap: 19_500_000_000_000,
     pe: 18.5, pbv: 1.6, dividendYield: 0,
     high52w: 2_500, low52w: 1_680, about: 'XL Axiata is one of the leading telecommunications companies in Indonesia, providing mobile and broadband services.',
     employees: 8_000, website: 'https://www.xl.co.id', industry: 'Telecommunications', country: 'Indonesia',
@@ -227,7 +227,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'SIDO.JK': {
     ticker: 'SIDO.JK', name: 'Industri Jamu Dan Farmasi Sido Muncul Tbk', sector: 'Health Care',
     price: 620, change: 10, changePercent: 1.64,
-    volume: 18_000_000, marketCap: 18_600_000_000_000,
+    volume: 18_000_000, frequency: 40_000, marketCap: 18_600_000_000_000,
     pe: 16.3, pbv: 4.0, dividendYield: 5.1,
     high52w: 780, low52w: 570, about: 'Sido Muncul is Indonesia\'s leading herbal medicine and health supplement company, famous for its Tolak Angin brand.',
     employees: 4_500, website: 'https://www.sidomuncul.co.id', industry: 'Drug Manufacturers', country: 'Indonesia',
@@ -237,7 +237,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'ACES.JK': {
     ticker: 'ACES.JK', name: 'Ace Hardware Indonesia Tbk', sector: 'Consumer Cyclicals',
     price: 680, change: -8, changePercent: -1.16,
-    volume: 9_000_000, marketCap: 11_600_000_000_000,
+    volume: 9_000_000, frequency: 20_000, marketCap: 11_600_000_000_000,
     pe: 19.5, pbv: 3.2, dividendYield: 2.8,
     high52w: 920, low52w: 645, about: 'Ace Hardware Indonesia operates a chain of home improvement and lifestyle retail stores under the Ace Hardware brand.',
     employees: 12_000, website: 'https://www.acehardware.co.id', industry: 'Specialty Retail', country: 'Indonesia',
@@ -247,8 +247,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'MAPI.JK': {
     ticker: 'MAPI.JK', name: 'Mitra Adiperkasa Tbk', sector: 'Consumer Cyclicals',
     price: 1_140, change: 25, changePercent: 2.24,
-    volume: 9_900_000_000_000,
-    marketCap: 9_900_000_000_000,
+    volume: 6_500_000, frequency: 14_444, marketCap: 9_900_000_000_000,
     pe: 12.8, pbv: 2.1, dividendYield: 1.5,
     high52w: 1_400, low52w: 940, about: 'Mitra Adiperkasa is Indonesia\'s largest lifestyle retail operator, managing international brands like Zara, H&M, and Starbucks.',
     employees: 23_000, website: 'https://www.map.co.id', industry: 'Specialty Retail', country: 'Indonesia',
@@ -258,7 +257,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'PWON.JK': {
     ticker: 'PWON.JK', name: 'Pakuwon Jati Tbk', sector: 'Properties & Real Estate',
     price: 490, change: -5, changePercent: -1.01,
-    volume: 35_000_000, marketCap: 23_600_000_000_000,
+    volume: 35_000_000, frequency: 77_778, marketCap: 23_600_000_000_000,
     pe: 8.5, pbv: 1.0, dividendYield: 1.9,
     high52w: 610, low52w: 455, about: 'Pakuwon Jati is a leading property developer and mall operator in Indonesia, with a focus on integrated superblocks.',
     employees: 5_000, website: 'https://www.pakuwon.com', industry: 'Real Estate', country: 'Indonesia',
@@ -268,7 +267,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'BSDE.JK': {
     ticker: 'BSDE.JK', name: 'Bumi Serpong Damai Tbk', sector: 'Properties & Real Estate',
     price: 1_080, change: 20, changePercent: 1.89,
-    volume: 20_000_000, marketCap: 20_500_000_000_000,
+    volume: 20_000_000, frequency: 44_444, marketCap: 20_500_000_000_000,
     pe: 7.2, pbv: 0.7, dividendYield: 1.2,
     high52w: 1_300, low52w: 920, about: 'Bumi Serpong Damai is one of Indonesia\'s largest property developers, best known for the BSD City township in Tangerang.',
     employees: 4_200, website: 'https://www.bsdcity.com', industry: 'Real Estate', country: 'Indonesia',
@@ -278,7 +277,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'JPFA.JK': {
     ticker: 'JPFA.JK', name: 'Japfa Comfeed Indonesia Tbk', sector: 'Consumer Non-Cyclicals',
     price: 1_390, change: 30, changePercent: 2.21,
-    volume: 8_000_000, marketCap: 15_300_000_000_000,
+    volume: 8_000_000, frequency: 17_778, marketCap: 15_300_000_000_000,
     pe: 10.8, pbv: 1.5, dividendYield: 2.0,
     high52w: 1_700, low52w: 1_200, about: 'Japfa Comfeed is a leading agri-food company in Indonesia involved in poultry, aquaculture, and animal health products.',
     employees: 29_000, website: 'https://www.japfa.co.id', industry: 'Agricultural Products', country: 'Indonesia',
@@ -288,7 +287,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'TKIM.JK': {
     ticker: 'TKIM.JK', name: 'Tjiwi Kimia Tbk', sector: 'Basic Materials',
     price: 6_850, change: -150, changePercent: -2.14,
-    volume: 3_000_000, marketCap: 20_900_000_000_000,
+    volume: 3_000_000, frequency: 6_667, marketCap: 20_900_000_000_000,
     pe: 6.0, pbv: 0.7, dividendYield: 0.3,
     high52w: 9_800, low52w: 6_600, about: 'Tjiwi Kimia is a major pulp and paper manufacturer in Indonesia, producing office paper, industrial paper, and packaging materials.',
     employees: 9_500, website: 'https://www.asiapulppaper.com', industry: 'Paper Products', country: 'Indonesia',
@@ -298,7 +297,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'SMRA.JK': {
     ticker: 'SMRA.JK', name: 'Summarecon Agung Tbk', sector: 'Properties & Real Estate',
     price: 630, change: 10, changePercent: 1.61,
-    volume: 25_000_000, marketCap: 9_100_000_000_000,
+    volume: 25_000_000, frequency: 55_556, marketCap: 9_100_000_000_000,
     pe: 14.2, pbv: 0.9, dividendYield: 1.0,
     high52w: 820, low52w: 565, about: 'Summarecon Agung is a property developer in Indonesia known for developing integrated townships.',
     employees: 6_000, website: 'https://www.summarecon.com', industry: 'Real Estate', country: 'Indonesia',
@@ -308,7 +307,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'INTP.JK': {
     ticker: 'INTP.JK', name: 'Indocement Tunggal Prakarsa Tbk', sector: 'Basic Materials',
     price: 6_850, change: -100, changePercent: -1.44,
-    volume: 4_800_000, marketCap: 25_000_000_000_000,
+    volume: 4_800_000, frequency: 10_667, marketCap: 25_000_000_000_000,
     pe: 28.0, pbv: 1.5, dividendYield: 1.8,
     high52w: 9_400, low52w: 6_600, about: 'Indocement is the second largest cement producer in Indonesia, a subsidiary of HeidelbergCement Group.',
     employees: 6_500, website: 'https://www.indocement.co.id', industry: 'Construction Materials', country: 'Indonesia',
@@ -318,7 +317,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
   'TBIG.JK': {
     ticker: 'TBIG.JK', name: 'Tower Bersama Infrastructure Tbk', sector: 'Infrastructure',
     price: 2_460, change: 40, changePercent: 1.65,
-    volume: 7_000_000, marketCap: 28_000_000_000_000,
+    volume: 7_000_000, frequency: 15_556, marketCap: 28_000_000_000_000,
     pe: 20.5, pbv: 4.8, dividendYield: 1.2,
     high52w: 2_900, low52w: 2_150, about: 'Tower Bersama Infrastructure is one of the largest independent tower companies in Indonesia, leasing space to mobile network operators.',
     employees: 2_200, website: 'https://www.tbig.co.id', industry: 'Telecommunications', country: 'Indonesia',

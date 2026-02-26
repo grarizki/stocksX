@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown } from 'lucide-vue-next'
+import { ChevronDown, Calendar } from 'lucide-vue-next'
 import { Line, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -22,11 +22,66 @@ const props = defineProps<{ ticker: string }>()
 type ViewMode = 'stock' | 'broker'
 const viewMode = ref<ViewMode>('stock')
 
-type Range = '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y'
-const RANGES: Range[] = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
-const activeRange = ref<Range>('1D')
+type DataRange = '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y'
+const DATA_RANGES: DataRange[] = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
+
+// activeDataRange is always a valid DataRange for data functions
+const activeDataRange = ref<DataRange>('1D')
 const showNet = ref(false)
 const showSummary = ref(false)
+
+// ── Date range picker ──────────────────────────────────────────
+const TODAY = new Date(2026, 1, 26) // Feb 26 2026 (matches project date)
+const dateRange = ref<{ start: Date; end: Date }>({ start: TODAY, end: TODAY })
+const showCalendar = ref(false)
+const isCustomRange = ref(false)
+
+const PRESETS = [
+  { label: 'Last 1 Day',    range: '1D'  as DataRange },
+  { label: 'Last 7 Days',   range: '1W'  as DataRange },
+  { label: 'Last 1 Month',  range: '1M'  as DataRange },
+  { label: 'Last 3 Months', range: '3M'  as DataRange },
+  { label: 'Year to Date',  range: 'YTD' as DataRange },
+  { label: 'Last 1 Year',   range: '1Y'  as DataRange },
+]
+
+function applyPreset(r: DataRange) {
+  activeDataRange.value = r
+  isCustomRange.value = false
+  showCalendar.value = false
+  const end = new Date(TODAY)
+  const start = new Date(TODAY)
+  if (r === '1W') start.setDate(end.getDate() - 7)
+  else if (r === '1M') start.setMonth(end.getMonth() - 1)
+  else if (r === '3M') start.setMonth(end.getMonth() - 3)
+  else if (r === 'YTD') { start.setMonth(0); start.setDate(1) }
+  else if (r === '1Y') start.setFullYear(end.getFullYear() - 1)
+  dateRange.value = { start, end }
+}
+
+function onCalendarUpdate(val: { start: Date; end: Date } | null) {
+  if (!val?.start || !val?.end) return
+  dateRange.value = val
+  isCustomRange.value = true
+  const diffDays = Math.round((val.end.getTime() - val.start.getTime()) / 86400000)
+  if (diffDays <= 1) activeDataRange.value = '1D'
+  else if (diffDays <= 7) activeDataRange.value = '1W'
+  else if (diffDays <= 31) activeDataRange.value = '1M'
+  else if (diffDays <= 92) activeDataRange.value = '3M'
+  else activeDataRange.value = '1Y'
+}
+
+function fmtD(d: Date) {
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mon = d.toLocaleString('en', { month: 'short' })
+  const yy = String(d.getFullYear()).slice(2)
+  return `${dd} ${mon} ${yy}`
+}
+
+const dateLabel = computed(() => {
+  if (!isCustomRange.value && activeDataRange.value === '1D') return fmtD(TODAY)
+  return `${fmtD(dateRange.value.start)} → ${fmtD(dateRange.value.end)}`
+})
 
 // ── By-Stock view ──────────────────────────────────────────────
 type SortKey = 'bVal' | 'bLot' | 'bAvg' | 'sVal' | 'sLot' | 'sAvg' | 'netVal'
@@ -44,7 +99,7 @@ function toggleSort(key: SortKey) {
 }
 
 const data = computed<BrokerActivityData>(() =>
-  getBrokerActivity(props.ticker, activeRange.value)
+  getBrokerActivity(props.ticker, activeDataRange.value)
 )
 
 const sortedTable = computed<BrokerRow[]>(() => {
@@ -128,15 +183,9 @@ const lineChartOptions = computed(() => ({
   },
 }))
 
-function fmtVal(v: number) {
-  return `${v.toFixed(2)}B`
-}
-function fmtLot(v: number) {
-  return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v)
-}
-function fmtPrice(v: number) {
-  return v.toLocaleString()
-}
+function fmtVal(v: number) { return `${v.toFixed(2)}B` }
+function fmtLot(v: number) { return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v) }
+function fmtPrice(v: number) { return v.toLocaleString() }
 
 // ── Foreign-Domestic ───────────────────────────────────────────
 type FDMarket = 'Regular' | 'All Market'
@@ -146,8 +195,7 @@ const FD_METRICS: FDMetric[] = ['Value', 'Volume']
 const fdMarket = ref<FDMarket>('Regular')
 const fdMetric = ref<FDMetric>('Value')
 
-const fdData = computed(() => getForeignDomestic(props.ticker, activeRange.value, fdMarket.value))
-
+const fdData = computed(() => getForeignDomestic(props.ticker, activeDataRange.value, fdMarket.value))
 const fdIsValue = computed(() => fdMetric.value === 'Value')
 
 function fmtFD(v: number, isValue: boolean) {
@@ -245,7 +293,7 @@ const INVESTOR_TYPES: InvestorType[] = ['All Investor', 'Foreign', 'Local']
 const MARKET_TYPES: MarketType[] = ['Regular', 'Nego', 'Tunai']
 
 const brokerRows = computed<BrokerTableRow[]>(() =>
-  getBrokerTable(selectedBroker.value, activeRange.value)
+  getBrokerTable(selectedBroker.value, activeDataRange.value)
 )
 
 function fmtBVal(v: number) {
@@ -259,38 +307,18 @@ function fmtBLot(v: number) {
   if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`
   return String(v)
 }
-function fmtBAvg(v: number) {
-  return v.toLocaleString('id-ID')
-}
-
-const today = new Date()
-function fmtDate(d: Date) {
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-const dateRangeLabel = computed(() => {
-  const end = new Date(today)
-  const start = new Date(today)
-  const r = activeRange.value
-  if (r === '1D') return fmtDate(end)
-  if (r === '1W') start.setDate(end.getDate() - 7)
-  else if (r === '1M') start.setMonth(end.getMonth() - 1)
-  else if (r === '3M') start.setMonth(end.getMonth() - 3)
-  else if (r === 'YTD') { start.setMonth(0); start.setDate(1) }
-  else if (r === '1Y') start.setFullYear(end.getFullYear() - 1)
-  return `${fmtDate(start)} - ${fmtDate(end)}`
-})
+function fmtBAvg(v: number) { return v.toLocaleString('id-ID') }
 </script>
 
 <template>
   <div
     class="space-y-3"
-    @click="showBrokerPicker = false; showInvestorPicker = false; showMarketPicker = false"
+    @click="showBrokerPicker = false; showInvestorPicker = false; showMarketPicker = false; showCalendar = false"
   >
-    <!-- Header row: title + view toggle + controls -->
+    <!-- Header: title + view toggle + All button -->
     <div class="flex items-center justify-between">
       <h3 class="text-sm font-semibold">Broker Activity</h3>
       <div class="flex items-center gap-2">
-        <!-- View toggle -->
         <div class="flex rounded-lg border border-border/50 p-0.5 text-[10px] font-medium">
           <button
             class="rounded-md px-2 py-1 transition-colors"
@@ -303,8 +331,6 @@ const dateRangeLabel = computed(() => {
             @click.stop="viewMode = 'broker'"
           >By Broker</button>
         </div>
-
-        <!-- All Brokers button (stock view only) -->
         <button
           v-if="viewMode === 'stock'"
           class="flex items-center gap-1 rounded-lg border border-border/50 px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -313,36 +339,67 @@ const dateRangeLabel = computed(() => {
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           All
         </button>
-
-        <!-- Net toggle -->
-        <label class="flex cursor-pointer items-center gap-1.5">
-          <span class="text-xs text-muted-foreground">Net</span>
-          <div
-            class="relative h-5 w-9 rounded-full transition-colors"
-            :class="showNet ? 'bg-blue-500' : 'bg-muted'"
-            @click.stop="showNet = !showNet"
-          >
-            <div
-              class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"
-              :class="showNet ? 'translate-x-4' : 'translate-x-0.5'"
-            />
-          </div>
-        </label>
       </div>
     </div>
 
-    <!-- Broker Summary Sidebar -->
-    <StockBrokerSummary v-model:open="showSummary" :ticker="ticker" :range="activeRange" :show-net="showNet" />
+    <StockBrokerSummary v-model:open="showSummary" :ticker="ticker" :range="activeDataRange" :show-net="showNet" />
 
-    <!-- Range tabs (shared) -->
-    <div class="flex gap-1 overflow-x-auto scrollbar-none">
-      <button
-        v-for="r in RANGES"
-        :key="r"
-        class="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-        :class="activeRange === r ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
-        @click.stop="activeRange = r"
-      >{{ r }}</button>
+    <!-- Date picker row -->
+    <div class="relative z-30" @click.stop>
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Date display / calendar trigger -->
+        <button
+          class="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent/30"
+          :class="isCustomRange
+            ? 'border-emerald-500/40 text-emerald-400'
+            : 'border-border/50 text-emerald-400'"
+          @click.stop="showCalendar = !showCalendar"
+        >
+          <span>{{ dateLabel }}</span>
+          <Calendar class="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+
+        <!-- Quick range pills -->
+        <div class="flex gap-1 overflow-x-auto scrollbar-none">
+          <button
+            v-for="r in DATA_RANGES"
+            :key="r"
+            class="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+            :class="activeDataRange === r && !isCustomRange
+              ? 'bg-blue-500 text-white'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
+            @click.stop="applyPreset(r)"
+          >{{ r }}</button>
+        </div>
+      </div>
+
+      <!-- Calendar dropdown -->
+      <Transition name="dropdown">
+        <div
+          v-if="showCalendar"
+          class="absolute left-0 top-full z-40 mt-1 rounded-2xl border border-border/50 bg-background shadow-2xl overflow-hidden"
+          @click.stop
+        >
+          <VDatePicker
+            v-model.range="dateRange"
+            :columns="2"
+            :max-date="TODAY"
+            color="green"
+            is-dark
+            @update:model-value="onCalendarUpdate"
+          />
+          <!-- Preset shortcuts -->
+          <div class="grid grid-cols-3 border-t border-border/40">
+            <button
+              v-for="p in PRESETS"
+              :key="p.range"
+              class="px-3 py-2 text-xs font-medium text-emerald-400 transition-colors hover:bg-accent/40 border-border/20"
+              :class="p.range !== 'YTD' && p.range !== '1Y' ? 'border-b' : ''"
+              @click.stop="applyPreset(p.range)"
+            >{{ p.label }}</button>
+          </div>
+        </div>
+      </Transition>
     </div>
 
     <!-- ── By-Stock view ── -->
@@ -351,7 +408,6 @@ const dateRangeLabel = computed(() => {
       <div class="rounded-xl border border-border/40 bg-card/50 p-3 space-y-3">
         <div class="flex items-center justify-between">
           <p class="text-xs font-semibold">Foreign-Domestic Activity</p>
-          <!-- Market toggle -->
           <div class="flex rounded-lg border border-border/50 p-0.5 text-[10px] font-medium">
             <button
               v-for="m in FD_MARKETS"
@@ -363,7 +419,6 @@ const dateRangeLabel = computed(() => {
           </div>
         </div>
 
-        <!-- Value / Volume metric toggle -->
         <div class="flex rounded-lg border border-border/50 p-0.5 text-[10px] font-medium w-fit">
           <button
             v-for="mt in FD_METRICS"
@@ -374,7 +429,6 @@ const dateRangeLabel = computed(() => {
           >{{ mt }}</button>
         </div>
 
-        <!-- Stats row -->
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div class="flex justify-between">
             <span class="text-muted-foreground">F Buy</span>
@@ -393,19 +447,16 @@ const dateRangeLabel = computed(() => {
           >{{ (fdIsValue ? fdData.netForeign : fdData.netForeignVol) >= 0 ? '+' : '' }}{{ fmtFD(fdIsValue ? fdData.netForeign : fdData.netForeignVol, fdIsValue) }}</span>
         </div>
 
-        <!-- Bar chart -->
         <div class="h-36 w-full">
           <Bar :data="fdBarData" :options="fdBarOptions" />
         </div>
 
-        <!-- Legend -->
         <div class="flex items-center gap-4 text-[10px] text-muted-foreground">
           <span class="flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-sm bg-cyan-500/70" />Foreign</span>
           <span class="flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-sm bg-violet-600/70" />Domestic</span>
           <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border border-border/60 bg-muted/40 opacity-60" />Buy (light) / Sell (dark)</span>
         </div>
 
-        <!-- F/D percentage footer -->
         <div class="flex overflow-hidden rounded-lg text-[10px] font-semibold">
           <div
             class="flex items-center justify-center gap-1 bg-cyan-500/20 py-1.5 text-cyan-400 transition-all"
@@ -424,7 +475,7 @@ const dateRangeLabel = computed(() => {
         </div>
       </div>
 
-      <!-- Chart: Intraday cumulative net flow per broker -->
+      <!-- Chart -->
       <div class="rounded-xl border border-border/40 bg-card/50 p-3">
         <p class="mb-2 text-[10px] text-muted-foreground">
           Net flow · <span class="font-semibold text-foreground">Billion IDR</span>
@@ -531,7 +582,6 @@ const dateRangeLabel = computed(() => {
 
       <!-- Filter dropdowns row -->
       <div class="flex gap-2" @click.stop>
-        <!-- Investor type -->
         <div class="relative z-10 flex-1">
           <button
             class="flex w-full items-center justify-between rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-xs transition-colors hover:bg-accent/30"
@@ -556,7 +606,6 @@ const dateRangeLabel = computed(() => {
           </Transition>
         </div>
 
-        <!-- Market type -->
         <div class="relative z-10 flex-1">
           <button
             class="flex w-full items-center justify-between rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-xs transition-colors hover:bg-accent/30"
@@ -580,11 +629,6 @@ const dateRangeLabel = computed(() => {
             </div>
           </Transition>
         </div>
-      </div>
-
-      <!-- Date range label -->
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-medium text-blue-400">{{ dateRangeLabel }}</span>
       </div>
 
       <!-- Table -->

@@ -24,13 +24,9 @@ useHead({
 const watchlistStore = useWatchlistStore()
 const isWatched = computed(() => watchlistStore.isInWatchlist(ticker.value))
 
-type Tab = 'orderbook' | 'keystats' | 'about' | 'financials' | 'broker' | 'historical'
+type Tab = 'orderbook' | 'tradebook' | 'keystats' | 'about' | 'financials' | 'broker' | 'historical'
 const activeTab = ref<Tab>('orderbook')
 
-function goBack() {
-  if (window.history.length > 1) window.history.back()
-  else navigateTo(localePath('/home'))
-}
 </script>
 
 <template>
@@ -103,7 +99,7 @@ function goBack() {
       <!-- Section tabs -->
       <div class="flex overflow-x-auto border-b border-border/40 scrollbar-none">
         <button
-          v-for="tab in (['orderbook', 'keystats', 'broker', 'historical', 'about', 'financials'] as Tab[])"
+          v-for="tab in (['orderbook', 'tradebook', 'broker', 'historical', 'keystats', 'about', 'financials'] as Tab[])"
           :key="tab"
           class="shrink-0 border-b-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors"
           :class="activeTab === tab
@@ -111,7 +107,7 @@ function goBack() {
             : 'border-transparent text-muted-foreground hover:text-foreground'"
           @click="activeTab = tab"
         >
-          {{ tab === 'keystats' ? $t('stock.keyStats') : tab === 'orderbook' ? 'Orderbook' : tab === 'about' ? $t('stock.about') : tab === 'broker' ? 'Broker' : tab === 'historical' ? 'Historical' : $t('stock.financials') }}
+          {{ tab === 'keystats' ? $t('stock.keyStats') : tab === 'orderbook' ? 'Orderbook' : tab === 'tradebook' ? 'Trade Book' : tab === 'about' ? $t('stock.about') : tab === 'broker' ? 'Broker' : tab === 'historical' ? 'Historical' : $t('stock.financials') }}
         </button>
       </div>
 
@@ -129,6 +125,7 @@ function goBack() {
         :dividend-yield="stock.dividendYield"
         :market-cap="stock.marketCap"
       />
+      <StockTradeBook v-else-if="activeTab === 'tradebook'" :ticker="stock.ticker" :price="stock.price" />
       <StockStats v-else-if="activeTab === 'keystats'" :stock="stock" />
       <StockBrokerActivity v-else-if="activeTab === 'broker'" :ticker="stock.ticker" />
       <StockHistoricalData v-else-if="activeTab === 'historical'" :ticker="stock.ticker" />
