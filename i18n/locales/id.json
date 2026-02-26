@@ -62,7 +62,15 @@
     "relatedNews": "Berita Terkait",
     "relatedStocks": "Saham Terkait",
     "addToWatchlist": "Tambah ke daftar pantau",
-    "removeFromWatchlist": "Hapus dari daftar pantau"
+    "removeFromWatchlist": "Hapus dari daftar pantau",
+    "badgeInfo": {
+      "dayTrade": "Day Trade",
+      "dayTradeLabel": "Day Trade {n}x",
+      "dayTradeDesc": "Saham ini bisa dibeli dengan Day Trade dengan nilai hingga {n}x Trading Balance kamu.",
+      "tradingLimit": "Trading Limit",
+      "tradingLimitLabel": "Trading Limit",
+      "tradingLimitDesc": "Saham ini bisa dibeli dengan Trading Limit dan dapat dijadikan jaminan dengan haircut {n}%."
+    }
   },
   "stocks": {
     "title": "Saham",

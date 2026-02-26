@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap, ArrowUp, Sun, Moon } from 'lucide-vue-next'
+import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap, ArrowUp, Sun, Moon, StarIcon } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'blank' })
 
@@ -318,7 +318,7 @@ onMounted(() => {
               </a>
               <NuxtLink :to="userStore.isLoggedIn ? localePath('/home') : localePath('/auth/login')" class="w-full md:w-auto">
                 <Button size="lg" variant="outline" class="w-full gap-2 bg-white text-blue-700 hover:bg-blue-50">
-                  <Star class="h-4 w-4" />
+                  <StarIcon class="h-4 w-4" />
                   {{ userStore.isLoggedIn ? $t('nav.home') : $t('landing.signUpFree') }}
                 </Button>
               </NuxtLink>

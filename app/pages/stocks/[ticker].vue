@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft, Star, StarOff, ExternalLink } from 'lucide-vue-next'
+import { ArrowLeft, ExternalLink, Zap, Shield } from 'lucide-vue-next'
 import { useWatchlistStore } from '~/stores/watchlist'
 import { STOCKS_DATA } from '@/data/stocksData'
+import { StarFilledIcon, StarIcon } from '@radix-icons/vue'
+
+const dayTradeOpen = ref(false)
+const tradingLimitOpen = ref(false)
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -40,17 +44,30 @@ function goBack() {
     <div v-else class="space-y-3">
       <!-- Header -->
       <div>
-        <div class="flex items-start gap-3">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-sm font-bold">
-            {{ stock.ticker.replace('.JK', '').slice(0, 2) }}
-          </div>
-          <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <!-- Ticker + badges row -->
             <div class="flex flex-wrap items-center gap-1.5">
               <h1 class="text-xl font-bold">{{ stock.ticker.replace('.JK', '') }}</h1>
-              <Badge variant="secondary" class="text-[10px]">{{ stock.sector }}</Badge>
-              <Badge variant="outline" class="text-[10px]">IDX</Badge>
+              <button
+                v-if="stock.dayTradeMultiplier"
+                class="flex h-5 w-5 items-center justify-center rounded text-amber-500 hover:bg-amber-500/10"
+                aria-label="Day Trade info"
+                @click="dayTradeOpen = true"
+              >
+                <Zap class="h-3.5 w-3.5 fill-current" />
+              </button>
+              <button
+                v-if="stock.tradingLimitHaircut"
+                class="flex h-5 w-5 items-center justify-center rounded text-blue-500 hover:bg-blue-500/10"
+                aria-label="Trading Limit info"
+                @click="tradingLimitOpen = true"
+              >
+                <Shield class="h-3.5 w-3.5" />
+              </button>
             </div>
-            <p class="truncate text-xs text-muted-foreground">{{ stock.name }}</p>
+            <!-- Company name -->
+            <p class="mt-0.5 truncate text-sm text-muted-foreground">{{ stock.name }}</p>
           </div>
           <a
             v-if="stock.website"
@@ -121,6 +138,40 @@ function goBack() {
       <!-- Related news always visible -->
       <StockNews :ticker="stock.ticker" />
 
+      <!-- Day Trade modal -->
+      <Dialog v-model:open="dayTradeOpen">
+        <DialogContent class="left-0 top-auto bottom-0 translate-x-0 translate-y-0 w-full max-w-full rounded-t-2xl rounded-b-none px-4 pb-8 pt-6 data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-left-0 data-[state=closed]:slide-out-to-left-0">
+          <div class="mb-4 flex items-center gap-2">
+            <Zap class="h-5 w-5 fill-current text-amber-500" />
+            <h2 class="text-base font-semibold">Day Trade</h2>
+          </div>
+          <p class="mb-4 text-sm text-muted-foreground">
+            Saham ini tersedia untuk fasilitas <span class="font-medium text-foreground">Day Trade</span> — pembelian saham yang dapat dijual pada hari yang sama tanpa perlu dana penuh di muka.
+          </p>
+          <div class="rounded-lg border border-border/60 bg-muted/40 px-4 py-3">
+            <p class="text-xs text-muted-foreground">Multiplier</p>
+            <p class="text-2xl font-bold text-amber-500">{{ stock?.dayTradeMultiplier }}x</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <!-- Trading Limit modal -->
+      <Dialog v-model:open="tradingLimitOpen">
+        <DialogContent class="left-0 top-auto bottom-0 translate-x-0 translate-y-0 w-full max-w-full rounded-t-2xl rounded-b-none px-4 pb-8 pt-6 data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-left-0 data-[state=closed]:slide-out-to-left-0">
+          <div class="mb-4 flex items-center gap-2">
+            <Shield class="h-5 w-5 text-blue-500" />
+            <h2 class="text-base font-semibold">Trading Limit</h2>
+          </div>
+          <p class="mb-4 text-sm text-muted-foreground">
+            Saham ini dapat digunakan sebagai jaminan untuk fasilitas <span class="font-medium text-foreground">Trading Limit</span> — kredit trading berbasis nilai portofolio Anda.
+          </p>
+          <div class="rounded-lg border border-border/60 bg-muted/40 px-4 py-3">
+            <p class="text-xs text-muted-foreground">Haircut</p>
+            <p class="text-2xl font-bold text-blue-500">{{ stock?.tradingLimitHaircut }}%</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <!-- FAB: watchlist toggle -->
       <button
         class="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 lg:bottom-8"
@@ -128,8 +179,8 @@ function goBack() {
         :aria-label="isWatched ? $t('stock.removeFromWatchlist') : $t('stock.addToWatchlist')"
         @click="watchlistStore.toggleWatchlist(ticker)"
       >
-        <StarOff v-if="isWatched" class="h-5 w-5" aria-hidden="true" />
-        <Star v-else class="h-5 w-5" aria-hidden="true" />
+        <StarFilledIcon v-if="isWatched" class="h-5 w-5 fill-current" aria-hidden="true" />
+        <StarIcon v-else class="h-5 w-5" aria-hidden="true" />
       </button>
     </div>
   </div>

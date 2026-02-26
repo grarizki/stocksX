@@ -3,6 +3,7 @@ import { Search, TrendingUp, TrendingDown, Star, StarOff, SlidersHorizontal } fr
 import type { Stock } from '@/data/stocks'
 import { formatNumber, formatCompact } from '@/lib/utils'
 import { useWatchlistStore } from '~/stores/watchlist'
+import { StarFilledIcon, StarIcon } from '@radix-icons/vue'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -173,8 +174,8 @@ const losers = computed(() => (allStocks.value ?? []).filter((s) => s.changePerc
           :class="watchlistStore.isInWatchlist(stock.ticker) ? 'text-yellow-400' : ''"
           @click.prevent="watchlistStore.toggleWatchlist(stock.ticker)"
         >
-          <StarOff v-if="watchlistStore.isInWatchlist(stock.ticker)" class="h-4 w-4" />
-          <Star v-else class="h-4 w-4" />
+          <StarFilledIcon v-if="watchlistStore.isInWatchlist(stock.ticker)" class="h-4 w-4" />
+          <StarIcon v-else class="h-4 w-4" />
         </button>
       </NuxtLink>
     </div>

@@ -62,7 +62,15 @@
     "relatedNews": "Related News",
     "relatedStocks": "Related Stocks",
     "addToWatchlist": "Add to watchlist",
-    "removeFromWatchlist": "Remove from watchlist"
+    "removeFromWatchlist": "Remove from watchlist",
+    "badgeInfo": {
+      "dayTrade": "Day Trade",
+      "dayTradeLabel": "Day Trade {n}x",
+      "dayTradeDesc": "This stock can be bought using Day Trade with up to {n}x your Trading Balance.",
+      "tradingLimit": "Trading Limit",
+      "tradingLimitLabel": "Trading Limit",
+      "tradingLimitDesc": "This stock can be bought using Trading Limit and used as collateral with a {n}% haircut."
+    }
   },
   "stocks": {
     "title": "Stocks",

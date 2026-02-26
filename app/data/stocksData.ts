@@ -12,6 +12,10 @@ export type StockDetail = Stock & {
   prevClose: number
   dayHigh: number
   dayLow: number
+  /** Day Trade multiplier, e.g. 5 means 5x. Undefined = not eligible */
+  dayTradeMultiplier?: number
+  /** Trading Limit (TL) haircut percentage, e.g. 10 means 10%. Undefined = not eligible */
+  tradingLimitHaircut?: number
 }
 
 export const STOCKS_DATA: Record<string, StockDetail> = {
@@ -24,6 +28,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
     employees: 24_000, website: 'https://www.bca.co.id', industry: 'Banking', country: 'Indonesia',
     eps: 382, beta: 0.72, avgVolume: 28_000_000,
     openPrice: 9_275, prevClose: 9_275, dayHigh: 9_400, dayLow: 9_250,
+    dayTradeMultiplier: 5, tradingLimitHaircut: 10,
   },
   'BBRI.JK': {
     ticker: 'BBRI.JK', name: 'Bank Rakyat Indonesia Tbk', sector: 'Financials',
@@ -34,6 +39,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
     employees: 80_000, website: 'https://www.bri.co.id', industry: 'Banking', country: 'Indonesia',
     eps: 317, beta: 1.02, avgVolume: 70_000_000,
     openPrice: 4_220, prevClose: 4_220, dayHigh: 4_230, dayLow: 4_160,
+    dayTradeMultiplier: 5, tradingLimitHaircut: 10,
   },
   'BMRI.JK': {
     ticker: 'BMRI.JK', name: 'Bank Mandiri Tbk', sector: 'Financials',
@@ -44,6 +50,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
     employees: 38_000, website: 'https://www.bankmandiri.co.id', industry: 'Banking', country: 'Indonesia',
     eps: 530, beta: 0.98, avgVolume: 40_000_000,
     openPrice: 6_125, prevClose: 6_125, dayHigh: 6_275, dayLow: 6_100,
+    dayTradeMultiplier: 5, tradingLimitHaircut: 10,
   },
   'TLKM.JK': {
     ticker: 'TLKM.JK', name: 'Telkom Indonesia Tbk', sector: 'Infrastructure',
@@ -54,6 +61,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
     employees: 27_000, website: 'https://www.telkom.co.id', industry: 'Telecommunications', country: 'Indonesia',
     eps: 190, beta: 0.65, avgVolume: 50_000_000,
     openPrice: 2_775, prevClose: 2_775, dayHigh: 2_790, dayLow: 2_730,
+    dayTradeMultiplier: 3, tradingLimitHaircut: 15,
   },
   'ASII.JK': {
     ticker: 'ASII.JK', name: 'Astra International Tbk', sector: 'Consumer Cyclicals',
@@ -64,6 +72,7 @@ export const STOCKS_DATA: Record<string, StockDetail> = {
     employees: 245_000, website: 'https://www.astra.co.id', industry: 'Auto & Truck Manufacturers', country: 'Indonesia',
     eps: 370, beta: 0.88, avgVolume: 20_000_000,
     openPrice: 4_420, prevClose: 4_420, dayHigh: 4_500, dayLow: 4_410,
+    dayTradeMultiplier: 3, tradingLimitHaircut: 15,
   },
   'BYAN.JK': {
     ticker: 'BYAN.JK', name: 'Bayan Resources Tbk', sector: 'Energy',
