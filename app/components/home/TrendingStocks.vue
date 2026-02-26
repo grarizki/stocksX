@@ -46,7 +46,7 @@ const isPaused = ref(false)
           :to="`/stocks/${stock.ticker}`"
           class="flex shrink-0 items-center gap-2.5 rounded-full border border-border/40 bg-card/60 px-3.5 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:bg-accent/40 hover:shadow-md active:scale-95"
         >
-          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-bold">
+          <div class="hidden h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-bold lg:flex">
             {{ stock.ticker.slice(0, 2) }}
           </div>
           <span class="text-xs font-bold">{{ stock.ticker.replace('.JK', '') }}</span>

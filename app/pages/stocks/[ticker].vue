@@ -15,7 +15,7 @@ const ticker = computed(() => (route.params.ticker as string).toUpperCase())
 const stock = computed(() => STOCKS_DATA[ticker.value] ?? null)
 
 useHead({
-  title: computed(() => stock.value ? `${stock.value.ticker} - ${stock.value.name} - StoxLyz` : 'Stock Not Found'),
+  title: computed(() => stock.value ? `${stock.value.ticker.replace('.JK', '')} - ${stock.value.name} - StoxLyz` : 'Stock Not Found'),
 })
 
 const watchlistStore = useWatchlistStore()
@@ -32,11 +32,6 @@ function goBack() {
 
 <template>
   <div>
-    <Button variant="ghost" size="sm" class="mb-3 h-8 gap-1 px-2" @click="goBack">
-      <ArrowLeft class="h-4 w-4" aria-hidden="true" />
-      {{ $t('stock.back') }}
-    </Button>
-
     <div v-if="!stock" class="py-16 text-center text-sm text-muted-foreground">
       Stock not found
     </div>
@@ -51,11 +46,12 @@ function goBack() {
               <h1 class="text-xl font-bold">{{ stock.ticker.replace('.JK', '') }}</h1>
               <button
                 v-if="stock.dayTradeMultiplier"
-                class="flex h-5 w-5 items-center justify-center rounded text-amber-500 hover:bg-amber-500/10"
+                class="flex items-center gap-0.5 rounded px-1 py-0.5 text-amber-500 hover:bg-amber-500/10"
                 aria-label="Day Trade info"
                 @click="dayTradeOpen = true"
               >
                 <Zap class="h-3.5 w-3.5 fill-current" />
+                <span class="text-[11px] font-bold leading-none">{{ stock.dayTradeMultiplier }}x</span>
               </button>
               <button
                 v-if="stock.tradingLimitHaircut"

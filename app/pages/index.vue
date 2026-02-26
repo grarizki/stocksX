@@ -360,15 +360,7 @@ onMounted(() => {
     <footer class="border-t border-border/40 py-8">
       <div class="mx-auto max-w-6xl px-4">
         <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div class="flex items-center gap-2">
-            <div class="flex h-6 w-6 items-center justify-center rounded bg-blue-500">
-              <span class="text-xs font-bold text-primary-foreground">SL</span>
-            </div>
             <span class="font-semibold">Stox<span class="text-blue-500">Lyz</span></span>
-          </div>
-          <p class="text-center text-xs text-muted-foreground">
-            {{ $t('landing.footerDisclaimer') }}
-          </p>
         </div>
       </div>
     </footer>

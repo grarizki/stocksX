@@ -56,8 +56,8 @@ const hoveredIdx = ref<number | null>(null)
           : 'text-muted-foreground hover:text-foreground'"
         @click="activeTab = tab.value"
       >
-        <component :is="tab.icon" class="h-3.5 w-3.5" :class="activeTab === tab.value && tab.color" />
-        {{ tab.label }}
+        <component :is="tab.icon" class="h-3.5 w-3.5 shrink-0" :class="activeTab === tab.value && tab.color" />
+        <span class="hidden sm:inline">{{ tab.label }}</span>
       </button>
     </div>
 
