@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ChevronRight, Clock, Newspaper } from 'lucide-vue-next'
 import { timeAgo } from '@/lib/utils'
-import { DUMMY_NEWS } from '@/data/newsData'
 
-const articles = DUMMY_NEWS.slice(0, 4)
+const { articles, pending, fetchAll } = useNews()
+
+onMounted(fetchAll)
+
+const displayed = computed(() => articles.value.slice(0, 4))
 </script>
 
 <template>
@@ -21,11 +24,15 @@ const articles = DUMMY_NEWS.slice(0, 4)
       </NuxtLink>
     </div>
 
-    <div class="space-y-2">
+    <div v-if="pending" class="space-y-2">
+      <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-xl bg-muted/50" />
+    </div>
+
+    <div v-else class="space-y-2">
       <a
-        v-for="(article, i) in articles"
-        :key="article.id"
-        :href="article.url"
+        v-for="(article, i) in displayed"
+        :key="article.link"
+        :href="article.link"
         target="_blank"
         rel="noopener noreferrer"
         class="group flex gap-3 rounded-xl border border-border/30 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-border/60 hover:bg-accent/20 hover:shadow-md active:scale-[0.99]"
@@ -44,7 +51,7 @@ const articles = DUMMY_NEWS.slice(0, 4)
             </Badge>
             <div class="flex items-center gap-1 text-[10px] text-muted-foreground">
               <Clock class="h-2.5 w-2.5" />
-              {{ timeAgo(article.date) }}
+              {{ timeAgo(article.isoDate) }}
             </div>
           </div>
         </div>

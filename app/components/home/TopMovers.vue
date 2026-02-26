@@ -98,7 +98,7 @@ const hoveredIdx = ref<number | null>(null)
 
         <!-- Info -->
         <div class="flex-1 overflow-hidden">
-          <span class="text-sm font-bold">{{ stock.ticker }}</span>
+          <span class="text-sm font-bold">{{ stock.ticker.replace('.JK', '') }}</span>
           <p class="truncate text-[11px] text-muted-foreground">{{ stock.name }}</p>
         </div>
 

@@ -13,7 +13,7 @@ defineProps<{ stock: Stock }>()
       </div>
       <div class="flex-1">
         <div class="flex items-center gap-2">
-          <h1 class="text-2xl font-bold">{{ stock.ticker }}</h1>
+          <h1 class="text-2xl font-bold">{{ stock.ticker.replace('.JK', '') }}</h1>
           <Badge variant="secondary">{{ stock.sector }}</Badge>
         </div>
         <p class="text-sm text-muted-foreground">{{ stock.name }}</p>

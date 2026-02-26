@@ -66,7 +66,7 @@ function getBarWidth(change: number) {
         </div>
 
         <p class="relative mt-1.5 text-[10px] text-muted-foreground">
-          {{ sector.etfTicker }}
+          {{ sector.etfTicker.replace('.JK', '') }}
         </p>
       </button>
     </div>

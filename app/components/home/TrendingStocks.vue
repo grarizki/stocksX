@@ -49,7 +49,7 @@ const isPaused = ref(false)
           <div class="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-bold">
             {{ stock.ticker.slice(0, 2) }}
           </div>
-          <span class="text-xs font-bold">{{ stock.ticker }}</span>
+          <span class="text-xs font-bold">{{ stock.ticker.replace('.JK', '') }}</span>
           <span
             class="rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
             :class="stock.changePercent >= 0

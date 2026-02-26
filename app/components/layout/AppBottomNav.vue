@@ -11,7 +11,6 @@ const navItems = computed(() => [
   { label: t('nav.stocks'), icon: TrendingUp, to: '/stocks' },
   { label: t('nav.news'), icon: Newspaper, to: '/news' },
   { label: t('nav.indicators'), icon: BarChart2, to: '/indicators' },
-  { label: t('nav.broker'), icon: Building2, to: '/stocks/broker' },
 ])
 
 const isActive = (to: string) => {

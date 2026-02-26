@@ -1,31 +1,29 @@
 <script setup lang="ts">
 import { timeAgo } from '@/lib/utils'
-import { DUMMY_NEWS } from '@/data/newsData'
 
-const props = defineProps<{ ticker: string }>()
+defineProps<{ ticker: string }>()
 
-// Filter news relevant to this ticker (by relatedTickers or title mention)
-const tickerCode = computed(() => props.ticker.replace('.JK', ''))
+const { articles, pending, fetchAll } = useNews()
 
-const articles = computed(() =>
-  DUMMY_NEWS.filter(
-    (a) =>
-      a.relatedTickers.includes(props.ticker) ||
-      a.title.includes(tickerCode.value) ||
-      a.summary.includes(tickerCode.value),
-  ).slice(0, 3),
-)
+onMounted(fetchAll)
+
+// Show up to 5 most recent articles (no per-ticker filtering — general economic news)
+const displayed = computed(() => articles.value.slice(0, 5))
 </script>
 
 <template>
   <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
     <h3 class="mb-3 text-sm font-semibold">{{ $t('stock.relatedNews') }}</h3>
 
-    <div v-if="articles.length" class="space-y-3">
+    <div v-if="pending" class="space-y-3">
+      <div v-for="i in 3" :key="i" class="h-12 animate-pulse rounded-lg bg-muted/50" />
+    </div>
+
+    <div v-else-if="displayed.length" class="space-y-3">
       <a
-        v-for="article in articles"
-        :key="article.id"
-        :href="article.url"
+        v-for="article in displayed"
+        :key="article.link"
+        :href="article.link"
         target="_blank"
         rel="noopener noreferrer"
         class="block rounded-lg p-2 transition-colors hover:bg-accent/30"
@@ -33,11 +31,11 @@ const articles = computed(() =>
         <p class="line-clamp-2 text-sm font-medium leading-snug">{{ article.title }}</p>
         <div class="mt-1 flex items-center gap-2">
           <span class="text-[10px] text-muted-foreground">{{ article.source }}</span>
-          <span class="text-[10px] text-muted-foreground">{{ timeAgo(article.date) }}</span>
+          <span class="text-[10px] text-muted-foreground">{{ timeAgo(article.isoDate) }}</span>
         </div>
       </a>
     </div>
 
-    <p v-else class="text-xs text-muted-foreground">No related news found.</p>
+    <p v-else class="text-xs text-muted-foreground">No news available.</p>
   </Card>
 </template>

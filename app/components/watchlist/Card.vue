@@ -15,7 +15,7 @@ defineEmits<{ remove: [ticker: string] }>()
       </div>
       <div class="flex-1 overflow-hidden">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-bold">{{ stock.ticker }}</span>
+          <span class="text-sm font-bold">{{ stock.ticker.replace('.JK', '') }}</span>
         </div>
         <p class="truncate text-xs text-muted-foreground">{{ stock.name }}</p>
       </div>

@@ -9,7 +9,7 @@ const expanded = ref(false)
 
 <template>
   <Card class="backdrop-blur-xl bg-card/80 border border-border/50 p-4">
-    <h3 class="mb-2 text-sm font-semibold">{{ $t('stock.about') }} {{ stock.ticker }}</h3>
+    <h3 class="mb-2 text-sm font-semibold">{{ $t('stock.about') }} {{ stock.ticker.replace('.JK', '') }}</h3>
     <p
       class="text-sm leading-relaxed text-muted-foreground transition-all"
       :class="!expanded && 'line-clamp-3'"

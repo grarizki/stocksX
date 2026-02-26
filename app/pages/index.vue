@@ -224,7 +224,7 @@ onMounted(() => {
                     :class="i === activeRow ? 'bg-accent/50' : ''"
                   >
                     <div class="flex h-6 w-10 shrink-0 items-center justify-center rounded bg-muted/60 text-[9px] font-bold">
-                      {{ stock.ticker }}
+                      {{ stock.ticker.replace('.JK', '') }}
                     </div>
                     <div class="min-w-0 flex-1">
                       <div class="h-2 w-24 rounded bg-foreground/20" />
