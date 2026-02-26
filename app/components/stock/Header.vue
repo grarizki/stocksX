@@ -9,7 +9,7 @@ defineProps<{ stock: Stock }>()
   <div class="space-y-3">
     <div class="flex items-start gap-4">
       <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-sm font-bold">
-        {{ stock.ticker.slice(0, 2) }}
+        {{ stock.ticker.replace('.JK', '') }}
       </div>
       <div class="flex-1">
         <div class="flex items-center gap-2">

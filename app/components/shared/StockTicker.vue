@@ -20,7 +20,7 @@ const props = defineProps<{
     <!-- Info -->
     <div class="flex-1 overflow-hidden">
       <div class="flex items-center gap-2">
-        <span class="text-sm font-bold">{{ stock.ticker }}</span>
+        <span class="text-sm font-bold">{{ stock.ticker.replace('.JK', '') }}</span>
         <Badge v-if="stock.sector" variant="secondary" class="text-[10px] px-1.5 py-0">
           {{ stock.sector }}
         </Badge>

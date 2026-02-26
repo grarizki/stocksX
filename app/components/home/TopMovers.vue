@@ -93,7 +93,7 @@ const hoveredIdx = ref<number | null>(null)
           class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-bold transition-transform duration-200"
           :class="hoveredIdx === i && 'scale-110'"
         >
-          {{ stock.ticker.slice(0, 2) }}
+          {{ stock.ticker.replace('.JK', '') }}
         </div>
 
         <!-- Info -->
