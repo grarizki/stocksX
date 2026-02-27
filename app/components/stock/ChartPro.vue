@@ -27,6 +27,7 @@ import {
   Play,
   X,
   Sparkles,
+  Target,
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -75,7 +76,7 @@ const MA_DEFS: { key: MAKey; period: number; color: string }[] = [
 
 const STRATEGIES: { id: StrategyId; label: string; desc: string }[] = [
   { id: 'ma_cross', label: 'MA Crossover', desc: 'Buy when fast MA crosses above slow MA, sell on cross below' },
-  { id: 'rsi', label: 'RSI Mean Reversion', desc: 'Buy when RSI < 30 (oversold), sell when RSI > 70 (overbought)' },
+  { id: 'rsi', label: 'RSI Mean Reversion', desc: 'Buy when RSI recovers above 30, sell when RSI falls back below 70' },
   { id: 'breakout', label: 'Breakout', desc: 'Buy on N-day high breakout, sell on N-day low breakdown' },
 ]
 
@@ -102,9 +103,31 @@ const btRunning = ref(false)
 const aiExplanation = ref('')
 const aiLoading = ref(false)
 
+type TradeRating = 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell'
+interface TradeSetup {
+  entry: number
+  target: number
+  stopLoss: number
+  rating: TradeRating
+  summary: string
+}
+
+const RATING_CONFIG: Record<TradeRating, { label: string; bg: string; text: string; bar: string; fill: number }> = {
+  strong_buy:  { label: 'Strong Buy',  bg: 'bg-emerald-500/15', text: 'text-emerald-300', bar: 'bg-emerald-400', fill: 100 },
+  buy:         { label: 'Buy',         bg: 'bg-emerald-500/8',  text: 'text-emerald-400', bar: 'bg-emerald-500', fill: 75  },
+  hold:        { label: 'Hold',        bg: 'bg-yellow-500/10',  text: 'text-yellow-300',  bar: 'bg-yellow-400',  fill: 50  },
+  sell:        { label: 'Sell',        bg: 'bg-red-500/8',      text: 'text-red-400',     bar: 'bg-red-500',     fill: 25  },
+  strong_sell: { label: 'Strong Sell', bg: 'bg-red-500/15',     text: 'text-red-300',     bar: 'bg-red-400',     fill: 5   },
+}
+const tradeSetup = ref<TradeSetup | null>(null)
+const setupLoading = ref(false)
+const aiRunning = ref(false)
+const aiRationale = ref('')
+
 // Signal series on chart
 let buySignalSeries: ISeriesApi<'Line'> | null = null
 let sellSignalSeries: ISeriesApi<'Line'> | null = null
+let setupSeries: ISeriesApi<'Line'>[] = []
 
 // DOM refs
 const wrapperEl = ref<HTMLElement | null>(null)
@@ -197,8 +220,8 @@ function runBacktest(): BacktestResult {
     for (let i = 1; i < data.length; i++) {
       const prev = rsi[i - 1], curr = rsi[i]
       if (prev == null || curr == null) continue
-      if (prev >= 30 && curr < 30) signals.push({ idx: i, type: 'buy' })
-      else if (prev <= 70 && curr > 70) signals.push({ idx: i, type: 'sell' })
+      if (prev < 30 && curr >= 30) signals.push({ idx: i, type: 'buy' })
+      else if (prev > 70 && curr <= 70) signals.push({ idx: i, type: 'sell' })
     }
   } else if (selectedStrategy.value === 'breakout') {
     const n = btParams.breakoutPeriod
@@ -338,10 +361,89 @@ function plotSignals(trades: Trade[]) {
   }
 }
 
+function clearSetupSeries() {
+  for (const s of setupSeries) mainChart?.removeSeries(s)
+  setupSeries = []
+  tradeSetup.value = null
+}
+
 function clearBacktest() {
   clearSignalSeries()
+  clearSetupSeries()
   btResult.value = null
   aiExplanation.value = ''
+  aiRationale.value = ''
+}
+
+async function aiRunBacktest() {
+  if (!rawData.value.length) return
+  aiRunning.value = true
+  clearBacktest()
+  try {
+    const sample = rawData.value.slice(-60).map(d => ({
+      time: d.time, open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volume,
+    }))
+    const res = await $fetch<{ strategy: StrategyId; params: Record<string, number>; rationale: string }>('/api/ai/auto-backtest', {
+      method: 'POST',
+      body: { ticker: props.ticker, range: activeRange.value, ohlcvSample: sample },
+    })
+    selectedStrategy.value = res.strategy
+    if (res.strategy === 'ma_cross') {
+      if (res.params.fastMA) btParams.fastMA = res.params.fastMA
+      if (res.params.slowMA) btParams.slowMA = res.params.slowMA
+    } else if (res.strategy === 'rsi') {
+      if (res.params.rsiPeriod) btParams.rsiPeriod = res.params.rsiPeriod
+    } else if (res.strategy === 'breakout') {
+      if (res.params.breakoutPeriod) btParams.breakoutPeriod = res.params.breakoutPeriod
+    }
+    aiRationale.value = res.rationale
+    await nextTick()
+    runBT()
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    aiRationale.value = `Error: ${msg}`
+  } finally {
+    aiRunning.value = false
+  }
+}
+
+async function drawTradeSetup() {
+  if (!btResult.value || !mainChart || !rawData.value.length) return
+  setupLoading.value = true
+  clearSetupSeries()
+  try {
+    const strategyLabel = STRATEGIES.find(s => s.id === selectedStrategy.value)?.label ?? selectedStrategy.value
+    const params: Record<string, number> = {}
+    if (selectedStrategy.value === 'ma_cross') { params.fastMA = btParams.fastMA; params.slowMA = btParams.slowMA }
+    else if (selectedStrategy.value === 'rsi') { params.rsiPeriod = btParams.rsiPeriod }
+    else if (selectedStrategy.value === 'breakout') { params.breakoutPeriod = btParams.breakoutPeriod }
+
+    const setup = await $fetch<TradeSetup>('/api/ai/trade-setup', {
+      method: 'POST',
+      body: { ticker: props.ticker, strategy: strategyLabel, params, range: activeRange.value, result: btResult.value },
+    })
+
+    tradeSetup.value = setup
+
+    const first = rawData.value[0]!
+    const last = rawData.value[rawData.value.length - 1]!
+    const times = [{ time: first.time as UTCTimestamp }, { time: last.time as UTCTimestamp }]
+
+    const entryS = mainChart.addSeries(LineSeries, { color: '#26a69a', lineWidth: 2, lineStyle: 0, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
+    entryS.setData(times.map(t => ({ ...t, value: setup.entry })))
+
+    const targetS = mainChart.addSeries(LineSeries, { color: '#60a5fa', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
+    targetS.setData(times.map(t => ({ ...t, value: setup.target })))
+
+    const stopS = mainChart.addSeries(LineSeries, { color: '#ef5350', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
+    stopS.setData(times.map(t => ({ ...t, value: setup.stopLoss })))
+
+    setupSeries = [entryS, targetS, stopS]
+  } catch {
+    tradeSetup.value = null
+  } finally {
+    setupLoading.value = false
+  }
 }
 
 async function explainWithAI() {
@@ -797,6 +899,23 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
         <!-- Scrollable content -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
 
+          <!-- AI Pick Strategy -->
+          <div>
+            <button
+              class="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 py-2.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 disabled:opacity-40"
+              :disabled="aiRunning || !rawData.length"
+              @click="aiRunBacktest"
+            >
+              <Sparkles class="h-3.5 w-3.5" />
+              {{ aiRunning ? 'Picking strategy…' : 'AI Pick & Run' }}
+            </button>
+            <Transition name="fade">
+              <p v-if="aiRationale" class="mt-2 text-[10px] leading-relaxed text-amber-300/60">{{ aiRationale }}</p>
+            </Transition>
+          </div>
+
+          <div class="h-px bg-white/5" />
+
           <!-- Strategy selector -->
           <div>
             <p class="mb-2 text-[10px] font-semibold uppercase tracking-widest text-white/30">Strategy</p>
@@ -938,6 +1057,69 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              <!-- AI Trade Setup -->
+              <div>
+                <button
+                  class="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/15 disabled:opacity-40"
+                  :disabled="setupLoading"
+                  @click="drawTradeSetup"
+                >
+                  <Target class="h-3.5 w-3.5" />
+                  {{ setupLoading ? 'Analyzing…' : 'AI Trade Setup' }}
+                </button>
+
+                <Transition name="fade">
+                  <div v-if="tradeSetup" class="mt-3 space-y-2">
+                    <!-- Rating badge -->
+                    <div :class="['rounded-lg px-3 py-2.5 flex items-center justify-between', RATING_CONFIG[tradeSetup.rating].bg]">
+                      <span :class="['text-xs font-bold tracking-wide', RATING_CONFIG[tradeSetup.rating].text]">
+                        {{ RATING_CONFIG[tradeSetup.rating].label }}
+                      </span>
+                      <div class="flex items-center gap-1">
+                        <div
+                          v-for="n in 5" :key="n"
+                          class="h-1.5 w-4 rounded-full transition-colors"
+                          :class="n <= Math.round(RATING_CONFIG[tradeSetup.rating].fill / 20) ? RATING_CONFIG[tradeSetup.rating].bar : 'bg-white/10'"
+                        />
+                      </div>
+                    </div>
+                    <!-- Price levels -->
+                    <div class="rounded-lg border border-white/5 bg-white/3 overflow-hidden">
+                      <div class="divide-y divide-white/5">
+                        <div class="flex items-center justify-between px-3 py-2">
+                          <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-[#26a69a]" />
+                            <span class="text-[11px] text-white/50">Entry</span>
+                          </div>
+                          <span class="text-[11px] font-semibold text-white">{{ tradeSetup.entry.toLocaleString() }}</span>
+                        </div>
+                        <div class="flex items-center justify-between px-3 py-2">
+                          <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-[#60a5fa]" />
+                            <span class="text-[11px] text-white/50">Target</span>
+                          </div>
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] text-[#26a69a]">+{{ (((tradeSetup.target - tradeSetup.entry) / tradeSetup.entry) * 100).toFixed(1) }}%</span>
+                            <span class="text-[11px] font-semibold text-white">{{ tradeSetup.target.toLocaleString() }}</span>
+                          </div>
+                        </div>
+                        <div class="flex items-center justify-between px-3 py-2">
+                          <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-[#ef5350]" />
+                            <span class="text-[11px] text-white/50">Stop</span>
+                          </div>
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] text-[#ef5350]">{{ (((tradeSetup.stopLoss - tradeSetup.entry) / tradeSetup.entry) * 100).toFixed(1) }}%</span>
+                            <span class="text-[11px] font-semibold text-white">{{ tradeSetup.stopLoss.toLocaleString() }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="border-t border-white/5 px-3 py-2 text-[10px] leading-relaxed text-white/40">{{ tradeSetup.summary }}</p>
+                    </div>
+                  </div>
+                </Transition>
               </div>
 
               <!-- AI Explain -->

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Eye, EyeOff, Loader2, LogIn } from 'lucide-vue-next'
-import { roleVariant } from '~/composables/useRoleVariant'
+import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'blank' })
 
@@ -18,7 +17,6 @@ const error = ref('')
 const DUMMY_USERS = [
   { email: 'super@stoxlyz.com', password: 'super123', name: 'Super Admin', role: 'superadmin' as const },
   { email: 'admin@stoxlyz.com', password: 'password123', name: 'Admin', role: 'admin' as const },
-  { email: 'demo@stoxlyz.com', password: 'demo123', name: 'Demo User', role: 'user' as const },
 ]
 
 async function handleLogin() {
@@ -37,11 +35,6 @@ async function handleLogin() {
   }
 
   await userStore.setProfile({ name: match.name, email: match.email, role: match.role })
-  navigateTo(localePath('/home'))
-}
-
-async function quickLogin(user: typeof DUMMY_USERS[number]) {
-  await userStore.setProfile({ name: user.name, email: user.email, role: user.role })
   navigateTo(localePath('/home'))
 }
 </script>
@@ -124,40 +117,6 @@ async function quickLogin(user: typeof DUMMY_USERS[number]) {
           {{ $t('auth.register') }}
         </NuxtLink>
       </p>
-
-      <!-- Demo accounts -->
-      <div class="mt-8">
-        <div class="relative mb-4">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-border" />
-          </div>
-          <div class="relative flex justify-center">
-            <span class="bg-background px-3 text-xs text-muted-foreground">{{ $t('auth.demoAccounts') }}</span>
-          </div>
-        </div>
-
-        <div class="space-y-2">
-          <button
-            v-for="user in DUMMY_USERS"
-            :key="user.email"
-            type="button"
-            class="flex w-full items-center gap-3 rounded-lg border border-border/50 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
-            @click="quickLogin(user)"
-          >
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
-              {{ user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }}
-            </div>
-            <div class="flex-1 overflow-hidden">
-              <p class="text-sm font-medium">{{ user.name }}</p>
-              <p class="truncate text-xs text-muted-foreground">{{ user.email }}</p>
-            </div>
-            <Badge :variant="roleVariant(user.role)" class="shrink-0 capitalize text-[10px]">
-              {{ user.role }}
-            </Badge>
-            <LogIn class="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
       </div>
     </div>
   </div>
