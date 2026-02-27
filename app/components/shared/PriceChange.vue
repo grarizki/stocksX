@@ -1,25 +1,28 @@
 <script setup lang="ts">
-import { TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
-import { formatPercent } from '@/lib/utils'
+import { Minus, TrendingDown, TrendingUp } from "lucide-vue-next";
+import { formatPercent } from "@/lib/utils";
 
 const props = defineProps<{
-  change: number
-  changePercent: number
-  showIcon?: boolean
-  size?: 'sm' | 'md' | 'lg'
-}>()
+	change: number;
+	changePercent: number;
+	showIcon?: boolean;
+	size?: "sm" | "md" | "lg";
+}>();
 
-const isPositive = computed(() => props.change > 0)
-const isNegative = computed(() => props.change < 0)
-const isNeutral = computed(() => props.change === 0)
+const isPositive = computed(() => props.change > 0);
+const isNegative = computed(() => props.change < 0);
+const isNeutral = computed(() => props.change === 0);
 
 const sizeClasses = computed(() => {
-  switch (props.size) {
-    case 'lg': return 'text-lg font-bold'
-    case 'sm': return 'text-xs font-medium'
-    default: return 'text-sm font-semibold'
-  }
-})
+	switch (props.size) {
+		case "lg":
+			return "text-lg font-bold";
+		case "sm":
+			return "text-xs font-medium";
+		default:
+			return "text-sm font-semibold";
+	}
+});
 </script>
 
 <template>

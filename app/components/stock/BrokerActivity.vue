@@ -1,315 +1,390 @@
 <script setup lang="ts">
-import { ChevronDown, Calendar } from 'lucide-vue-next'
-import { Line, Bar } from 'vue-chartjs'
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js'
-import { getBrokerActivity, getBrokerTable, getForeignDomestic, BROKER_NAMES } from '@/data/brokerActivity'
-import type { BrokerActivityData, BrokerRow, BrokerTableRow } from '@/data/brokerActivity'
+	BarElement,
+	CategoryScale,
+	Chart as ChartJS,
+	Filler,
+	Legend,
+	LinearScale,
+	LineElement,
+	PointElement,
+	Tooltip,
+} from "chart.js";
+import { Calendar, ChevronDown } from "lucide-vue-next";
+import { Bar, Line } from "vue-chartjs";
+import type {
+	BrokerActivityData,
+	BrokerRow,
+	BrokerTableRow,
+} from "@/data/brokerActivity";
+import {
+	BROKER_NAMES,
+	getBrokerActivity,
+	getBrokerTable,
+	getForeignDomestic,
+} from "@/data/brokerActivity";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler)
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	BarElement,
+	Tooltip,
+	Legend,
+	Filler,
+);
 
-const props = defineProps<{ ticker: string }>()
+const props = defineProps<{ ticker: string }>();
 
-type ViewMode = 'stock' | 'broker'
-const viewMode = ref<ViewMode>('stock')
+type ViewMode = "stock" | "broker";
+const viewMode = ref<ViewMode>("stock");
 
-type DataRange = '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y'
-const DATA_RANGES: DataRange[] = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
+type DataRange = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y";
+const DATA_RANGES: DataRange[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];
 
 // activeDataRange is always a valid DataRange for data functions
-const activeDataRange = ref<DataRange>('1D')
-const showNet = ref(false)
-const showSummary = ref(false)
+const activeDataRange = ref<DataRange>("1D");
+const showNet = ref(false);
+const showSummary = ref(false);
 
 // ── Date range picker ──────────────────────────────────────────
-const TODAY = new Date(2026, 1, 26) // Feb 26 2026 (matches project date)
-const dateRange = ref<{ start: Date; end: Date }>({ start: TODAY, end: TODAY })
-const showCalendar = ref(false)
-const isCustomRange = ref(false)
+const TODAY = new Date(); // Feb 26 2026 (matches project date)
+const dateRange = ref<{ start: Date; end: Date }>({ start: TODAY, end: TODAY });
+const showCalendar = ref(false);
+const isCustomRange = ref(false);
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const PRESETS = computed(() => [
-  { label: t('stock.brokerActivity.presetDay'),    range: '1D'  as DataRange },
-  { label: t('stock.brokerActivity.presetWeek'),   range: '1W'  as DataRange },
-  { label: t('stock.brokerActivity.presetMonth'),  range: '1M'  as DataRange },
-  { label: t('stock.brokerActivity.preset3Month'), range: '3M'  as DataRange },
-  { label: t('stock.brokerActivity.presetYTD'),    range: 'YTD' as DataRange },
-  { label: t('stock.brokerActivity.presetYear'),   range: '1Y'  as DataRange },
-])
+	{ label: t("stock.brokerActivity.presetDay"), range: "1D" as DataRange },
+	{ label: t("stock.brokerActivity.presetWeek"), range: "1W" as DataRange },
+	{ label: t("stock.brokerActivity.presetMonth"), range: "1M" as DataRange },
+	{ label: t("stock.brokerActivity.preset3Month"), range: "3M" as DataRange },
+	{ label: t("stock.brokerActivity.presetYTD"), range: "YTD" as DataRange },
+	{ label: t("stock.brokerActivity.presetYear"), range: "1Y" as DataRange },
+]);
 
 function applyPreset(r: DataRange) {
-  activeDataRange.value = r
-  isCustomRange.value = false
-  showCalendar.value = false
-  const end = new Date(TODAY)
-  const start = new Date(TODAY)
-  if (r === '1W') start.setDate(end.getDate() - 7)
-  else if (r === '1M') start.setMonth(end.getMonth() - 1)
-  else if (r === '3M') start.setMonth(end.getMonth() - 3)
-  else if (r === 'YTD') { start.setMonth(0); start.setDate(1) }
-  else if (r === '1Y') start.setFullYear(end.getFullYear() - 1)
-  dateRange.value = { start, end }
+	activeDataRange.value = r;
+	isCustomRange.value = false;
+	showCalendar.value = false;
+	const end = new Date(TODAY);
+	const start = new Date(TODAY);
+	if (r === "1W") start.setDate(end.getDate() - 7);
+	else if (r === "1M") start.setMonth(end.getMonth() - 1);
+	else if (r === "3M") start.setMonth(end.getMonth() - 3);
+	else if (r === "YTD") {
+		start.setMonth(0);
+		start.setDate(1);
+	} else if (r === "1Y") start.setFullYear(end.getFullYear() - 1);
+	dateRange.value = { start, end };
 }
 
 function onCalendarUpdate(val: { start: Date; end: Date } | null) {
-  if (!val?.start || !val?.end) return
-  dateRange.value = val
-  isCustomRange.value = true
-  const diffDays = Math.round((val.end.getTime() - val.start.getTime()) / 86400000)
-  if (diffDays <= 1) activeDataRange.value = '1D'
-  else if (diffDays <= 7) activeDataRange.value = '1W'
-  else if (diffDays <= 31) activeDataRange.value = '1M'
-  else if (diffDays <= 92) activeDataRange.value = '3M'
-  else activeDataRange.value = '1Y'
+	if (!val?.start || !val?.end) return;
+	dateRange.value = val;
+	isCustomRange.value = true;
+	const diffDays = Math.round(
+		(val.end.getTime() - val.start.getTime()) / 86400000,
+	);
+	if (diffDays <= 1) activeDataRange.value = "1D";
+	else if (diffDays <= 7) activeDataRange.value = "1W";
+	else if (diffDays <= 31) activeDataRange.value = "1M";
+	else if (diffDays <= 92) activeDataRange.value = "3M";
+	else activeDataRange.value = "1Y";
 }
 
 function fmtD(d: Date) {
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mon = d.toLocaleString('en', { month: 'short' })
-  const yy = String(d.getFullYear()).slice(2)
-  return `${dd} ${mon} ${yy}`
+	const dd = String(d.getDate()).padStart(2, "0");
+	const mon = d.toLocaleString("en", { month: "short" });
+	const yy = String(d.getFullYear()).slice(2);
+	return `${dd} ${mon} ${yy}`;
+}
+
+function fmtMonth(d: Date) {
+	const month = d.toLocaleString("en", { month: "short" });
+	const year = d.getFullYear();
+	return `${month} ${year}`;
 }
 
 const dateLabel = computed(() => {
-  if (!isCustomRange.value && activeDataRange.value === '1D') return fmtD(TODAY)
-  return `${fmtD(dateRange.value.start)} → ${fmtD(dateRange.value.end)}`
-})
+	// For single day, show the specific date
+	if (!isCustomRange.value && activeDataRange.value === "1D")
+		return fmtD(TODAY);
+
+	// For ranges, show month name of the end date
+	return fmtMonth(dateRange.value.end);
+});
 
 // ── By-Stock view ──────────────────────────────────────────────
-type SortKey = 'bVal' | 'bLot' | 'bAvg' | 'sVal' | 'sLot' | 'sAvg' | 'netVal'
-type SortDir = 'asc' | 'desc'
-const sortKey = ref<SortKey>('bVal')
-const sortDir = ref<SortDir>('desc')
+type SortKey = "bVal" | "bLot" | "bAvg" | "sVal" | "sLot" | "sAvg" | "netVal";
+type SortDir = "asc" | "desc";
+const sortKey = ref<SortKey>("bVal");
+const sortDir = ref<SortDir>("desc");
 
 function toggleSort(key: SortKey) {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    sortKey.value = key
-    sortDir.value = 'desc'
-  }
+	if (sortKey.value === key) {
+		sortDir.value = sortDir.value === "desc" ? "asc" : "desc";
+	} else {
+		sortKey.value = key;
+		sortDir.value = "desc";
+	}
 }
 
 const data = computed<BrokerActivityData>(() =>
-  getBrokerActivity(props.ticker, activeDataRange.value)
-)
+	getBrokerActivity(props.ticker, activeDataRange.value),
+);
 
 const sortedTable = computed<BrokerRow[]>(() => {
-  return [...data.value.table].sort((a, b) => {
-    const va = a[sortKey.value] as number
-    const vb = b[sortKey.value] as number
-    return sortDir.value === 'desc' ? vb - va : va - vb
-  })
-})
+	return [...data.value.table].sort((a, b) => {
+		const va = a[sortKey.value] as number;
+		const vb = b[sortKey.value] as number;
+		return sortDir.value === "desc" ? vb - va : va - vb;
+	});
+});
 
 const lineChartData = computed(() => {
-  const { brokers, colors, intraday } = data.value
-  const labels = intraday.map(p => p.time as string)
-  const sparseLabels = labels.map((l, i) => (i % 4 === 0 ? l : ''))
-  const datasets = brokers.map((broker, idx) => ({
-    label: broker,
-    data: intraday.map(p => p[broker] as number),
-    borderColor: colors[idx],
-    backgroundColor: colors[idx] + '18',
-    borderWidth: 1.5,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    tension: 0.3,
-    fill: false,
-  }))
-  return { labels: sparseLabels, datasets }
-})
+	const { brokers, colors, intraday } = data.value;
+	const labels = intraday.map((p) => p.time as string);
+	const sparseLabels = labels.map((l, i) => (i % 4 === 0 ? l : ""));
+	const datasets = brokers.map((broker, idx) => ({
+		label: broker,
+		data: intraday.map((p) => p[broker] as number),
+		borderColor: colors[idx],
+		backgroundColor: colors[idx] + "18",
+		borderWidth: 1.5,
+		pointRadius: 0,
+		pointHoverRadius: 4,
+		tension: 0.3,
+		fill: false,
+	}));
+	return { labels: sparseLabels, datasets };
+});
 
 const lineYBounds = computed(() => {
-  const { brokers, intraday } = data.value
-  let max = 0
-  for (const p of intraday) {
-    for (const b of brokers) {
-      const v = Math.abs(p[b] as number)
-      if (v > max) max = v
-    }
-  }
-  const bound = Math.ceil(max * 1.15 * 10) / 10 || 1
-  return { min: -bound, max: bound }
-})
+	const { brokers, intraday } = data.value;
+	let max = 0;
+	for (const p of intraday) {
+		for (const b of brokers) {
+			const v = Math.abs(p[b] as number);
+			if (v > max) max = v;
+		}
+	}
+	const bound = Math.ceil(max * 1.15 * 10) / 10 || 1;
+	return { min: -bound, max: bound };
+});
 
 const lineChartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index' as const, intersect: false },
-  plugins: {
-    legend: {
-      display: true,
-      position: 'top' as const,
-      labels: { color: '#9ca3af', font: { size: 10 }, boxWidth: 10, padding: 8, pointStyle: 'line' as const },
-    },
-    tooltip: {
-      backgroundColor: '#1f2937',
-      titleColor: '#9ca3af',
-      bodyColor: '#d1d5db',
-      padding: 10,
-      callbacks: {
-        label: (ctx: any) => ` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)}B`,
-      },
-    },
-  },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { color: '#6b7280', font: { size: 9 }, maxRotation: 0 },
-    },
-    y: {
-      position: 'left' as const,
-      min: lineYBounds.value.min,
-      max: lineYBounds.value.max,
-      grid: {
-        color: (ctx: any) => ctx.tick.value === 0 ? '#6b728060' : '#1f293733',
-        lineWidth: (ctx: any) => ctx.tick.value === 0 ? 1.5 : 1,
-      },
-      ticks: {
-        color: '#6b7280',
-        font: { size: 9 },
-        callback: (v: any) => `${Number(v).toFixed(1)}B`,
-      },
-    },
-  },
-}))
+	responsive: true,
+	maintainAspectRatio: false,
+	interaction: { mode: "index" as const, intersect: false },
+	plugins: {
+		legend: {
+			display: true,
+			position: "top" as const,
+			labels: {
+				color: "#9ca3af",
+				font: { size: 10 },
+				boxWidth: 10,
+				padding: 8,
+				pointStyle: "line" as const,
+			},
+		},
+		tooltip: {
+			backgroundColor: "#1f2937",
+			titleColor: "#9ca3af",
+			bodyColor: "#d1d5db",
+			padding: 10,
+			callbacks: {
+				label: (ctx: any) =>
+					` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)}B`,
+			},
+		},
+	},
+	scales: {
+		x: {
+			grid: { display: false },
+			ticks: { color: "#6b7280", font: { size: 9 }, maxRotation: 0 },
+		},
+		y: {
+			position: "left" as const,
+			min: lineYBounds.value.min,
+			max: lineYBounds.value.max,
+			grid: {
+				color: (ctx: any) => (ctx.tick.value === 0 ? "#6b728060" : "#1f293733"),
+				lineWidth: (ctx: any) => (ctx.tick.value === 0 ? 1.5 : 1),
+			},
+			ticks: {
+				color: "#6b7280",
+				font: { size: 9 },
+				callback: (v: any) => `${Number(v).toFixed(1)}B`,
+			},
+		},
+	},
+}));
 
-function fmtVal(v: number) { return `${v.toFixed(2)}B` }
-function fmtLot(v: number) { return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v) }
-function fmtPrice(v: number) { return v.toLocaleString() }
+function fmtVal(v: number) {
+	return `${v.toFixed(2)}B`;
+}
+function fmtLot(v: number) {
+	return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v);
+}
+function fmtPrice(v: number) {
+	return v.toLocaleString();
+}
 
 // ── Foreign-Domestic ───────────────────────────────────────────
-type FDMarket = 'Regular' | 'All Market'
-type FDMetric = 'Value' | 'Volume'
-const FD_MARKETS: FDMarket[] = ['Regular', 'All Market']
-const FD_METRICS: FDMetric[] = ['Value', 'Volume']
-const fdMarket = ref<FDMarket>('Regular')
-const fdMetric = ref<FDMetric>('Value')
+type FDMarket = "Regular" | "All Market";
+type FDMetric = "Value" | "Volume";
+const FD_MARKETS: FDMarket[] = ["Regular", "All Market"];
+const FD_METRICS: FDMetric[] = ["Value", "Volume"];
+const fdMarket = ref<FDMarket>("Regular");
+const fdMetric = ref<FDMetric>("Value");
 
-const fdData = computed(() => getForeignDomestic(props.ticker, activeDataRange.value, fdMarket.value))
-const fdIsValue = computed(() => fdMetric.value === 'Value')
+const fdData = computed(() =>
+	getForeignDomestic(props.ticker, activeDataRange.value, fdMarket.value),
+);
+const fdIsValue = computed(() => fdMetric.value === "Value");
 
 function fmtFD(v: number, isValue: boolean) {
-  if (isValue) {
-    const abs = Math.abs(v)
-    if (abs >= 1000) return `${(v / 1000).toFixed(2)} T`
-    if (abs >= 1) return `${v.toFixed(2)} B`
-    return `${(v * 1000).toFixed(0)} M`
-  } else {
-    return `${v.toFixed(2)} M`
-  }
+	if (isValue) {
+		const abs = Math.abs(v);
+		if (abs >= 1000) return `${(v / 1000).toFixed(2)} T`;
+		if (abs >= 1) return `${v.toFixed(2)} B`;
+		return `${(v * 1000).toFixed(0)} M`;
+	} else {
+		return `${v.toFixed(2)} M`;
+	}
 }
 
 const fdBarData = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const raw = isVal
-    ? { fBuy: d.fBuy, fSell: d.fSell, dBuy: d.dBuy, dSell: d.dSell }
-    : { fBuy: d.fBuyVol, fSell: d.fSellVol, dBuy: d.dBuyVol, dSell: d.dSellVol }
-  const scale = isVal && Math.max(raw.fBuy, raw.fSell, raw.dBuy, raw.dSell) >= 1000 ? 1000 : 1
-  const v = (n: number) => parseFloat((n / scale).toFixed(3))
-  return {
-    labels: ['Foreign', 'Domestic'],
-    datasets: [
-      { label: 'Buy',  data: [v(raw.fBuy), v(raw.dBuy)],   backgroundColor: ['#06b6d440', '#7c3aed40'], borderColor: ['#06b6d4', '#7c3aed'], borderWidth: 1.5, borderRadius: 4 },
-      { label: 'Sell', data: [v(raw.fSell), v(raw.dSell)], backgroundColor: ['#06b6d480', '#7c3aed80'], borderColor: ['#06b6d4', '#7c3aed'], borderWidth: 1.5, borderRadius: 4 },
-    ],
-  }
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const raw = isVal
+		? { fBuy: d.fBuy, fSell: d.fSell, dBuy: d.dBuy, dSell: d.dSell }
+		: {
+				fBuy: d.fBuyVol,
+				fSell: d.fSellVol,
+				dBuy: d.dBuyVol,
+				dSell: d.dSellVol,
+			};
+	const scale =
+		isVal && Math.max(raw.fBuy, raw.fSell, raw.dBuy, raw.dSell) >= 1000
+			? 1000
+			: 1;
+	const v = (n: number) => parseFloat((n / scale).toFixed(3));
+	return {
+		labels: ["Foreign", "Domestic"],
+		datasets: [
+			{
+				label: "Buy",
+				data: [v(raw.fBuy), v(raw.dBuy)],
+				backgroundColor: ["#06b6d440", "#7c3aed40"],
+				borderColor: ["#06b6d4", "#7c3aed"],
+				borderWidth: 1.5,
+				borderRadius: 4,
+			},
+			{
+				label: "Sell",
+				data: [v(raw.fSell), v(raw.dSell)],
+				backgroundColor: ["#06b6d480", "#7c3aed80"],
+				borderColor: ["#06b6d4", "#7c3aed"],
+				borderWidth: 1.5,
+				borderRadius: 4,
+			},
+		],
+	};
+});
 
 const fdBarOptions = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const maxVal = isVal
-    ? Math.max(d.fBuy, d.fSell, d.dBuy, d.dSell)
-    : Math.max(d.fBuyVol, d.fSellVol, d.dBuyVol, d.dSellVol)
-  const unit = isVal ? (maxVal >= 1000 ? 'T' : maxVal >= 1 ? 'B' : 'M') : 'M'
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1f2937',
-        titleColor: '#9ca3af',
-        bodyColor: '#d1d5db',
-        callbacks: {
-          label: (ctx: any) => ` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)} ${unit}`,
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } } },
-      y: {
-        grid: { color: '#1f293733' },
-        ticks: {
-          color: '#6b7280',
-          font: { size: 9 },
-          callback: (v: any) => `${Number(v).toFixed(1)}${unit}`,
-        },
-      },
-    },
-  }
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const maxVal = isVal
+		? Math.max(d.fBuy, d.fSell, d.dBuy, d.dSell)
+		: Math.max(d.fBuyVol, d.fSellVol, d.dBuyVol, d.dSellVol);
+	const unit = isVal ? (maxVal >= 1000 ? "T" : maxVal >= 1 ? "B" : "M") : "M";
+	return {
+		responsive: true,
+		maintainAspectRatio: false,
+		plugins: {
+			legend: { display: false },
+			tooltip: {
+				backgroundColor: "#1f2937",
+				titleColor: "#9ca3af",
+				bodyColor: "#d1d5db",
+				callbacks: {
+					label: (ctx: any) =>
+						` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)} ${unit}`,
+				},
+			},
+		},
+		scales: {
+			x: {
+				grid: { display: false },
+				ticks: { color: "#6b7280", font: { size: 10 } },
+			},
+			y: {
+				grid: { color: "#1f293733" },
+				ticks: {
+					color: "#6b7280",
+					font: { size: 9 },
+					callback: (v: any) => `${Number(v).toFixed(1)}${unit}`,
+				},
+			},
+		},
+	};
+});
 
 const fdForeignPct = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol
-  const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol
-  const total = fTotal + dTotal
-  return total > 0 ? ((fTotal / total) * 100).toFixed(2) : '0.00'
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol;
+	const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol;
+	const total = fTotal + dTotal;
+	return total > 0 ? ((fTotal / total) * 100).toFixed(2) : "0.00";
+});
 const fdDomesticPct = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol
-  const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol
-  const total = fTotal + dTotal
-  return total > 0 ? ((dTotal / total) * 100).toFixed(2) : '0.00'
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol;
+	const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol;
+	const total = fTotal + dTotal;
+	return total > 0 ? ((dTotal / total) * 100).toFixed(2) : "0.00";
+});
 
 // ── By-Broker view ─────────────────────────────────────────────
-const BROKER_CODES = Object.keys(BROKER_NAMES)
-const selectedBroker = ref<string>(BROKER_CODES[0] ?? 'YP')
+const BROKER_CODES = Object.keys(BROKER_NAMES);
+const selectedBroker = ref<string>(BROKER_CODES[0] ?? "YP");
 
-type InvestorType = 'All Investor' | 'Foreign' | 'Local'
-type MarketType = 'Regular' | 'Nego' | 'Tunai'
-const investorType = ref<InvestorType>('All Investor')
-const marketType = ref<MarketType>('Regular')
-const showBrokerPicker = ref(false)
-const showInvestorPicker = ref(false)
-const showMarketPicker = ref(false)
-const INVESTOR_TYPES: InvestorType[] = ['All Investor', 'Foreign', 'Local']
-const MARKET_TYPES: MarketType[] = ['Regular', 'Nego', 'Tunai']
+type InvestorType = "All Investor" | "Foreign" | "Local";
+type MarketType = "Regular" | "Nego" | "Tunai";
+const investorType = ref<InvestorType>("All Investor");
+const marketType = ref<MarketType>("Regular");
+const showBrokerPicker = ref(false);
+const showInvestorPicker = ref(false);
+const showMarketPicker = ref(false);
+const INVESTOR_TYPES: InvestorType[] = ["All Investor", "Foreign", "Local"];
+const MARKET_TYPES: MarketType[] = ["Regular", "Nego", "Tunai"];
 
 const brokerRows = computed<BrokerTableRow[]>(() =>
-  getBrokerTable(selectedBroker.value, activeDataRange.value)
-)
+	getBrokerTable(selectedBroker.value, activeDataRange.value),
+);
 
 function fmtBVal(v: number) {
-  if (v === 0) return '-'
-  if (Math.abs(v) >= 1) return `${v.toFixed(1)}B`
-  return `${(v * 1000).toFixed(0)}M`
+	if (v === 0) return "-";
+	if (Math.abs(v) >= 1) return `${v.toFixed(1)}B`;
+	return `${(v * 1000).toFixed(0)}M`;
 }
 function fmtBLot(v: number) {
-  if (v === 0) return '0'
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`
-  return String(v)
+	if (v === 0) return "0";
+	if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+	if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+	return String(v);
 }
-function fmtBAvg(v: number) { return v.toLocaleString('id-ID') }
+function fmtBAvg(v: number) {
+	return v.toLocaleString("id-ID");
+}
 </script>
 
 <template>
@@ -384,22 +459,14 @@ function fmtBAvg(v: number) { return v.toLocaleString('id-ID') }
         >
           <VDatePicker
             v-model.range="dateRange"
-            :columns="2"
+            :columns="1"
             :max-date="TODAY"
             color="blue"
             is-dark
             @update:model-value="onCalendarUpdate"
           />
           <!-- Preset shortcuts -->
-          <div class="grid grid-cols-3 border-t border-border/40">
-            <button
-              v-for="p in PRESETS"
-              :key="p.range"
-              class="px-3 py-2 text-xs font-medium text-emerald-400 transition-colors hover:bg-accent/40 border-border/20"
-              :class="p.range !== 'YTD' && p.range !== '1Y' ? 'border-b' : ''"
-              @click.stop="applyPreset(p.range)"
-            >{{ p.label }}</button>
-          </div>
+
         </div>
       </Transition>
     </div>

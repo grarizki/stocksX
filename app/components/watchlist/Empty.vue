@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Star, Search, StarIcon } from 'lucide-vue-next'
+import { Search, Star, StarIcon } from "lucide-vue-next";
 </script>
 
 <template>

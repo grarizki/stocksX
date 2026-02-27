@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Stock } from '@/data/stocks'
-import { formatNumber } from '@/lib/utils'
+import type { Stock } from "@/data/stocks";
+import { formatNumber } from "@/lib/utils";
 
-defineProps<{ stock: Stock }>()
+defineProps<{ stock: Stock }>();
 </script>
 
 <template>

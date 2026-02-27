@@ -1,68 +1,74 @@
 <script setup lang="ts">
-import { ChevronDown, LineChart } from 'lucide-vue-next'
-import { getBrokerTable, BROKER_NAMES } from '@/data/brokerActivity'
-import type { BrokerTableRow } from '@/data/brokerActivity'
+import { ChevronDown, LineChart } from "lucide-vue-next";
+import type { BrokerTableRow } from "@/data/brokerActivity";
+import { BROKER_NAMES, getBrokerTable } from "@/data/brokerActivity";
 
-useHead({ title: 'Broker Activity - StoxLyz' })
+useHead({ title: "Broker Activity - StoxLyz" });
 
-type Range = '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y'
-const RANGES: Range[] = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
-const activeRange = ref<Range>('1D')
-const showNet = ref(false)
+type Range = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y";
+const RANGES: Range[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];
+const activeRange = ref<Range>("1D");
+const showNet = ref(false);
 
-const BROKER_CODES = Object.keys(BROKER_NAMES)
-const selectedBroker = ref<string>(BROKER_CODES[0] ?? 'YP')
+const BROKER_CODES = Object.keys(BROKER_NAMES);
+const selectedBroker = ref<string>(BROKER_CODES[0] ?? "YP");
 
-type InvestorType = 'All Investor' | 'Foreign' | 'Local'
-type MarketType = 'Regular' | 'Nego' | 'Tunai'
+type InvestorType = "All Investor" | "Foreign" | "Local";
+type MarketType = "Regular" | "Nego" | "Tunai";
 
-const investorType = ref<InvestorType>('All Investor')
-const marketType = ref<MarketType>('Regular')
-const showBrokerPicker = ref(false)
-const showInvestorPicker = ref(false)
-const showMarketPicker = ref(false)
+const investorType = ref<InvestorType>("All Investor");
+const marketType = ref<MarketType>("Regular");
+const showBrokerPicker = ref(false);
+const showInvestorPicker = ref(false);
+const showMarketPicker = ref(false);
 
-const INVESTOR_TYPES: InvestorType[] = ['All Investor', 'Foreign', 'Local']
-const MARKET_TYPES: MarketType[] = ['Regular', 'Nego', 'Tunai']
+const INVESTOR_TYPES: InvestorType[] = ["All Investor", "Foreign", "Local"];
+const MARKET_TYPES: MarketType[] = ["Regular", "Nego", "Tunai"];
 
 const rows = computed<BrokerTableRow[]>(() =>
-  getBrokerTable(selectedBroker.value, activeRange.value)
-)
+	getBrokerTable(selectedBroker.value, activeRange.value),
+);
 
 function fmtVal(v: number) {
-  if (v === 0) return '-'
-  if (Math.abs(v) >= 1) return `${v.toFixed(1)}B`
-  return `${(v * 1000).toFixed(0)}M`
+	if (v === 0) return "-";
+	if (Math.abs(v) >= 1) return `${v.toFixed(1)}B`;
+	return `${(v * 1000).toFixed(0)}M`;
 }
 function fmtLot(v: number) {
-  if (v === 0) return '0'
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`
-  return String(v)
+	if (v === 0) return "0";
+	if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+	if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+	return String(v);
 }
 function fmtAvg(v: number) {
-  return v.toLocaleString('id-ID')
+	return v.toLocaleString("id-ID");
 }
 
 // Compute date range label based on active range
-const today = new Date()
+const today = new Date();
 
 function fmtDate(d: Date) {
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+	return d.toLocaleDateString("en-GB", {
+		day: "2-digit",
+		month: "short",
+		year: "numeric",
+	});
 }
 
 const dateRangeLabel = computed(() => {
-  const end = new Date(today)
-  const start = new Date(today)
-  const r = activeRange.value
-  if (r === '1D') return fmtDate(end)
-  if (r === '1W') start.setDate(end.getDate() - 7)
-  else if (r === '1M') start.setMonth(end.getMonth() - 1)
-  else if (r === '3M') start.setMonth(end.getMonth() - 3)
-  else if (r === 'YTD') { start.setMonth(0); start.setDate(1) }
-  else if (r === '1Y') start.setFullYear(end.getFullYear() - 1)
-  return `${fmtDate(start)} - ${fmtDate(end)}`
-})
+	const end = new Date(today);
+	const start = new Date(today);
+	const r = activeRange.value;
+	if (r === "1D") return fmtDate(end);
+	if (r === "1W") start.setDate(end.getDate() - 7);
+	else if (r === "1M") start.setMonth(end.getMonth() - 1);
+	else if (r === "3M") start.setMonth(end.getMonth() - 3);
+	else if (r === "YTD") {
+		start.setMonth(0);
+		start.setDate(1);
+	} else if (r === "1Y") start.setFullYear(end.getFullYear() - 1);
+	return `${fmtDate(start)} - ${fmtDate(end)}`;
+});
 </script>
 
 <template>

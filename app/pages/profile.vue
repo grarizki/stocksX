@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Mail, LogOut, Settings } from 'lucide-vue-next'
-import { roleVariant } from '~/composables/useRoleVariant'
+import { LogOut, Mail, Settings } from "lucide-vue-next";
+import { roleVariant } from "~/composables/useRoleVariant";
 
-definePageMeta({})
+definePageMeta({});
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('nav.profile')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("nav.profile")} - StoxLyz`) });
 
-const localePath = useLocalePath()
-const userStore = useUserStore()
+const localePath = useLocalePath();
+const userStore = useUserStore();
 
 function handleLogout() {
-  userStore.logout()
-  navigateTo(localePath('/auth/login'))
+	userStore.logout();
+	navigateTo(localePath("/auth/login"));
 }
 </script>
 

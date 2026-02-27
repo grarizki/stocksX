@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { NewsArticle } from '@/composables/useNews'
-import { timeAgo } from '@/lib/utils'
+import type { NewsArticle } from "@/composables/useNews";
+import { timeAgo } from "@/lib/utils";
 
-defineProps<{ article: NewsArticle; index?: number }>()
+defineProps<{ article: NewsArticle; index?: number }>();
 
-const localePath = useLocalePath()
-const loaded = ref(false)
+const localePath = useLocalePath();
+const loaded = ref(false);
 </script>
 
 <template>

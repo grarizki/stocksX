@@ -1,22 +1,39 @@
 <script setup lang="ts">
-import { Shield, Users, TrendingUp, Settings } from 'lucide-vue-next'
-import { roleVariant } from '~/composables/useRoleVariant'
+import { Settings, Shield, TrendingUp, Users } from "lucide-vue-next";
+import { roleVariant } from "~/composables/useRoleVariant";
 
-definePageMeta({ middleware: ['admin'] })
+definePageMeta({ middleware: ["admin"] });
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('admin.title')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("admin.title")} - StoxLyz`) });
 
-const userStore = useUserStore()
+const userStore = useUserStore();
 
 const DUMMY_USERS = [
-  { name: 'Super Admin', email: 'super@stoxlyz.id', role: 'superadmin', status: 'active' },
-  { name: 'Budi Santoso', email: 'budi@stoxlyz.id', role: 'admin', status: 'active' },
-  { name: 'Demo User', email: 'demo@stoxlyz.id', role: 'user', status: 'active' },
-]
+	{
+		name: "Super Admin",
+		email: "super@stoxlyz.id",
+		role: "superadmin",
+		status: "active",
+	},
+	{
+		name: "Budi Santoso",
+		email: "budi@stoxlyz.id",
+		role: "admin",
+		status: "active",
+	},
+	{
+		name: "Demo User",
+		email: "demo@stoxlyz.id",
+		role: "user",
+		status: "active",
+	},
+];
 
-const totalUsers = computed(() => DUMMY_USERS.length)
-const adminRolesCount = computed(() => DUMMY_USERS.filter(u => u.role !== 'user').length)
+const totalUsers = computed(() => DUMMY_USERS.length);
+const adminRolesCount = computed(
+	() => DUMMY_USERS.filter((u) => u.role !== "user").length,
+);
 </script>
 
 <template>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { timeAgo } from '@/lib/utils'
+import { timeAgo } from "@/lib/utils";
 
-defineProps<{ ticker: string }>()
+defineProps<{ ticker: string }>();
 
-const { articles, pending, fetchAll } = useNews()
+const { articles, pending, fetchAll } = useNews();
 
-onMounted(fetchAll)
+onMounted(fetchAll);
 
 // Show up to 5 most recent articles (no per-ticker filtering — general economic news)
-const displayed = computed(() => articles.value.slice(0, 5))
+const displayed = computed(() => articles.value.slice(0, 5));
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ChevronDown } from 'lucide-vue-next'
-import type { Stock } from '@/data/stocks'
+import { ChevronDown } from "lucide-vue-next";
+import type { Stock } from "@/data/stocks";
 
-defineProps<{ stock: Stock }>()
+defineProps<{ stock: Stock }>();
 
-const expanded = ref(false)
+const expanded = ref(false);
 </script>
 
 <template>

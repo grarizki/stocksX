@@ -1,38 +1,48 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight } from "lucide-vue-next";
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('news.title')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("news.title")} - StoxLyz`) });
 
-const { articles, pending, fetchAll } = useNews()
-onMounted(fetchAll)
+const { articles, pending, fetchAll } = useNews();
+onMounted(fetchAll);
 
-const PAGE_SIZE = 10
-const page = ref(1)
+const PAGE_SIZE = 10;
+const page = ref(1);
 
-watch(articles, () => { page.value = 1 })
+watch(articles, () => {
+	page.value = 1;
+});
 
-const featuredIndex = computed(() => articles.value.findIndex(a => !!a.image?.large))
-const featured = computed(() => featuredIndex.value >= 0 ? articles.value[featuredIndex.value] : null)
-const rest = computed(() => articles.value.filter((a, i) => i !== featuredIndex.value && !!a.image?.small))
+const featuredIndex = computed(() =>
+	articles.value.findIndex((a) => !!a.image?.large),
+);
+const featured = computed(() =>
+	featuredIndex.value >= 0 ? articles.value[featuredIndex.value] : null,
+);
+const rest = computed(() =>
+	articles.value.filter(
+		(a, i) => i !== featuredIndex.value && !!a.image?.small,
+	),
+);
 
-const pageCount = computed(() => Math.ceil(rest.value.length / PAGE_SIZE))
+const pageCount = computed(() => Math.ceil(rest.value.length / PAGE_SIZE));
 const paged = computed(() => {
-  const offset = (page.value - 1) * PAGE_SIZE
-  return rest.value.slice(offset, offset + PAGE_SIZE).map((article) => ({
-    article,
-    index: articles.value.indexOf(article),
-  }))
-})
+	const offset = (page.value - 1) * PAGE_SIZE;
+	return rest.value.slice(offset, offset + PAGE_SIZE).map((article) => ({
+		article,
+		index: articles.value.indexOf(article),
+	}));
+});
 
 function prevPage() {
-  page.value--
-  nextTick(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+	page.value--;
+	nextTick(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 
 function nextPage() {
-  page.value++
-  nextTick(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+	page.value++;
+	nextTick(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 </script>
 

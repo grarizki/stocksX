@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { Stock } from '@/data/stocks'
+import type { Stock } from "@/data/stocks";
 
 const props = defineProps<{
-  stock: Stock
-  showPrice?: boolean
-}>()
+	stock: Stock;
+	showPrice?: boolean;
+}>();
 </script>
 
 <template>

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { TrendingUp, TrendingDown, ChevronRight } from 'lucide-vue-next'
-import type { EconomicIndicator } from '@/data/indicators'
-import { INDICATOR_HISTORY } from '@/data/indicatorHistory'
+import { ChevronRight, TrendingDown, TrendingUp } from "lucide-vue-next";
+import { INDICATOR_HISTORY } from "@/data/indicatorHistory";
+import type { EconomicIndicator } from "@/data/indicators";
 
-const props = defineProps<{ indicator: EconomicIndicator }>()
-const localePath = useLocalePath()
+const props = defineProps<{ indicator: EconomicIndicator }>();
+const localePath = useLocalePath();
 
 const sparkValues = computed(
-  () => INDICATOR_HISTORY[props.indicator.id]?.map((h) => h.value) ?? [],
-)
-const isPositive = computed(() => props.indicator.change >= 0)
+	() => INDICATOR_HISTORY[props.indicator.id]?.map((h) => h.value) ?? [],
+);
+const isPositive = computed(() => props.indicator.change >= 0);
 </script>
 
 <template>

@@ -1,37 +1,40 @@
 <script setup lang="ts">
-import { ArrowUpDown } from 'lucide-vue-next'
-import { useWatchlistStore } from '~/stores/watchlist'
-import type { Stock } from '~/data/stocks'
+import { ArrowUpDown } from "lucide-vue-next";
+import type { Stock } from "~/data/stocks";
+import { useWatchlistStore } from "~/stores/watchlist";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-useHead({ title: computed(() => `${t('watchlist.title')} - StoxLyz`) })
+useHead({ title: computed(() => `${t("watchlist.title")} - StoxLyz`) });
 
-const watchlistStore = useWatchlistStore()
+const watchlistStore = useWatchlistStore();
 
-type SortOption = 'default' | 'alpha' | 'change' | 'marketCap'
-const sortBy = ref<SortOption>('default')
+type SortOption = "default" | "alpha" | "change" | "marketCap";
+const sortBy = ref<SortOption>("default");
 
-const tickersQuery = computed(() => watchlistStore.items.join(','))
+const tickersQuery = computed(() => watchlistStore.items.join(","));
 
-const { data: fetchedStocks, status } = useApiFetch<Stock[]>('/api/stocks/quotes', {
-  query: computed(() => ({ tickers: tickersQuery.value })),
-  watch: [tickersQuery],
-})
+const { data: fetchedStocks, status } = useApiFetch<Stock[]>(
+	"/api/stocks/quotes",
+	{
+		query: computed(() => ({ tickers: tickersQuery.value })),
+		watch: [tickersQuery],
+	},
+);
 
 const watchedStocks = computed<Stock[]>(() => {
-  const stocks = fetchedStocks.value ?? []
-  switch (sortBy.value) {
-    case 'alpha':
-      return [...stocks].sort((a, b) => a.ticker.localeCompare(b.ticker))
-    case 'change':
-      return [...stocks].sort((a, b) => b.changePercent - a.changePercent)
-    case 'marketCap':
-      return [...stocks].sort((a, b) => b.marketCap - a.marketCap)
-    default:
-      return stocks
-  }
-})
+	const stocks = fetchedStocks.value ?? [];
+	switch (sortBy.value) {
+		case "alpha":
+			return [...stocks].sort((a, b) => a.ticker.localeCompare(b.ticker));
+		case "change":
+			return [...stocks].sort((a, b) => b.changePercent - a.changePercent);
+		case "marketCap":
+			return [...stocks].sort((a, b) => b.marketCap - a.marketCap);
+		default:
+			return stocks;
+	}
+});
 </script>
 
 <template>

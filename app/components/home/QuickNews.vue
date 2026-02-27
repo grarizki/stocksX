@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ChevronRight, Clock, Newspaper } from 'lucide-vue-next'
-import { timeAgo } from '@/lib/utils'
+import { ChevronRight, Clock, Newspaper } from "lucide-vue-next";
+import { timeAgo } from "@/lib/utils";
 
-const { articles, pending, fetchAll } = useNews()
+const { articles, pending, fetchAll } = useNews();
 
-onMounted(fetchAll)
+onMounted(fetchAll);
 
-const displayed = computed(() => articles.value.slice(0, 4))
+const displayed = computed(() => articles.value.slice(0, 4));
 </script>
 
 <template>

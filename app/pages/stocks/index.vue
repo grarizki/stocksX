@@ -1,98 +1,114 @@
 <script setup lang="ts">
-import { Search, TrendingUp, TrendingDown, Star, StarOff, SlidersHorizontal } from 'lucide-vue-next'
-import type { Stock } from '@/data/stocks'
-import { formatNumber, formatCompact } from '@/lib/utils'
-import { useWatchlistStore } from '~/stores/watchlist'
-import { StarFilledIcon, StarIcon } from '@radix-icons/vue'
+import { StarFilledIcon, StarIcon } from "@radix-icons/vue";
+import {
+	Search,
+	SlidersHorizontal,
+	Star,
+	StarOff,
+	TrendingDown,
+	TrendingUp,
+} from "lucide-vue-next";
+import type { Stock } from "@/data/stocks";
+import { formatCompact, formatNumber } from "@/lib/utils";
+import { useWatchlistStore } from "~/stores/watchlist";
 
-const { t } = useI18n()
-const localePath = useLocalePath()
-useHead({ title: computed(() => `${t('stocks.title')} - StoxLyz`) })
+const { t } = useI18n();
+const localePath = useLocalePath();
+useHead({ title: computed(() => `${t("stocks.title")} - StoxLyz`) });
 
 const SECTOR_ID: Record<string, string> = {
-  'All': 'Semua',
-  'Financials': 'Keuangan',
-  'Infrastructure': 'Infrastruktur',
-  'Consumer Cyclicals': 'Konsumer Siklikal',
-  'Consumer Non-Cyclicals': 'Konsumer Primer',
-  'Technology': 'Teknologi',
-  'Energy': 'Energi',
-  'Basic Materials': 'Material Dasar',
-  'Health Care': 'Kesehatan',
-  'Properties & Real Estate': 'Properti',
-}
+	All: "Semua",
+	Financials: "Keuangan",
+	Infrastructure: "Infrastruktur",
+	"Consumer Cyclicals": "Konsumer Siklikal",
+	"Consumer Non-Cyclicals": "Konsumer Primer",
+	Technology: "Teknologi",
+	Energy: "Energi",
+	"Basic Materials": "Material Dasar",
+	"Health Care": "Kesehatan",
+	"Properties & Real Estate": "Properti",
+};
 
-const watchlistStore = useWatchlistStore()
+const watchlistStore = useWatchlistStore();
 
-const { data: allStocks, status } = useApiFetch<Stock[]>('/api/stocks/quotes')
+const { data: allStocks, status } = useApiFetch<Stock[]>("/api/stocks/quotes");
 
 // Unique sectors from data
 const sectors = computed(() => {
-  const s = new Set(allStocks.value?.map((s) => s.sector) ?? [])
-  return ['All', ...Array.from(s).sort()]
-})
+	const s = new Set(allStocks.value?.map((s) => s.sector) ?? []);
+	return ["All", ...Array.from(s).sort()];
+});
 
-const search = ref('')
-const selectedSector = ref('All')
-type SortKey = 'default' | 'change' | 'price' | 'marketCap' | 'volume'
-const sortBy = ref<SortKey>('default')
+const search = ref("");
+const selectedSector = ref("All");
+type SortKey = "default" | "change" | "price" | "marketCap" | "volume";
+const sortBy = ref<SortKey>("default");
 
-const debouncedSearch = ref('')
-let debounceTimer: ReturnType<typeof setTimeout>
+const debouncedSearch = ref("");
+let debounceTimer: ReturnType<typeof setTimeout>;
 watch(search, (val) => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => { debouncedSearch.value = val.trim() }, 300)
-})
+	clearTimeout(debounceTimer);
+	debounceTimer = setTimeout(() => {
+		debouncedSearch.value = val.trim();
+	}, 300);
+});
 
 // When search has a query, fetch matching stubs from the full 905-stock list
 const { data: searchResults } = useApiFetch<{ ticker: string; name: string }[]>(
-  '/api/stocks/search',
-  {
-    query: computed(() => ({ q: debouncedSearch.value })),
-    watch: [debouncedSearch],
-  },
-)
+	"/api/stocks/search",
+	{
+		query: computed(() => ({ q: debouncedSearch.value })),
+		watch: [debouncedSearch],
+	},
+);
 
-const filtered = computed<(Stock | { ticker: string; name: string; _stub?: true })[]>(() => {
-  const q = debouncedSearch.value.toLowerCase()
+const filtered = computed<
+	(Stock | { ticker: string; name: string; _stub?: true })[]
+>(() => {
+	const q = debouncedSearch.value.toLowerCase();
 
-  if (q) {
-    // Stocks from quotes API that match
-    const liveMatches = (allStocks.value ?? []).filter(
-      (s) => s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
-    )
-    const liveTickerSet = new Set(liveMatches.map((s) => s.ticker))
+	if (q) {
+		// Stocks from quotes API that match
+		const liveMatches = (allStocks.value ?? []).filter(
+			(s) =>
+				s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
+		);
+		const liveTickerSet = new Set(liveMatches.map((s) => s.ticker));
 
-    // Stub entries from full IDX list that aren't in the live set
-    const stubs = (searchResults.value ?? [])
-      .filter((r) => !liveTickerSet.has(r.ticker))
-      .map((r) => ({ ...r, _stub: true as const }))
+		// Stub entries from full IDX list that aren't in the live set
+		const stubs = (searchResults.value ?? [])
+			.filter((r) => !liveTickerSet.has(r.ticker))
+			.map((r) => ({ ...r, _stub: true as const }));
 
-    return [...liveMatches, ...stubs]
-  }
+		return [...liveMatches, ...stubs];
+	}
 
-  let list = allStocks.value ?? []
+	let list = allStocks.value ?? [];
 
-  if (selectedSector.value !== 'All') {
-    list = list.filter((s) => s.sector === selectedSector.value)
-  }
+	if (selectedSector.value !== "All") {
+		list = list.filter((s) => s.sector === selectedSector.value);
+	}
 
-  switch (sortBy.value) {
-    case 'change':
-      return [...list].sort((a, b) => b.changePercent - a.changePercent)
-    case 'price':
-      return [...list].sort((a, b) => b.price - a.price)
-    case 'marketCap':
-      return [...list].sort((a, b) => b.marketCap - a.marketCap)
-    case 'volume':
-      return [...list].sort((a, b) => b.volume - a.volume)
-    default:
-      return list
-  }
-})
+	switch (sortBy.value) {
+		case "change":
+			return [...list].sort((a, b) => b.changePercent - a.changePercent);
+		case "price":
+			return [...list].sort((a, b) => b.price - a.price);
+		case "marketCap":
+			return [...list].sort((a, b) => b.marketCap - a.marketCap);
+		case "volume":
+			return [...list].sort((a, b) => b.volume - a.volume);
+		default:
+			return list;
+	}
+});
 
-const gainers = computed(() => (allStocks.value ?? []).filter((s) => s.changePercent > 0).length)
-const losers = computed(() => (allStocks.value ?? []).filter((s) => s.changePercent < 0).length)
+const gainers = computed(
+	() => (allStocks.value ?? []).filter((s) => s.changePercent > 0).length,
+);
+const losers = computed(
+	() => (allStocks.value ?? []).filter((s) => s.changePercent < 0).length,
+);
 </script>
 
 <template>

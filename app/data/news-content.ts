@@ -1,5 +1,5 @@
 export const newsContent: Record<string, string> = {
-  "news-1": `Indeks Harga Saham Gabungan (IHSG) ditutup menguat 0,45% ke level 7.285,45 pada perdagangan Jumat (14/2/2026). Volume perdagangan tercatat sebesar Rp 12,3 triliun dengan jumlah saham yang diperdagangkan mencapai 15,8 miliar lembar.
+	"news-1": `Indeks Harga Saham Gabungan (IHSG) ditutup menguat 0,45% ke level 7.285,45 pada perdagangan Jumat (14/2/2026). Volume perdagangan tercatat sebesar Rp 12,3 triliun dengan jumlah saham yang diperdagangkan mencapai 15,8 miliar lembar.
 
 Saham-saham perbankan besar menjadi penopang utama kenaikan indeks. BBCA naik 0,78% ke Rp 9.675, sementara BMRI menguat 1,6% ke Rp 6.350. Investor asing tercatat melakukan net buy sebesar Rp 856 miliar di pasar reguler.
 
@@ -9,7 +9,7 @@ Secara sektoral, sektor keuangan memimpin kenaikan dengan apresiasi 0,42%, diiku
 
 Untuk perdagangan pekan depan, analis memproyeksikan IHSG bergerak di rentang 7.200-7.400 dengan potensi pengujian resistance di level 7.350.`,
 
-  "news-2": `PT Adaro Energy Indonesia Tbk (ADRO) melaporkan kinerja keuangan yang solid sepanjang tahun 2025 dengan laba bersih mencapai Rp 18,2 triliun, meningkat 12% secara year-on-year. Pencapaian ini melampaui konsensus analis yang memproyeksikan laba di kisaran Rp 16,5 triliun.
+	"news-2": `PT Adaro Energy Indonesia Tbk (ADRO) melaporkan kinerja keuangan yang solid sepanjang tahun 2025 dengan laba bersih mencapai Rp 18,2 triliun, meningkat 12% secara year-on-year. Pencapaian ini melampaui konsensus analis yang memproyeksikan laba di kisaran Rp 16,5 triliun.
 
 Pendapatan perseroan tercatat sebesar Rp 72,8 triliun, didorong oleh peningkatan volume penjualan batubara sebesar 8% menjadi 62 juta ton. Harga rata-rata penjualan batubara juga relatif stabil di level USD 85 per ton meskipun mengalami tekanan di paruh kedua tahun.
 
@@ -19,7 +19,7 @@ Manajemen mengumumkan pembagian dividen sebesar Rp 250 per saham, setara dengan 
 
 Merespons laporan keuangan ini, beberapa sekuritas menaikkan target harga ADRO. JP Morgan menaikkan target ke Rp 3.400 dari sebelumnya Rp 3.000 dengan rekomendasi overweight.`,
 
-  "news-3": `Bank Indonesia (BI) memutuskan untuk mempertahankan suku bunga acuan BI Rate di level 5,75% pada Rapat Dewan Gubernur (RDG) yang berakhir hari ini. Keputusan ini sesuai dengan ekspektasi pasar, dengan 28 dari 32 ekonom yang disurvei memperkirakan suku bunga ditahan.
+	"news-3": `Bank Indonesia (BI) memutuskan untuk mempertahankan suku bunga acuan BI Rate di level 5,75% pada Rapat Dewan Gubernur (RDG) yang berakhir hari ini. Keputusan ini sesuai dengan ekspektasi pasar, dengan 28 dari 32 ekonom yang disurvei memperkirakan suku bunga ditahan.
 
 Gubernur BI Perry Warjiyo menyatakan bahwa keputusan ini diambil untuk menjaga stabilitas nilai tukar rupiah di tengah ketidakpastian global. "Kami melihat ruang untuk pelonggaran kebijakan moneter ke depan seiring terkendalinya inflasi dan stabilnya rupiah," ujar Perry dalam konferensi pers.
 
@@ -29,7 +29,7 @@ Pasar merespons positif sinyal dovish dari BI. Yield Surat Berharga Negara (SBN)
 
 Ekonom Bank Mandiri memproyeksikan BI akan memangkas suku bunga sebesar 25 basis poin menjadi 5,50% pada RDG Maret 2026, dengan total pemangkasan 75 basis poin sepanjang 2026.`,
 
-  "news-4": `Saham-saham emiten tambang emas di Bursa Efek Indonesia (BEI) mengalami penguatan signifikan pada perdagangan Rabu (12/2/2026). ANTM naik 2,54% ke Rp 1.415 sementara MDKA melesat 2,16% ke Rp 2.370.
+	"news-4": `Saham-saham emiten tambang emas di Bursa Efek Indonesia (BEI) mengalami penguatan signifikan pada perdagangan Rabu (12/2/2026). ANTM naik 2,54% ke Rp 1.415 sementara MDKA melesat 2,16% ke Rp 2.370.
 
 Penguatan ini terjadi seiring kenaikan harga emas dunia yang menyentuh level USD 2.180 per troy ounce, didorong oleh meningkatnya permintaan safe haven di tengah ketegangan geopolitik dan ekspektasi pemangkasan suku bunga oleh bank sentral global.
 
@@ -39,7 +39,7 @@ ANTM sebagai produsen emas terbesar di Indonesia diperkirakan akan mendapat damp
 
 Sementara itu, MDKA terus mengembangkan proyek tambang emas dan tembaga di Pani, Gorontalo, yang diperkirakan akan mulai berproduksi secara komersial pada kuartal IV 2026.`,
 
-  "news-5": `Badan Pusat Statistik (BPS) melaporkan inflasi Januari 2026 sebesar 2,68% year-on-year (YoY), lebih rendah dari 2,81% pada Desember 2025. Secara month-on-month, inflasi tercatat sebesar 0,45%.
+	"news-5": `Badan Pusat Statistik (BPS) melaporkan inflasi Januari 2026 sebesar 2,68% year-on-year (YoY), lebih rendah dari 2,81% pada Desember 2025. Secara month-on-month, inflasi tercatat sebesar 0,45%.
 
 Kepala BPS menyampaikan bahwa komponen bahan pangan menjadi penyumbang utama inflasi dengan kontribusi sebesar 0,28 persentase poin. Harga beras, cabai, dan telur ayam masih menjadi pendorong utama inflasi pangan.
 
@@ -49,7 +49,7 @@ Kelompok transportasi mencatat deflasi 0,12% MoM seiring penurunan harga tiket p
 
 Pemerintah menargetkan inflasi 2026 berada di kisaran 1,5-3,5%, sejalan dengan target Bank Indonesia. Dengan tren inflasi yang menurun, konsensus ekonom memperkirakan inflasi akhir tahun 2026 akan berada di level 2,8-3,0%.`,
 
-  "news-6": `PT Bank Rakyat Indonesia Tbk (BBRI) menargetkan pertumbuhan kredit sebesar 10-12% pada tahun 2026, naik dari realisasi pertumbuhan 9,5% di 2025. Target ini sejalan dengan upaya perseroan memperkuat posisinya sebagai bank UMKM terbesar di Indonesia.
+	"news-6": `PT Bank Rakyat Indonesia Tbk (BBRI) menargetkan pertumbuhan kredit sebesar 10-12% pada tahun 2026, naik dari realisasi pertumbuhan 9,5% di 2025. Target ini sejalan dengan upaya perseroan memperkuat posisinya sebagai bank UMKM terbesar di Indonesia.
 
 Direktur Utama BBRI menyampaikan bahwa segmen mikro dan ultra mikro akan menjadi pendorong utama pertumbuhan kredit. "Kami menargetkan penyaluran KUR sebesar Rp 280 triliun pada 2026, naik dari Rp 260 triliun di tahun lalu," ujarnya.
 
@@ -59,7 +59,7 @@ Terkait digitalisasi, BBRI mencatat transaksi melalui platform BRImo mencapai 5,
 
 Dari sisi pendanaan, BBRI menargetkan pertumbuhan DPK sebesar 8-10% dengan komposisi CASA (Current Account Saving Account) di atas 65% untuk menjaga cost of fund tetap efisien.`,
 
-  "news-7": `Nilai tukar rupiah terhadap dolar AS tercatat stabil di kisaran Rp 15.830 per USD pada perdagangan Selasa (11/2/2026). Stabilitas rupiah ditopang oleh surplus neraca perdagangan dan intervensi Bank Indonesia di pasar valas.
+	"news-7": `Nilai tukar rupiah terhadap dolar AS tercatat stabil di kisaran Rp 15.830 per USD pada perdagangan Selasa (11/2/2026). Stabilitas rupiah ditopang oleh surplus neraca perdagangan dan intervensi Bank Indonesia di pasar valas.
 
 Bank Indonesia melaporkan posisi cadangan devisa pada akhir Januari 2026 mencapai USD 139,5 miliar, naik dari USD 138,2 miliar di bulan sebelumnya. Kenaikan ini didorong oleh penerimaan devisa dari ekspor dan penerbitan sukuk global.
 
@@ -69,7 +69,7 @@ Di pasar global, indeks dolar AS (DXY) tercatat melemah 0,3% ke level 103,5 seir
 
 Analis memproyeksikan rupiah akan bergerak di kisaran Rp 15.600-16.000 per USD sepanjang 2026, dengan potensi penguatan di semester kedua seiring arus masuk modal asing yang meningkat.`,
 
-  "news-8": `PT Telkom Indonesia Tbk (TLKM) mengumumkan rencana spin-off unit bisnis data center yang dikelola oleh anak usahanya, Telkom Data Ekosistem. Rencana ini disambut positif oleh pasar dengan saham TLKM menguat 2% pada perdagangan sesi pertama.
+	"news-8": `PT Telkom Indonesia Tbk (TLKM) mengumumkan rencana spin-off unit bisnis data center yang dikelola oleh anak usahanya, Telkom Data Ekosistem. Rencana ini disambut positif oleh pasar dengan saham TLKM menguat 2% pada perdagangan sesi pertama.
 
 Direktur Utama TLKM menyampaikan bahwa spin-off ini bertujuan untuk mengoptimalkan valuasi aset digital perusahaan. "Bisnis data center kami tumbuh 35% year-on-year dan kami melihat potensi besar seiring percepatan transformasi digital di Indonesia," ujarnya.
 
@@ -79,7 +79,7 @@ Analis dari Goldman Sachs menilai bahwa spin-off data center berpotensi membuka 
 
 Rencana spin-off ini masih dalam tahap studi kelayakan dan diperkirakan akan rampung pada semester kedua 2026, dengan kemungkinan IPO entitas baru pada 2027.`,
 
-  "news-9": `Investor asing tercatat melakukan aksi jual bersih (net sell) sebesar Rp 2,3 triliun di pasar saham Indonesia sepanjang bulan Februari 2026 hingga tanggal 14. Angka ini meningkat dari net sell Rp 1,8 triliun pada bulan Januari.
+	"news-9": `Investor asing tercatat melakukan aksi jual bersih (net sell) sebesar Rp 2,3 triliun di pasar saham Indonesia sepanjang bulan Februari 2026 hingga tanggal 14. Angka ini meningkat dari net sell Rp 1,8 triliun pada bulan Januari.
 
 Berdasarkan data Bursa Efek Indonesia, saham-saham sektor konsumer menjadi yang paling banyak dilepas oleh investor asing. UNVR mencatat net foreign sell terbesar sebesar Rp 450 miliar, diikuti oleh ICBP sebesar Rp 280 miliar dan HMSP sebesar Rp 210 miliar.
 
@@ -89,7 +89,7 @@ Di sisi lain, beberapa saham justru mencatat net foreign buy. ADRO menjadi saham
 
 Secara historis, arus keluar modal asing di awal tahun sering kali bersifat sementara dan cenderung berbalik positif di semester kedua seiring membaiknya sentimen global.`,
 
-  "news-10": `PT Elang Mahkota Teknologi Tbk (EMTK) mengumumkan akuisisi 65% saham platform fintech lending dengan nilai transaksi sebesar Rp 1,2 triliun. Akuisisi ini diharapkan memperkuat ekosistem digital perusahaan yang mencakup media, e-commerce, dan kini layanan keuangan.
+	"news-10": `PT Elang Mahkota Teknologi Tbk (EMTK) mengumumkan akuisisi 65% saham platform fintech lending dengan nilai transaksi sebesar Rp 1,2 triliun. Akuisisi ini diharapkan memperkuat ekosistem digital perusahaan yang mencakup media, e-commerce, dan kini layanan keuangan.
 
 CEO EMTK menyampaikan bahwa akuisisi ini sejalan dengan strategi perusahaan untuk membangun super-app ecosystem. "Dengan mengintegrasikan layanan fintech ke dalam ekosistem kami, kami dapat menawarkan pengalaman yang lebih komprehensif kepada pengguna," ujarnya.
 
@@ -99,7 +99,7 @@ Analis memproyeksikan bahwa akuisisi ini akan memberikan kontribusi pendapatan t
 
 Saham EMTK merespons positif pengumuman ini dengan kenaikan 2,35% ke Rp 4.350. Beberapa broker menaikkan rekomendasi menjadi buy dengan target harga Rp 5.000.`,
 
-  "news-11": `Bagi investor pemula, memahami rasio valuasi saham merupakan langkah fundamental dalam analisis investasi. Dua rasio yang paling umum digunakan adalah Price-to-Earnings (P/E) dan Price-to-Book Value (PBV).
+	"news-11": `Bagi investor pemula, memahami rasio valuasi saham merupakan langkah fundamental dalam analisis investasi. Dua rasio yang paling umum digunakan adalah Price-to-Earnings (P/E) dan Price-to-Book Value (PBV).
 
 Rasio P/E menunjukkan berapa kali lipat harga saham terhadap laba per saham (EPS). Sebagai contoh, jika saham BBCA memiliki P/E 26x, artinya investor membayar Rp 26 untuk setiap Rp 1 laba yang dihasilkan perusahaan. P/E yang tinggi bisa menunjukkan ekspektasi pertumbuhan yang tinggi, namun juga bisa berarti saham sudah mahal.
 
@@ -109,7 +109,7 @@ Penting untuk membandingkan rasio valuasi antar perusahaan dalam sektor yang sam
 
 Selain P/E dan PBV, investor juga perlu memperhatikan rasio lain seperti dividend yield, ROE, dan debt-to-equity ratio untuk mendapatkan gambaran valuasi yang lebih komprehensif sebelum mengambil keputusan investasi.`,
 
-  "news-12": `Badan Pusat Statistik (BPS) melaporkan neraca perdagangan Indonesia pada Januari 2026 mencatat surplus sebesar USD 3,56 miliar, meningkat dari surplus USD 2,89 miliar pada bulan sebelumnya. Indonesia telah mencatat surplus perdagangan selama 46 bulan berturut-turut.
+	"news-12": `Badan Pusat Statistik (BPS) melaporkan neraca perdagangan Indonesia pada Januari 2026 mencatat surplus sebesar USD 3,56 miliar, meningkat dari surplus USD 2,89 miliar pada bulan sebelumnya. Indonesia telah mencatat surplus perdagangan selama 46 bulan berturut-turut.
 
 Ekspor Januari 2026 tercatat sebesar USD 23,8 miliar, naik 8,5% year-on-year. Kenaikan ekspor didorong oleh peningkatan harga dan volume ekspor komoditas utama. Ekspor minyak kelapa sawit (CPO) melonjak 15% menjadi USD 3,2 miliar seiring kenaikan harga CPO di pasar global.
 
@@ -119,7 +119,7 @@ Menteri Perdagangan menyatakan optimis surplus perdagangan akan terus berlanjut 
 
 Surplus perdagangan yang solid memberikan dukungan positif bagi stabilitas rupiah dan cadangan devisa. Analis memperkirakan surplus perdagangan kumulatif 2026 akan mencapai USD 35-40 miliar.`,
 
-  "news-13": `PT Indofood CBP Sukses Makmur Tbk (ICBP) mengumumkan rencana ekspansi signifikan di benua Afrika dengan menggandakan kapasitas produksi pabrik mi instan di Nigeria dan Kenya. Total investasi diperkirakan mencapai USD 200 juta yang akan dilakukan secara bertahap selama 2026-2028.
+	"news-13": `PT Indofood CBP Sukses Makmur Tbk (ICBP) mengumumkan rencana ekspansi signifikan di benua Afrika dengan menggandakan kapasitas produksi pabrik mi instan di Nigeria dan Kenya. Total investasi diperkirakan mencapai USD 200 juta yang akan dilakukan secara bertahap selama 2026-2028.
 
 Presiden Direktur ICBP menyampaikan bahwa ekspansi ini merespons pertumbuhan permintaan yang kuat di pasar Afrika. "Penjualan Indomie di Afrika tumbuh rata-rata 20% per tahun dalam tiga tahun terakhir. Afrika adalah mesin pertumbuhan baru kami," ujarnya.
 
@@ -129,7 +129,7 @@ Analis dari Credit Suisse menilai ekspansi ini sebagai langkah strategis yang ak
 
 Saham ICBP menguat 1,54% ke Rp 11.525 merespons pengumuman ini. Target harga konsensus analis untuk ICBP berada di Rp 13.000 dengan rekomendasi mayoritas buy.`,
 
-  "news-14": `Dollar Cost Averaging (DCA) adalah strategi investasi di mana investor menanamkan jumlah uang yang tetap secara berkala, terlepas dari kondisi pasar. Strategi ini sangat populer di kalangan investor ritel karena kesederhanaan dan efektivitasnya.
+	"news-14": `Dollar Cost Averaging (DCA) adalah strategi investasi di mana investor menanamkan jumlah uang yang tetap secara berkala, terlepas dari kondisi pasar. Strategi ini sangat populer di kalangan investor ritel karena kesederhanaan dan efektivitasnya.
 
 Konsep DCA sederhana: misalnya, Anda menginvestasikan Rp 1 juta setiap bulan ke saham BBCA. Ketika harga turun, Anda mendapatkan lebih banyak lembar saham; ketika harga naik, Anda mendapatkan lebih sedikit. Hasilnya, harga rata-rata pembelian Anda cenderung lebih rendah dari harga rata-rata pasar.
 
@@ -139,7 +139,7 @@ Namun, DCA juga memiliki kelemahan. Dalam kondisi pasar yang terus naik (bull ma
 
 Untuk memulai DCA, investor bisa memanfaatkan fitur recurring investment yang tersedia di berbagai platform sekuritas online di Indonesia. Mulailah dengan saham-saham blue chip yang memiliki fundamental kuat dan likuiditas tinggi.`,
 
-  "news-15": `Sektor energi menjadi bintang di perdagangan hari ini dengan indeks sektoral menguat 1,25%, memimpin penguatan di antara 11 sektor di Bursa Efek Indonesia. Kenaikan ini didorong oleh penguatan harga batu bara acuan Newcastle yang naik 3% ke level USD 135 per ton.
+	"news-15": `Sektor energi menjadi bintang di perdagangan hari ini dengan indeks sektoral menguat 1,25%, memimpin penguatan di antara 11 sektor di Bursa Efek Indonesia. Kenaikan ini didorong oleh penguatan harga batu bara acuan Newcastle yang naik 3% ke level USD 135 per ton.
 
 Saham-saham emiten batu bara mencatat penguatan signifikan. ADRO naik 2,12% ke Rp 2.890, PTBA menguat 1,11% ke Rp 2.730, sementara ITMG naik 1,85%. Volume perdagangan di sektor energi meningkat 45% di atas rata-rata 20 hari.
 
@@ -149,7 +149,7 @@ Analis dari Macquarie memperkirakan harga batu bara akan bertahan di level USD 1
 
 Dengan harga batu bara yang solid, emiten batu bara Indonesia diperkirakan akan kembali membagikan dividen yang atraktif pada 2026, dengan yield potensial di kisaran 7-10%.`,
 
-  "news-16": `PT Bank Syariah Indonesia Tbk (BRIS) membukukan kinerja impresif dengan pertumbuhan pembiayaan sebesar 18% year-on-year (YoY) pada 2025, mencapai Rp 265 triliun. Pencapaian ini menjadikan BRIS sebagai bank dengan pertumbuhan pembiayaan tertinggi di industri perbankan nasional.
+	"news-16": `PT Bank Syariah Indonesia Tbk (BRIS) membukukan kinerja impresif dengan pertumbuhan pembiayaan sebesar 18% year-on-year (YoY) pada 2025, mencapai Rp 265 triliun. Pencapaian ini menjadikan BRIS sebagai bank dengan pertumbuhan pembiayaan tertinggi di industri perbankan nasional.
 
 Direktur Utama BRIS menyampaikan bahwa pertumbuhan didorong oleh segmen konsumer dan komersial. "Pembiayaan perumahan syariah tumbuh 25% seiring meningkatnya awareness masyarakat terhadap produk keuangan syariah," ujarnya.
 
@@ -159,7 +159,7 @@ Kualitas aset tetap terjaga dengan NPF (Non-Performing Financing) gross di level
 
 Market share BRIS di industri perbankan syariah terus meningkat dan kini mencapai 32%, memperkuat posisinya sebagai bank syariah terbesar di Indonesia.`,
 
-  "news-17": `Badan Pusat Statistik (BPS) melaporkan pertumbuhan ekonomi Indonesia pada kuartal IV 2025 sebesar 5,05% year-on-year (YoY), sedikit melambat dari 5,11% di kuartal III 2025. Secara kumulatif, ekonomi Indonesia tumbuh 5,08% sepanjang 2025.
+	"news-17": `Badan Pusat Statistik (BPS) melaporkan pertumbuhan ekonomi Indonesia pada kuartal IV 2025 sebesar 5,05% year-on-year (YoY), sedikit melambat dari 5,11% di kuartal III 2025. Secara kumulatif, ekonomi Indonesia tumbuh 5,08% sepanjang 2025.
 
 Konsumsi rumah tangga yang berkontribusi sekitar 53% terhadap PDB tumbuh 4,92% YoY, didorong oleh peningkatan daya beli masyarakat dan pertumbuhan kelas menengah. Investasi (PMTB) tumbuh 4,78%, sedikit melambat dari kuartal sebelumnya.
 

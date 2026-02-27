@@ -1,80 +1,130 @@
 <script setup lang="ts">
-import { TrendingUp, Sparkles, Newspaper, Bell, ArrowRight, ChevronRight, Star, Users, Zap, ArrowUp, Sun, Moon, StarIcon } from 'lucide-vue-next'
+import {
+	ArrowRight,
+	ArrowUp,
+	Bell,
+	ChevronRight,
+	Moon,
+	Newspaper,
+	Sparkles,
+	Star,
+	StarIcon,
+	Sun,
+	TrendingUp,
+	Users,
+	Zap,
+} from "lucide-vue-next";
 
-definePageMeta({ layout: 'blank' })
+definePageMeta({ layout: "blank" });
 
-useHead({ title: 'StoxLyz — Indonesian Stock Market Intelligence' })
+useHead({ title: "StoxLyz — Indonesian Stock Market Intelligence" });
 
-const { t } = useI18n()
-const localePath = useLocalePath()
-const userStore = useUserStore()
-const colorMode = useColorMode()
+const { t } = useI18n();
+const localePath = useLocalePath();
+const userStore = useUserStore();
+const colorMode = useColorMode();
 function toggleColorMode() {
-  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+	colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
 }
 
 const features = computed(() => [
-  { icon: TrendingUp, title: t('landing.feature1Title'), desc: t('landing.feature1Desc') },
-  { icon: Sparkles,   title: t('landing.feature2Title'), desc: t('landing.feature2Desc') },
-  { icon: Newspaper,  title: t('landing.feature3Title'), desc: t('landing.feature3Desc') },
-  { icon: Bell,       title: t('landing.feature4Title'), desc: t('landing.feature4Desc') },
-])
+	{
+		icon: TrendingUp,
+		title: t("landing.feature1Title"),
+		desc: t("landing.feature1Desc"),
+	},
+	{
+		icon: Sparkles,
+		title: t("landing.feature2Title"),
+		desc: t("landing.feature2Desc"),
+	},
+	{
+		icon: Newspaper,
+		title: t("landing.feature3Title"),
+		desc: t("landing.feature3Desc"),
+	},
+	{
+		icon: Bell,
+		title: t("landing.feature4Title"),
+		desc: t("landing.feature4Desc"),
+	},
+]);
 
 const stats = computed(() => [
-  { value: '700+', label: t('landing.stat1Label') },
-  { value: '12k+', label: t('landing.stat2Label') },
-  { value: '24/7', label: t('landing.stat3Label') },
-])
+	{ value: "700+", label: t("landing.stat1Label") },
+	{ value: "12k+", label: t("landing.stat2Label") },
+	{ value: "24/7", label: t("landing.stat3Label") },
+]);
 
 const marketCards = [
-  { ticker: 'IHSG', price: '7,421.83', change: '+1.24%', gain: true },
-  { ticker: 'LQ45', price: '912.45', change: '+0.87%', gain: true },
-  { ticker: 'IDX30', price: '486.20', change: '-0.31%', gain: false },
-]
+	{ ticker: "IHSG", price: "7,421.83", change: "+1.24%", gain: true },
+	{ ticker: "LQ45", price: "912.45", change: "+0.87%", gain: true },
+	{ ticker: "IDX30", price: "486.20", change: "-0.31%", gain: false },
+];
 
 const trendingStocks = [
-  { ticker: 'BBCA', change: '+2.14%', gain: true, sparkline: '0,20 8,14 16,18 24,10 32,15 40,8 48,12 56,4' },
-  { ticker: 'TLKM', change: '-0.95%', gain: false, sparkline: '0,4 8,8 16,5 24,12 32,9 40,16 48,14 56,20' },
-  { ticker: 'ASII', change: '+1.60%', gain: true, sparkline: '0,18 8,16 16,12 24,14 32,8 40,10 48,6 56,4' },
-  { ticker: 'BBRI', change: '+0.73%', gain: true, sparkline: '0,20 8,16 16,20 24,12 32,16 40,10 48,8 56,4' },
-]
+	{
+		ticker: "BBCA",
+		change: "+2.14%",
+		gain: true,
+		sparkline: "0,20 8,14 16,18 24,10 32,15 40,8 48,12 56,4",
+	},
+	{
+		ticker: "TLKM",
+		change: "-0.95%",
+		gain: false,
+		sparkline: "0,4 8,8 16,5 24,12 32,9 40,16 48,14 56,20",
+	},
+	{
+		ticker: "ASII",
+		change: "+1.60%",
+		gain: true,
+		sparkline: "0,18 8,16 16,12 24,14 32,8 40,10 48,6 56,4",
+	},
+	{
+		ticker: "BBRI",
+		change: "+0.73%",
+		gain: true,
+		sparkline: "0,20 8,16 16,20 24,12 32,16 40,10 48,8 56,4",
+	},
+];
 
-const newsItems = [75, 55, 85, 60]
+const newsItems = [75, 55, 85, 60];
 
-const showScrollTop = ref(false)
+const showScrollTop = ref(false);
 
 function onScroll() {
-  showScrollTop.value = window.scrollY > window.innerHeight * 0.8
+	showScrollTop.value = window.scrollY > window.innerHeight * 0.8;
 }
 
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+	window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-const activeRow = ref(0)
+const activeRow = ref(0);
 
-const animatedCount = ref(0)
+const animatedCount = ref(0);
 
 onMounted(() => {
-  const target = 12450
-  const step = Math.ceil(target / 60)
-  const countInterval = setInterval(() => {
-    animatedCount.value = Math.min(animatedCount.value + step, target)
-    if (animatedCount.value >= target) clearInterval(countInterval)
-  }, 16)
+	const target = 12450;
+	const step = Math.ceil(target / 60);
+	const countInterval = setInterval(() => {
+		animatedCount.value = Math.min(animatedCount.value + step, target);
+		if (animatedCount.value >= target) clearInterval(countInterval);
+	}, 16);
 
-  const rowInterval = setInterval(() => {
-    activeRow.value = (activeRow.value + 1) % trendingStocks.length
-  }, 1200)
+	const rowInterval = setInterval(() => {
+		activeRow.value = (activeRow.value + 1) % trendingStocks.length;
+	}, 1200);
 
-  window.addEventListener('scroll', onScroll, { passive: true })
+	window.addEventListener("scroll", onScroll, { passive: true });
 
-  onUnmounted(() => {
-    clearInterval(countInterval)
-    clearInterval(rowInterval)
-    window.removeEventListener('scroll', onScroll)
-  })
-})
+	onUnmounted(() => {
+		clearInterval(countInterval);
+		clearInterval(rowInterval);
+		window.removeEventListener("scroll", onScroll);
+	});
+});
 </script>
 
 <template>

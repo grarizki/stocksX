@@ -1,165 +1,181 @@
 <script setup lang="ts">
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  type ChartData,
-  type ChartOptions,
-} from 'chart.js'
-import { Line } from 'vue-chartjs'
+	CategoryScale,
+	type ChartData,
+	Chart as ChartJS,
+	type ChartOptions,
+	Filler,
+	LinearScale,
+	LineElement,
+	PointElement,
+	Tooltip,
+} from "chart.js";
+import { Line } from "vue-chartjs";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	Filler,
+	Tooltip,
+);
 
 const props = defineProps<{
-  ticker: string
-  price: number
-}>()
+	ticker: string;
+	price: number;
+}>();
 
 function seededRand(seed: number) {
-  let s = seed
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff
-    return (s >>> 0) / 0xffffffff
-  }
+	let s = seed;
+	return () => {
+		s = (s * 1664525 + 1013904223) & 0xffffffff;
+		return (s >>> 0) / 0xffffffff;
+	};
 }
 
-const tickerSeed = props.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+const tickerSeed = props.ticker
+	.split("")
+	.reduce((a, c) => a + c.charCodeAt(0), 0);
 
 function tickSize(p: number): number {
-  if (p < 200)  return 1
-  if (p < 500)  return 2
-  if (p < 2000) return 5
-  if (p < 5000) return 10
-  return 25
+	if (p < 200) return 1;
+	if (p < 500) return 2;
+	if (p < 2000) return 5;
+	if (p < 5000) return 10;
+	return 25;
 }
 
-type View = 'chart' | 'time' | 'price'
-const activeView = ref<View>('chart')
+type View = "chart" | "time" | "price";
+const activeView = ref<View>("chart");
 
 // ── Price view ────────────────────────────────────────────────────────────────
 type TradeRow = {
-  price: number
-  tLot: number
-  tFreq: number
-  bLot: number
-  sLot: number
-  bFreq: number
-  sFreq: number
-}
+	price: number;
+	tLot: number;
+	tFreq: number;
+	bLot: number;
+	sLot: number;
+	bFreq: number;
+	sFreq: number;
+};
 
 const tradeByPrice = computed<TradeRow[]>(() => {
-  const rand = seededRand(tickerSeed + 99)
-  const tick = tickSize(props.price)
-  return Array.from({ length: 16 }, (_, i) => {
-    const offset = (8 - i) * tick
-    const p = props.price + offset
-    const tLot  = Math.round((rand() * 10000 + 100) / (Math.abs(offset / tick) + 1))
-    const bLot  = Math.round(tLot * (0.3 + rand() * 0.5))
-    const sLot  = tLot - bLot
-    const tFreq = Math.round(tLot * (0.005 + rand() * 0.02))
-    const bFreq = Math.round(tFreq * (0.3 + rand() * 0.5))
-    const sFreq = Math.max(1, tFreq - bFreq)
-    return { price: p, tLot, tFreq, bLot, sLot, bFreq, sFreq }
-  })
-})
+	const rand = seededRand(tickerSeed + 99);
+	const tick = tickSize(props.price);
+	return Array.from({ length: 16 }, (_, i) => {
+		const offset = (8 - i) * tick;
+		const p = props.price + offset;
+		const tLot = Math.round(
+			(rand() * 10000 + 100) / (Math.abs(offset / tick) + 1),
+		);
+		const bLot = Math.round(tLot * (0.3 + rand() * 0.5));
+		const sLot = tLot - bLot;
+		const tFreq = Math.round(tLot * (0.005 + rand() * 0.02));
+		const bFreq = Math.round(tFreq * (0.3 + rand() * 0.5));
+		const sFreq = Math.max(1, tFreq - bFreq);
+		return { price: p, tLot, tFreq, bLot, sLot, bFreq, sFreq };
+	});
+});
 
 // ── Time view ─────────────────────────────────────────────────────────────────
-type TimeRow = { time: string; price: number; lot: number; type: 'B' | 'S' }
+type TimeRow = { time: string; price: number; lot: number; type: "B" | "S" };
 
 const tradeByTime = computed<TimeRow[]>(() => {
-  const rand = seededRand(tickerSeed + 77)
-  const tick = tickSize(props.price)
-  const base = new Date('2026-02-26T09:00:00')
-  return Array.from({ length: 20 }, (_) => {
-    base.setMinutes(base.getMinutes() + Math.round(rand() * 15 + 1))
-    const offset = Math.round((rand() - 0.5) * 6) * tick
-    return {
-      time: base.toTimeString().slice(0, 5),
-      price: props.price + offset,
-      lot: Math.round(rand() * 500 + 1),
-      type: (rand() > 0.5 ? 'B' : 'S') as 'B' | 'S',
-    }
-  }).reverse()
-})
+	const rand = seededRand(tickerSeed + 77);
+	const tick = tickSize(props.price);
+	const base = new Date("2026-02-26T09:00:00");
+	return Array.from({ length: 20 }, (_) => {
+		base.setMinutes(base.getMinutes() + Math.round(rand() * 15 + 1));
+		const offset = Math.round((rand() - 0.5) * 6) * tick;
+		return {
+			time: base.toTimeString().slice(0, 5),
+			price: props.price + offset,
+			lot: Math.round(rand() * 500 + 1),
+			type: (rand() > 0.5 ? "B" : "S") as "B" | "S",
+		};
+	}).reverse();
+});
 
 // ── Chart view ────────────────────────────────────────────────────────────────
-const tradeChartData = computed<ChartData<'line'>>(() => {
-  const rows = [...tradeByTime.value].reverse()
-  let cumBuy = 0
-  let cumSell = 0
-  const buyPoints: number[] = []
-  const sellPoints: number[] = []
-  for (const row of rows) {
-    if (row.type === 'B') cumBuy += row.lot
-    else cumSell += row.lot
-    buyPoints.push(cumBuy)
-    sellPoints.push(cumSell)
-  }
-  return {
-    labels: rows.map(r => r.time),
-    datasets: [
-      {
-        label: 'Buy',
-        data: buyPoints,
-        borderColor: 'rgb(52,211,153)',
-        backgroundColor: 'rgba(52,211,153,0.06)',
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.3,
-        fill: false,
-      },
-      {
-        label: 'Sell',
-        data: sellPoints,
-        borderColor: 'rgb(251,113,133)',
-        backgroundColor: 'rgba(251,113,133,0.06)',
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.3,
-        fill: false,
-      },
-    ],
-  }
-})
+const tradeChartData = computed<ChartData<"line">>(() => {
+	const rows = [...tradeByTime.value].reverse();
+	let cumBuy = 0;
+	let cumSell = 0;
+	const buyPoints: number[] = [];
+	const sellPoints: number[] = [];
+	for (const row of rows) {
+		if (row.type === "B") cumBuy += row.lot;
+		else cumSell += row.lot;
+		buyPoints.push(cumBuy);
+		sellPoints.push(cumSell);
+	}
+	return {
+		labels: rows.map((r) => r.time),
+		datasets: [
+			{
+				label: "Buy",
+				data: buyPoints,
+				borderColor: "rgb(52,211,153)",
+				backgroundColor: "rgba(52,211,153,0.06)",
+				borderWidth: 2,
+				pointRadius: 0,
+				tension: 0.3,
+				fill: false,
+			},
+			{
+				label: "Sell",
+				data: sellPoints,
+				borderColor: "rgb(251,113,133)",
+				backgroundColor: "rgba(251,113,133,0.06)",
+				borderWidth: 2,
+				pointRadius: 0,
+				tension: 0.3,
+				fill: false,
+			},
+		],
+	};
+});
 
-const tradeChartOptions = computed<ChartOptions<'line'>>(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: 'rgba(9,9,11,0.92)',
-      titleColor: '#a1a1aa',
-      bodyColor: '#fff',
-      borderColor: 'rgba(255,255,255,0.08)',
-      borderWidth: 1,
-      padding: 8,
-    },
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(255,255,255,0.04)' },
-      ticks: { color: '#71717a', font: { size: 9 }, maxTicksLimit: 6, maxRotation: 0 },
-      border: { display: false },
-    },
-    y: {
-      grid: { color: 'rgba(255,255,255,0.04)' },
-      ticks: {
-        color: '#71717a',
-        font: { size: 9 },
-        callback: (v) => {
-          const n = Number(v)
-          return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
-        },
-      },
-      border: { display: false },
-    },
-  },
-}))
+const tradeChartOptions = computed<ChartOptions<"line">>(() => ({
+	responsive: true,
+	maintainAspectRatio: false,
+	plugins: {
+		legend: { display: false },
+		tooltip: {
+			backgroundColor: "rgba(9,9,11,0.92)",
+			titleColor: "#a1a1aa",
+			bodyColor: "#fff",
+			borderColor: "rgba(255,255,255,0.08)",
+			borderWidth: 1,
+			padding: 8,
+		},
+	},
+	scales: {
+		x: {
+			grid: { color: "rgba(255,255,255,0.04)" },
+			ticks: {
+				color: "#71717a",
+				font: { size: 9 },
+				maxTicksLimit: 6,
+				maxRotation: 0,
+			},
+			border: { display: false },
+		},
+		y: {
+			grid: { color: "rgba(255,255,255,0.04)" },
+			ticks: {
+				color: "#71717a",
+				font: { size: 9 },
+				callback: (v) => {
+					const n = Number(v);
+					return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+				},
+			},
+			border: { display: false },
+		},
+	},
+}));
 </script>
 
 <template>

@@ -1,109 +1,116 @@
 <script setup lang="ts">
-import { getStockHistory } from '@/data/stockHistory'
-import type { OHLCPoint } from '@/data/stockHistory'
-import { formatCompact } from '@/lib/utils'
+import type { OHLCPoint } from "@/data/stockHistory";
+import { getStockHistory } from "@/data/stockHistory";
+import { formatCompact } from "@/lib/utils";
 
-const props = defineProps<{ ticker: string }>()
+const props = defineProps<{ ticker: string }>();
 
-type Period = 'daily' | 'weekly' | 'monthly'
-const period = ref<Period>('daily')
-const PERIODS: Period[] = ['daily', 'weekly', 'monthly']
+type Period = "daily" | "weekly" | "monthly";
+const period = ref<Period>("daily");
+const PERIODS: Period[] = ["daily", "weekly", "monthly"];
 
-const showAll = ref(false)
-const PAGE_SIZE = 15
+const showAll = ref(false);
+const PAGE_SIZE = 15;
 
-const fullHistory = computed(() => getStockHistory(props.ticker))
+const fullHistory = computed(() => getStockHistory(props.ticker));
 
 // Aggregate weekly: last close of week, sum volume, max high, min low
 function aggregateWeekly(points: OHLCPoint[]): OHLCPoint[] {
-  const weeks: Record<string, OHLCPoint[]> = {}
-  for (const p of points) {
-    const d = new Date(p.date)
-    const day = d.getDay()
-    const monday = new Date(d)
-    monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
-    const key = monday.toISOString().slice(0, 10)
-    if (!weeks[key]) weeks[key] = []
-    weeks[key].push(p)
-  }
-  return Object.entries(weeks)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, pts]) => ({
-      date: pts[pts.length - 1]!.date,
-      open: pts[0]!.open,
-      high: Math.max(...pts.map(p => p.high)),
-      low: Math.min(...pts.map(p => p.low)),
-      close: pts[pts.length - 1]!.close,
-      volume: pts.reduce((s, p) => s + p.volume, 0),
-    }))
+	const weeks: Record<string, OHLCPoint[]> = {};
+	for (const p of points) {
+		const d = new Date(p.date);
+		const day = d.getDay();
+		const monday = new Date(d);
+		monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+		const key = monday.toISOString().slice(0, 10);
+		if (!weeks[key]) weeks[key] = [];
+		weeks[key].push(p);
+	}
+	return Object.entries(weeks)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([, pts]) => ({
+			date: pts[pts.length - 1]!.date,
+			open: pts[0]!.open,
+			high: Math.max(...pts.map((p) => p.high)),
+			low: Math.min(...pts.map((p) => p.low)),
+			close: pts[pts.length - 1]!.close,
+			volume: pts.reduce((s, p) => s + p.volume, 0),
+		}));
 }
 
 // Aggregate monthly: last close of month, sum volume
 function aggregateMonthly(points: OHLCPoint[]): OHLCPoint[] {
-  const months: Record<string, OHLCPoint[]> = {}
-  for (const p of points) {
-    const key = p.date.slice(0, 7) // YYYY-MM
-    if (!months[key]) months[key] = []
-    months[key].push(p)
-  }
-  return Object.entries(months)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, pts]) => ({
-      date: pts[pts.length - 1]!.date,
-      open: pts[0]!.open,
-      high: Math.max(...pts.map(p => p.high)),
-      low: Math.min(...pts.map(p => p.low)),
-      close: pts[pts.length - 1]!.close,
-      volume: pts.reduce((s, p) => s + p.volume, 0),
-    }))
+	const months: Record<string, OHLCPoint[]> = {};
+	for (const p of points) {
+		const key = p.date.slice(0, 7); // YYYY-MM
+		if (!months[key]) months[key] = [];
+		months[key].push(p);
+	}
+	return Object.entries(months)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([, pts]) => ({
+			date: pts[pts.length - 1]!.date,
+			open: pts[0]!.open,
+			high: Math.max(...pts.map((p) => p.high)),
+			low: Math.min(...pts.map((p) => p.low)),
+			close: pts[pts.length - 1]!.close,
+			volume: pts.reduce((s, p) => s + p.volume, 0),
+		}));
 }
 
 const aggregated = computed<OHLCPoint[]>(() => {
-  const h = fullHistory.value
-  if (period.value === 'daily') return [...h].reverse()
-  if (period.value === 'weekly') return aggregateWeekly(h).reverse()
-  return aggregateMonthly(h).reverse()
-})
+	const h = fullHistory.value;
+	if (period.value === "daily") return [...h].reverse();
+	if (period.value === "weekly") return aggregateWeekly(h).reverse();
+	return aggregateMonthly(h).reverse();
+});
 
 const visible = computed(() =>
-  showAll.value ? aggregated.value : aggregated.value.slice(0, PAGE_SIZE)
-)
+	showAll.value ? aggregated.value : aggregated.value.slice(0, PAGE_SIZE),
+);
 
 function fmtDate(dateStr: string) {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })
+	const d = new Date(dateStr);
+	return d.toLocaleDateString("en-GB", {
+		day: "2-digit",
+		month: "short",
+		year: "2-digit",
+	});
 }
 
 function changeVsRow(idx: number): { value: number; pct: number } | null {
-  const cur = aggregated.value[idx]
-  const prev = aggregated.value[idx + 1]
-  if (!cur || !prev) return null
-  const diff = cur.close - prev.close
-  const pct = (diff / prev.close) * 100
-  return { value: diff, pct }
+	const cur = aggregated.value[idx];
+	const prev = aggregated.value[idx + 1];
+	if (!cur || !prev) return null;
+	const diff = cur.close - prev.close;
+	const pct = (diff / prev.close) * 100;
+	return { value: diff, pct };
 }
 
 function fmtChange(v: number) {
-  return (v >= 0 ? '+' : '') + v.toLocaleString()
+	return (v >= 0 ? "+" : "") + v.toLocaleString();
 }
 function fmtPct(v: number) {
-  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
+	return (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
 }
 function fmtValue(vol: number, price: number) {
-  return formatCompact(vol * price)
+	return formatCompact(vol * price);
 }
 
 // Derive dummy foreign flow & freq from volume (deterministic, seeded per date)
 function deriveExtras(row: OHLCPoint) {
-  const seed = row.date.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  const r = (n: number) => ((seed * (n + 1) * 1664525 + 1013904223) & 0x7fffffff) / 0x7fffffff
-  const fBuyRatio = 0.2 + r(1) * 0.6
-  const fBuy = Math.round(row.volume * fBuyRatio * row.close)
-  const fSell = Math.round(row.volume * (1 - fBuyRatio) * r(2) * 0.8 * row.close)
-  const nForeign = fBuy - fSell
-  const freq = Math.round(row.volume * (0.005 + r(3) * 0.02))
-  const avg = Math.round((row.open + row.high + row.low + row.close) / 4)
-  return { fBuy, fSell, nForeign, freq, avg }
+	const seed = row.date.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+	const r = (n: number) =>
+		((seed * (n + 1) * 1664525 + 1013904223) & 0x7fffffff) / 0x7fffffff;
+	const fBuyRatio = 0.2 + r(1) * 0.6;
+	const fBuy = Math.round(row.volume * fBuyRatio * row.close);
+	const fSell = Math.round(
+		row.volume * (1 - fBuyRatio) * r(2) * 0.8 * row.close,
+	);
+	const nForeign = fBuy - fSell;
+	const freq = Math.round(row.volume * (0.005 + r(3) * 0.02));
+	const avg = Math.round((row.open + row.high + row.low + row.close) / 4);
+	return { fBuy, fSell, nForeign, freq, avg };
 }
 </script>
 

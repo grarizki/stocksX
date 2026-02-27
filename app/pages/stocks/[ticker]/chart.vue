@@ -1,25 +1,29 @@
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
-import type { StockDetail } from '@/data/stocksData'
+import { ArrowLeft } from "lucide-vue-next";
+import type { StockDetail } from "@/data/stocksData";
 
-definePageMeta({ layout: 'blank' })
+definePageMeta({ layout: "blank" });
 
-const route = useRoute()
-const localePath = useLocalePath()
+const route = useRoute();
+const localePath = useLocalePath();
 
 const ticker = computed(() => {
-  const raw = (route.params.ticker as string).toUpperCase()
-  return raw.endsWith('.JK') ? raw : `${raw}.JK`
-})
+	const raw = (route.params.ticker as string).toUpperCase();
+	return raw.endsWith(".JK") ? raw : `${raw}.JK`;
+});
 
 const { data: stock } = useApiFetch<StockDetail>(
-  () => `/api/stocks/${ticker.value}/summary`,
-  { watch: [ticker] },
-)
+	() => `/api/stocks/${ticker.value}/summary`,
+	{ watch: [ticker] },
+);
 
 useHead({
-  title: computed(() => stock.value ? `${ticker.value.replace('.JK', '')} Chart - StoxLyz` : 'Chart'),
-})
+	title: computed(() =>
+		stock.value
+			? `${ticker.value.replace(".JK", "")} Chart - StoxLyz`
+			: "Chart",
+	),
+});
 </script>
 
 <template>

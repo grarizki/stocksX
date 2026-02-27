@@ -1,46 +1,60 @@
 <script setup lang="ts">
-import { ExternalLink, Bell } from 'lucide-vue-next'
-import { useWatchlistStore } from '~/stores/watchlist'
-import { usePriceAlertStore } from '~/stores/priceAlert'
-import { STOCKS_DATA } from '@/data/stocksData'
-import type { StockDetail } from '@/data/stocksData'
-import { StarFilledIcon, StarIcon } from '@radix-icons/vue'
+import { StarFilledIcon, StarIcon } from "@radix-icons/vue";
+import { Bell, ExternalLink } from "lucide-vue-next";
+import type { StockDetail } from "@/data/stocksData";
+import { STOCKS_DATA } from "@/data/stocksData";
+import { usePriceAlertStore } from "~/stores/priceAlert";
+import { useWatchlistStore } from "~/stores/watchlist";
 
-const notationOpen = ref(false)
-const priceAlertOpen = ref(false)
+const notationOpen = ref(false);
+const priceAlertOpen = ref(false);
 
-const priceAlertStore = usePriceAlertStore()
+const priceAlertStore = usePriceAlertStore();
 
-const route = useRoute()
+const route = useRoute();
 const ticker = computed(() => {
-  const raw = (route.params.ticker as string).toUpperCase()
-  return raw.endsWith('.JK') ? raw : `${raw}.JK`
-})
+	const raw = (route.params.ticker as string).toUpperCase();
+	return raw.endsWith(".JK") ? raw : `${raw}.JK`;
+});
 
 const { data: liveData, status } = useApiFetch<StockDetail>(
-  () => `/api/stocks/${ticker.value}/summary`,
-  { watch: [ticker] },
-)
+	() => `/api/stocks/${ticker.value}/summary`,
+	{ watch: [ticker] },
+);
 
 // Merge live data with static notations from STOCKS_DATA
 const stock = computed<StockDetail | null>(() => {
-  if (!liveData.value) return null
-  const staticEntry = STOCKS_DATA[ticker.value]
-  return { ...liveData.value, notations: staticEntry?.notations }
-})
+	if (!liveData.value) return null;
+	const staticEntry = STOCKS_DATA[ticker.value];
+	return { ...liveData.value, notations: staticEntry?.notations };
+});
 
-const hasAlerts = computed(() => stock.value ? priceAlertStore.alertsForTicker(stock.value.ticker).length > 0 : false)
+const hasAlerts = computed(() =>
+	stock.value
+		? priceAlertStore.alertsForTicker(stock.value.ticker).length > 0
+		: false,
+);
 
 useHead({
-  title: computed(() => stock.value ? `${stock.value.ticker.replace('.JK', '')} - ${stock.value.name} - StoxLyz` : 'Stock Not Found'),
-})
+	title: computed(() =>
+		stock.value
+			? `${stock.value.ticker.replace(".JK", "")} - ${stock.value.name} - StoxLyz`
+			: "Stock Not Found",
+	),
+});
 
-const watchlistStore = useWatchlistStore()
-const isWatched = computed(() => watchlistStore.isInWatchlist(ticker.value))
+const watchlistStore = useWatchlistStore();
+const isWatched = computed(() => watchlistStore.isInWatchlist(ticker.value));
 
-type Tab = 'orderbook' | 'tradebook' | 'keystats' | 'about' | 'financials' | 'broker' | 'historical'
-const activeTab = ref<Tab>('orderbook')
-
+type Tab =
+	| "orderbook"
+	| "tradebook"
+	| "keystats"
+	| "about"
+	| "financials"
+	| "broker"
+	| "historical";
+const activeTab = ref<Tab>("orderbook");
 </script>
 
 <template>
@@ -64,17 +78,14 @@ const activeTab = ref<Tab>('orderbook')
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
             <!-- Ticker + badges row -->
-            <div class="flex flex-wrap items-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-2">
               <h1 class="text-xl font-bold">{{ stock.ticker.replace('.JK', '') }}</h1>
               <!-- Notation pill -->
-              <div
-                v-if="stock.notations?.length"
-                class="flex items-center divide-x divide-border overflow-hidden rounded border border-border/60 text-[11px] font-bold leading-none"
-              >
+              <div v-if="stock.notations?.length" class="flex items-center gap-1">
                 <button
                   v-for="code in stock.notations"
                   :key="code"
-                  class="px-1.5 py-1 text-rose-500 hover:bg-rose-500/10"
+                  class="rounded border border-rose-500/40 px-1.5 py-1 text-[11px] font-bold leading-none text-rose-500 hover:bg-rose-500/10"
                   :aria-label="`Notasi ${code}`"
                   @click="notationOpen = true"
                 >

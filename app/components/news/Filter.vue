@@ -1,14 +1,14 @@
 <script setup lang="ts">
-const { t } = useI18n()
-const modelValue = defineModel<string>({ default: 'all' })
+const { t } = useI18n();
+const modelValue = defineModel<string>({ default: "all" });
 
 const categories = computed(() => [
-  { value: 'all', label: t('news.catAll') },
-  { value: 'market', label: t('news.catMarket') },
-  { value: 'stocks', label: t('news.catStocks') },
-  { value: 'economy', label: t('news.catEconomy') },
-  { value: 'education', label: t('news.catEducation') },
-])
+	{ value: "all", label: t("news.catAll") },
+	{ value: "market", label: t("news.catMarket") },
+	{ value: "stocks", label: t("news.catStocks") },
+	{ value: "economy", label: t("news.catEconomy") },
+	{ value: "education", label: t("news.catEducation") },
+]);
 </script>
 
 <template>

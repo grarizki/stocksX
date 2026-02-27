@@ -1,81 +1,96 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
-import { getBrokerSummary } from '@/data/brokerActivity'
-import type { BrokerSummaryRow } from '@/data/brokerActivity'
+import { X } from "lucide-vue-next";
+import type { BrokerSummaryRow } from "@/data/brokerActivity";
+import { getBrokerSummary } from "@/data/brokerActivity";
 
-const props = defineProps<{ ticker: string; range: string; showNet?: boolean }>()
-const open = defineModel<boolean>('open', { default: false })
+const props = defineProps<{
+	ticker: string;
+	range: string;
+	showNet?: boolean;
+}>();
+const open = defineModel<boolean>("open", { default: false });
 
-type SortKey = 'bVal' | 'bLot' | 'sVal' | 'sLot' | 'netVal' | 'netLot'
-type SortDir = 'asc' | 'desc'
+type SortKey = "bVal" | "bLot" | "sVal" | "sLot" | "netVal" | "netLot";
+type SortDir = "asc" | "desc";
 
-const sortKey = ref<SortKey>('bVal')
-const sortDir = ref<SortDir>('desc')
+const sortKey = ref<SortKey>("bVal");
+const sortDir = ref<SortDir>("desc");
 
-watch(() => props.showNet, (isNet) => {
-  sortKey.value = isNet ? 'netVal' : 'bVal'
-  sortDir.value = 'desc'
-})
+watch(
+	() => props.showNet,
+	(isNet) => {
+		sortKey.value = isNet ? "netVal" : "bVal";
+		sortDir.value = "desc";
+	},
+);
 
 function toggleSort(key: SortKey) {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    sortKey.value = key
-    sortDir.value = 'desc'
-  }
+	if (sortKey.value === key) {
+		sortDir.value = sortDir.value === "desc" ? "asc" : "desc";
+	} else {
+		sortKey.value = key;
+		sortDir.value = "desc";
+	}
 }
 
 const rows = computed<BrokerSummaryRow[]>(() => {
-  const raw = getBrokerSummary(props.ticker, props.range as any)
-  return [...raw].sort((a, b) => {
-    const va = a[sortKey.value]
-    const vb = b[sortKey.value]
-    return sortDir.value === 'desc' ? vb - va : va - vb
-  })
-})
+	const raw = getBrokerSummary(props.ticker, props.range as any);
+	return [...raw].sort((a, b) => {
+		const va = a[sortKey.value];
+		const vb = b[sortKey.value];
+		return sortDir.value === "desc" ? vb - va : va - vb;
+	});
+});
 
 // Max values for bar scaling — use the same scale for buy and sell so bars are comparable
-const maxGross = computed(() => Math.max(...rows.value.map(r => Math.max(r.bVal, r.sVal))))
-const maxAbsNet = computed(() => Math.max(...rows.value.map(r => Math.abs(r.netVal))))
+const maxGross = computed(() =>
+	Math.max(...rows.value.map((r) => Math.max(r.bVal, r.sVal))),
+);
+const maxAbsNet = computed(() =>
+	Math.max(...rows.value.map((r) => Math.abs(r.netVal))),
+);
 
 // Each half of the diverging bar is at most 50% wide
 function halfBarPct(val: number, max: number) {
-  return max === 0 ? 0 : Math.min(50, (val / max) * 50)
+	return max === 0 ? 0 : Math.min(50, (val / max) * 50);
 }
 function netBarPct(val: number, max: number) {
-  return max === 0 ? 0 : Math.min(50, (Math.abs(val) / max) * 50)
+	return max === 0 ? 0 : Math.min(50, (Math.abs(val) / max) * 50);
 }
 
 function fmtVal(v: number) {
-  return `${v.toFixed(1)}B`
+	return `${v.toFixed(1)}B`;
 }
 function fmtLot(v: number) {
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`
-  return String(v)
+	if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+	if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+	return String(v);
 }
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'bVal', label: 'Buy Val' },
-  { key: 'bLot', label: 'Buy Lot' },
-  { key: 'sVal', label: 'Sell Val' },
-  { key: 'sLot', label: 'Sell Lot' },
-  { key: 'netVal', label: 'Net Val' },
-  { key: 'netLot', label: 'Net Lot' },
-]
+	{ key: "bVal", label: "Buy Val" },
+	{ key: "bLot", label: "Buy Lot" },
+	{ key: "sVal", label: "Sell Val" },
+	{ key: "sLot", label: "Sell Lot" },
+	{ key: "netVal", label: "Net Val" },
+	{ key: "netLot", label: "Net Lot" },
+];
 
 // Total aggregates
-const totalBuy = computed(() => rows.value.reduce((s, r) => s + r.bVal, 0))
-const totalSell = computed(() => rows.value.reduce((s, r) => s + r.sVal, 0))
-const totalNet = computed(() => rows.value.reduce((s, r) => s + r.netVal, 0))
-const totalNetLot = computed(() => rows.value.reduce((s, r) => s + r.netLot, 0))
+const totalBuy = computed(() => rows.value.reduce((s, r) => s + r.bVal, 0));
+const totalSell = computed(() => rows.value.reduce((s, r) => s + r.sVal, 0));
+const totalNet = computed(() => rows.value.reduce((s, r) => s + r.netVal, 0));
+const totalNetLot = computed(() =>
+	rows.value.reduce((s, r) => s + r.netLot, 0),
+);
 
 onMounted(() => {
-  const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') open.value = false }
-  document.addEventListener('keydown', handler)
-  onUnmounted(() => document.removeEventListener('keydown', handler))
-})
+	const handler = (e: KeyboardEvent) => {
+		if (e.key === "Escape") open.value = false;
+	};
+	document.addEventListener("keydown", handler);
+	onUnmounted(() => document.removeEventListener("keydown", handler));
+});
 </script>
 
 <template>

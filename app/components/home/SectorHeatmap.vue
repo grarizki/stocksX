@@ -1,22 +1,26 @@
 <script setup lang="ts">
 type SectorData = {
-  id: string
-  name: string
-  etfTicker: string
-  change: number
-  price: number
-  marketCap: number
-}
+	id: string;
+	name: string;
+	etfTicker: string;
+	change: number;
+	price: number;
+	marketCap: number;
+};
 
-const { data: sectors, status } = useApiFetch<SectorData[]>('/api/sectors/performance')
+const { data: sectors, status } = useApiFetch<SectorData[]>(
+	"/api/sectors/performance",
+);
 
-const visible = ref(false)
-const activeSector = ref<string | null>(null)
+const visible = ref(false);
+const activeSector = ref<string | null>(null);
 
-onMounted(() => { visible.value = true })
+onMounted(() => {
+	visible.value = true;
+});
 
 function getBarWidth(change: number) {
-  return `${Math.min(Math.abs(change) * 20, 100)}%`
+	return `${Math.min(Math.abs(change) * 20, 100)}%`;
 }
 </script>
 

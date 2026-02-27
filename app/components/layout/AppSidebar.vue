@@ -1,38 +1,47 @@
 <script setup lang="ts">
-import { Home, Newspaper, BarChart2, TrendingUp, Settings, LogIn, LogOut, Building2 } from 'lucide-vue-next'
+import {
+	BarChart2,
+	Building2,
+	Home,
+	LogIn,
+	LogOut,
+	Newspaper,
+	Settings,
+	TrendingUp,
+} from "lucide-vue-next";
 
-const { t } = useI18n()
-const route = useRoute()
-const localePath = useLocalePath()
-const userStore = useUserStore()
+const { t } = useI18n();
+const route = useRoute();
+const localePath = useLocalePath();
+const userStore = useUserStore();
 
 const navItems = computed(() => [
-  { label: t('nav.home'), icon: Home, to: '/home' },
-  { label: t('nav.stocks'), icon: TrendingUp, to: '/stocks' },
-  { label: t('nav.news'), icon: Newspaper, to: '/news' },
-  { label: t('nav.indicators'), icon: BarChart2, to: '/indicators' },
-])
+	{ label: t("nav.home"), icon: Home, to: "/home" },
+	{ label: t("nav.stocks"), icon: TrendingUp, to: "/stocks" },
+	{ label: t("nav.news"), icon: Newspaper, to: "/news" },
+	{ label: t("nav.indicators"), icon: BarChart2, to: "/indicators" },
+]);
 
 const isActive = (to: string) => {
-  const path = route.path.replace(/^\/(id|en)/, '') || '/'
-  if (to === '/home') return path === '/home'
-  return path.startsWith(to)
-}
+	const path = route.path.replace(/^\/(id|en)/, "") || "/";
+	if (to === "/home") return path === "/home";
+	return path.startsWith(to);
+};
 
 async function handleLogout() {
-  userStore.logout()
-  await navigateTo(localePath('/auth/login'))
+	userStore.logout();
+	await navigateTo(localePath("/auth/login"));
 }
 
 const initials = computed(() => {
-  if (!userStore.profile?.name) return '?'
-  return userStore.profile.name
-    .split(' ')
-    .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase()
-})
+	if (!userStore.profile?.name) return "?";
+	return userStore.profile.name
+		.split(" ")
+		.slice(0, 2)
+		.map((w) => w[0])
+		.join("")
+		.toUpperCase();
+});
 </script>
 
 <template>

@@ -1,36 +1,44 @@
 <script setup lang="ts">
-import { Search, LogIn, LogOut, User, Shield, Sun, Moon } from 'lucide-vue-next'
-import { useEventListener } from '@vueuse/core'
-import { roleVariant } from '~/composables/useRoleVariant'
+import { useEventListener } from "@vueuse/core";
+import {
+	LogIn,
+	LogOut,
+	Moon,
+	Search,
+	Shield,
+	Sun,
+	User,
+} from "lucide-vue-next";
+import { roleVariant } from "~/composables/useRoleVariant";
 
-const { locale } = useI18n()
-const localePath = useLocalePath()
-const switchLocalePath = useSwitchLocalePath()
-const userStore = useUserStore()
+const { locale } = useI18n();
+const localePath = useLocalePath();
+const switchLocalePath = useSwitchLocalePath();
+const userStore = useUserStore();
 
-const showSearch = ref(false)
-const colorMode = useColorMode()
+const showSearch = ref(false);
+const colorMode = useColorMode();
 function toggleColorMode() {
-  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+	colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
 }
 
 // ⌘K / Ctrl+K opens search
-useEventListener('keydown', (e: KeyboardEvent) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault()
-    showSearch.value = true
-  }
-})
+useEventListener("keydown", (e: KeyboardEvent) => {
+	if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+		e.preventDefault();
+		showSearch.value = true;
+	}
+});
 
 async function handleLogout() {
-  userStore.logout()
-  await navigateTo(localePath('/auth/login'))
+	userStore.logout();
+	await navigateTo(localePath("/auth/login"));
 }
 
 async function handleLanguageSwitch() {
-  const next = locale.value === 'id' ? 'en' : 'id'
-  userStore.setLanguage(next)
-  await navigateTo(switchLocalePath(next))
+	const next = locale.value === "id" ? "en" : "id";
+	userStore.setLanguage(next);
+	await navigateTo(switchLocalePath(next));
 }
 </script>
 

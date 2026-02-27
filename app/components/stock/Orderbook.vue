@@ -1,126 +1,149 @@
 <script setup lang="ts">
-import { formatCompact } from '@/lib/utils'
+import { formatCompact } from "@/lib/utils";
 
 const props = defineProps<{
-  ticker: string
-  price: number
-  change: number
-  volume: number
-  high52w: number
-  low52w: number
-  pe: number
-  pbv: number
-  dividendYield: number
-  marketCap: number
-}>()
+	ticker: string;
+	price: number;
+	change: number;
+	volume: number;
+	high52w: number;
+	low52w: number;
+	pe: number;
+	pbv: number;
+	dividendYield: number;
+	marketCap: number;
+}>();
 
 // Seeded PRNG for deterministic ladder data
 function seededRand(seed: number) {
-  let s = seed
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff
-    return (s >>> 0) / 0xffffffff
-  }
+	let s = seed;
+	return () => {
+		s = (s * 1664525 + 1013904223) & 0xffffffff;
+		return (s >>> 0) / 0xffffffff;
+	};
 }
 
-const tickerSeed = props.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+const tickerSeed = props.ticker
+	.split("")
+	.reduce((a, c) => a + c.charCodeAt(0), 0);
 
 // ── Today's OHLC from real API ─────────────────────────────────────────────────
-interface OHLCVBar { time: number | string; open: number; high: number; low: number; close: number; volume: number }
-const { data: historyData } = useApiFetch<OHLCVBar[]>(`/api/stocks/${props.ticker}/history?range=1W`)
+interface OHLCVBar {
+	time: number | string;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
+}
+const { data: historyData } = useApiFetch<OHLCVBar[]>(
+	`/api/stocks/${props.ticker}/history?range=1W`,
+);
 
-const open = computed(() => historyData.value?.at(-1)?.open ?? props.price)
-const prevClose = computed(() => historyData.value?.at(-2)?.close ?? (props.price - props.change))
-const high = computed(() => historyData.value?.at(-1)?.high ?? props.price)
-const low  = computed(() => historyData.value?.at(-1)?.low  ?? props.price)
+const open = computed(() => historyData.value?.at(-1)?.open ?? props.price);
+const prevClose = computed(
+	() => historyData.value?.at(-2)?.close ?? props.price - props.change,
+);
+const high = computed(() => historyData.value?.at(-1)?.high ?? props.price);
+const low = computed(() => historyData.value?.at(-1)?.low ?? props.price);
 
-const ara  = computed(() => Math.round(prevClose.value * 1.35))
-const arb  = computed(() => Math.round(prevClose.value * 0.70))
+const ara = computed(() => Math.round(prevClose.value * 1.35));
+const arb = computed(() => Math.round(prevClose.value * 0.7));
 
-const lot  = computed(() => formatCompact(props.volume / 100))
-const val  = computed(() => formatCompact(props.volume * props.price))
-const avg  = computed(() => Math.round((open.value + props.price) / 2))
-const freq = computed(() => formatCompact(Math.round(props.volume / 450)))
-const fBuy = computed(() => formatCompact(Math.round(props.volume * props.price * 0.38)))
-const fSell= computed(() => formatCompact(Math.round(props.volume * props.price * 0.51)))
+const lot = computed(() => formatCompact(props.volume / 100));
+const val = computed(() => formatCompact(props.volume * props.price));
+const avg = computed(() => Math.round((open.value + props.price) / 2));
+const freq = computed(() => formatCompact(Math.round(props.volume / 450)));
+const fBuy = computed(() =>
+	formatCompact(Math.round(props.volume * props.price * 0.38)),
+);
+const fSell = computed(() =>
+	formatCompact(Math.round(props.volume * props.price * 0.51)),
+);
 
 const statsRows = computed(() => [
-  [
-    { label: 'Open',   value: open.value.toLocaleString(),      color: '' },
-    { label: 'Prev',   value: prevClose.value.toLocaleString(), color: '' },
-    { label: 'Lot',    value: lot.value,                        color: 'text-gain' },
-  ],
-  [
-    { label: 'High',   value: high.value.toLocaleString(),      color: 'text-gain' },
-    { label: 'ARA',    value: ara.value.toLocaleString(),       color: '' },
-    { label: 'Val',    value: val.value,                        color: 'text-gain' },
-  ],
-  [
-    { label: 'Low',    value: low.value.toLocaleString(),       color: 'text-loss' },
-    { label: 'ARB',    value: arb.value.toLocaleString(),       color: '' },
-    { label: 'Avg',    value: avg.value.toLocaleString(),       color: 'text-gain' },
-  ],
-  [
-    { label: 'F Buy',  value: fBuy.value,                       color: 'text-gain' },
-    { label: 'F Sell', value: fSell.value,                      color: 'text-loss' },
-    { label: 'Freq',   value: freq.value,                       color: 'text-gain' },
-  ],
-])
+	[
+		{ label: "Open", value: open.value.toLocaleString(), color: "" },
+		{ label: "Prev", value: prevClose.value.toLocaleString(), color: "" },
+		{ label: "Lot", value: lot.value, color: "text-gain" },
+	],
+	[
+		{ label: "High", value: high.value.toLocaleString(), color: "text-gain" },
+		{ label: "ARA", value: ara.value.toLocaleString(), color: "" },
+		{ label: "Val", value: val.value, color: "text-gain" },
+	],
+	[
+		{ label: "Low", value: low.value.toLocaleString(), color: "text-loss" },
+		{ label: "ARB", value: arb.value.toLocaleString(), color: "" },
+		{ label: "Avg", value: avg.value.toLocaleString(), color: "text-gain" },
+	],
+	[
+		{ label: "F Buy", value: fBuy.value, color: "text-gain" },
+		{ label: "F Sell", value: fSell.value, color: "text-loss" },
+		{ label: "Freq", value: freq.value, color: "text-gain" },
+	],
+]);
 
 // ── Bid/Ask Ladder ────────────────────────────────────────────────────────────
 // IDX tick size rules (simplified)
 function tickSize(p: number): number {
-  if (p < 200)    return 1
-  if (p < 500)    return 2
-  if (p < 2000)   return 5
-  if (p < 5000)   return 10
-  return 25
+	if (p < 200) return 1;
+	if (p < 500) return 2;
+	if (p < 2000) return 5;
+	if (p < 5000) return 10;
+	return 25;
 }
 
 type LadderRow = {
-  bidFreq: number
-  bidLot: number
-  bid: number
-  ask: number
-  askLot: number
-  askFreq: number
-}
+	bidFreq: number;
+	bidLot: number;
+	bid: number;
+	ask: number;
+	askLot: number;
+	askFreq: number;
+};
 
 const ladder = computed<LadderRow[]>(() => {
-  const rand = seededRand(tickerSeed)
-  const tick = tickSize(props.price)
-  // Best bid just below current price, best ask just above
-  const bestBid = props.price - tick
-  const bestAsk = props.price + tick
+	const rand = seededRand(tickerSeed);
+	const tick = tickSize(props.price);
+	// Best bid just below current price, best ask just above
+	const bestBid = props.price - tick;
+	const bestAsk = props.price + tick;
 
-  return Array.from({ length: 10 }, (_, i) => {
-    const bid = bestBid - i * tick
-    const ask = bestAsk + i * tick
-    // More volume near the spread, less further out
-    const proximity = 1 / (i + 1)
-    const bidLot  = Math.round((rand() * 800 + 50) * proximity)
-    const askLot  = Math.round((rand() * 800 + 50) * proximity)
-    const bidFreq = Math.round(rand() * 40 * proximity + 1)
-    const askFreq = Math.round(rand() * 40 * proximity + 1)
-    return { bidFreq, bidLot, bid, ask, askLot, askFreq }
-  })
-})
+	return Array.from({ length: 10 }, (_, i) => {
+		const bid = bestBid - i * tick;
+		const ask = bestAsk + i * tick;
+		// More volume near the spread, less further out
+		const proximity = 1 / (i + 1);
+		const bidLot = Math.round((rand() * 800 + 50) * proximity);
+		const askLot = Math.round((rand() * 800 + 50) * proximity);
+		const bidFreq = Math.round(rand() * 40 * proximity + 1);
+		const askFreq = Math.round(rand() * 40 * proximity + 1);
+		return { bidFreq, bidLot, bid, ask, askLot, askFreq };
+	});
+});
 
 // Max lot across all rows — for proportional volume bar widths
 const maxLot = computed(() =>
-  Math.max(...ladder.value.flatMap(r => [r.bidLot, r.askLot]))
-)
+	Math.max(...ladder.value.flatMap((r) => [r.bidLot, r.askLot])),
+);
 
-const totalBidLot  = computed(() => ladder.value.reduce((s, r) => s + r.bidLot, 0))
-const totalAskLot  = computed(() => ladder.value.reduce((s, r) => s + r.askLot, 0))
-const totalBidFreq = computed(() => ladder.value.reduce((s, r) => s + r.bidFreq, 0))
-const totalAskFreq = computed(() => ladder.value.reduce((s, r) => s + r.askFreq, 0))
+const totalBidLot = computed(() =>
+	ladder.value.reduce((s, r) => s + r.bidLot, 0),
+);
+const totalAskLot = computed(() =>
+	ladder.value.reduce((s, r) => s + r.askLot, 0),
+);
+const totalBidFreq = computed(() =>
+	ladder.value.reduce((s, r) => s + r.bidFreq, 0),
+);
+const totalAskFreq = computed(() =>
+	ladder.value.reduce((s, r) => s + r.askFreq, 0),
+);
 
 function lotWidth(lot: number) {
-  return `${Math.min(100, (lot / maxLot.value) * 100)}%`
+	return `${Math.min(100, (lot / maxLot.value) * 100)}%`;
 }
-
-
 </script>
 
 <template>

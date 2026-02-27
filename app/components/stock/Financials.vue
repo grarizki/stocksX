@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { Stock } from '@/data/stocks'
-import { formatCompact } from '@/lib/utils'
+import type { Stock } from "@/data/stocks";
+import { formatCompact } from "@/lib/utils";
 
-const props = defineProps<{ stock: Stock }>()
+const props = defineProps<{ stock: Stock }>();
 
 // Mock quarterly financials
 const quarters = computed(() => {
-  const base = props.stock.marketCap / (props.stock.pe || 15)
-  return [
-    { period: 'Q4 2025', revenue: base * 0.28, earnings: base * 0.065 },
-    { period: 'Q3 2025', revenue: base * 0.26, earnings: base * 0.058 },
-    { period: 'Q2 2025', revenue: base * 0.25, earnings: base * 0.055 },
-    { period: 'Q1 2025', revenue: base * 0.24, earnings: base * 0.052 },
-  ]
-})
+	const base = props.stock.marketCap / (props.stock.pe || 15);
+	return [
+		{ period: "Q4 2025", revenue: base * 0.28, earnings: base * 0.065 },
+		{ period: "Q3 2025", revenue: base * 0.26, earnings: base * 0.058 },
+		{ period: "Q2 2025", revenue: base * 0.25, earnings: base * 0.055 },
+		{ period: "Q1 2025", revenue: base * 0.24, earnings: base * 0.052 },
+	];
+});
 </script>
 
 <template>

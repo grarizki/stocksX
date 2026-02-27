@@ -1,39 +1,45 @@
 <script setup lang="ts">
-import { ExternalLink, ChevronLeft } from 'lucide-vue-next'
-import { timeAgo } from '@/lib/utils'
+import { ChevronLeft, ExternalLink } from "lucide-vue-next";
+import { timeAgo } from "@/lib/utils";
 
-const route = useRoute()
-const localePath = useLocalePath()
-const { articles, pending, fetchAll } = useNews()
+const route = useRoute();
+const localePath = useLocalePath();
+const { articles, pending, fetchAll } = useNews();
 
-onMounted(fetchAll)
+onMounted(fetchAll);
 
 const article = computed(() => {
-  const idx = Number(route.params.id)
-  return articles.value[idx] ?? null
-})
+	const idx = Number(route.params.id);
+	return articles.value[idx] ?? null;
+});
 
 watch([pending, article], ([isPending, art]) => {
-  if (!isPending && art === null && articles.value.length > 0) {
-    navigateTo(localePath('/news'), { replace: true })
-  }
-})
+	if (!isPending && art === null && articles.value.length > 0) {
+		navigateTo(localePath("/news"), { replace: true });
+	}
+});
 
-const imgLoaded = ref(false)
-watch(article, () => { imgLoaded.value = false })
+const imgLoaded = ref(false);
+watch(article, () => {
+	imgLoaded.value = false;
+});
 
-useHead({ title: computed(() => article.value ? `${article.value.title} - StoxLyz` : 'Berita - StoxLyz') })
+useHead({
+	title: computed(() =>
+		article.value ? `${article.value.title} - StoxLyz` : "Berita - StoxLyz",
+	),
+});
 
 useSeoMeta({
-  ogTitle: computed(() => article.value?.title ?? 'Berita - StoxLyz'),
-  ogDescription: computed(() => article.value?.contentSnippet ?? ''),
-  ogImage: computed(() => article.value?.image?.large ?? '/og-image.png'),
-  ogType: 'article',
-  twitterCard: 'summary_large_image',
-  twitterTitle: computed(() => article.value?.title ?? 'Berita - StoxLyz'),
-  twitterDescription: computed(() => article.value?.contentSnippet ?? ''),
-  twitterImage: computed(() => article.value?.image?.large ?? '/og-image.png'),
-})
+	ogTitle: computed(() => article.value?.title ?? "Berita - StoxLyz"),
+	ogDescription: computed(() => article.value?.contentSnippet ?? ""),
+	ogImage: computed(() => article.value?.image?.large ?? "/og-image.png"),
+	ogType: "article",
+	twitterCard: "summary_large_image",
+	twitterTitle: computed(() => article.value?.title ?? "Berita - StoxLyz"),
+	twitterDescription: computed(() => article.value?.contentSnippet ?? ""),
+	twitterImage: computed(() => article.value?.image?.large ?? "/og-image.png"),
+});
 </script>
 
 <template>

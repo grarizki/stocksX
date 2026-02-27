@@ -1,732 +1,1324 @@
 <script setup lang="ts">
 import {
-  createChart,
-  AreaSeries,
-  CandlestickSeries,
-  HistogramSeries,
-  LineSeries,
-  CrosshairMode,
-  PriceScaleMode,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-  type BarData,
-  type HistogramData,
-  type LineData,
-} from 'lightweight-charts'
-import { marked } from 'marked'
+	AreaSeries,
+	type BarData,
+	CandlestickSeries,
+	CrosshairMode,
+	createChart,
+	type HistogramData,
+	HistogramSeries,
+	type IChartApi,
+	type ISeriesApi,
+	type LineData,
+	LineSeries,
+	PriceScaleMode,
+	type UTCTimestamp,
+} from "lightweight-charts";
 import {
-  BarChart2,
-  CandlestickChart,
-  Minus,
-  TrendingUp,
-  MousePointer2,
-  Trash2,
-  LogIn,
-  FlaskConical,
-  Play,
-  X,
-  Sparkles,
-  Target,
-} from 'lucide-vue-next'
+	BarChart2,
+	CandlestickChart,
+	FlaskConical,
+	LogIn,
+	Minus,
+	MousePointer2,
+	Play,
+	Sparkles,
+	Target,
+	Trash2,
+	TrendingUp,
+	X,
+} from "lucide-vue-next";
+import { marked } from "marked";
 
 const props = defineProps<{
-  ticker: string
-  changePercent: number
-}>()
+	ticker: string;
+	changePercent: number;
+}>();
 
 // ---- Types ----
-type Range = '5H' | '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y' | '3Y' | '5Y'
-type ChartType = 'candlestick' | 'area'
-type DrawTool = 'pointer' | 'hline' | 'trendline'
-type MAKey = 'ma20' | 'ma50' | 'ma200'
-type StrategyId = 'ma_cross' | 'rsi' | 'breakout'
+type Range = "5H" | "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y" | "3Y" | "5Y";
+type ChartType = "candlestick" | "area";
+type DrawTool = "pointer" | "hline" | "trendline";
+type MAKey = "ma20" | "ma50" | "ma200";
+type StrategyId =
+	| "ma_cross"
+	| "rsi"
+	| "breakout"
+	| "macd"
+	| "bollinger"
+	| "psar";
 
 interface Drawing {
-  id: string
-  type: 'hline' | 'trendline'
-  series: ISeriesApi<'Line'>
+	id: string;
+	type: "hline" | "trendline";
+	series: ISeriesApi<"Line">;
 }
 
 interface Trade {
-  entryTime: UTCTimestamp
-  exitTime: UTCTimestamp
-  entryPrice: number
-  exitPrice: number
-  type: 'long'
-  pnlPct: number
+	entryTime: UTCTimestamp;
+	exitTime: UTCTimestamp;
+	entryPrice: number;
+	exitPrice: number;
+	type: "long";
+	pnlPct: number;
 }
 
 interface BacktestResult {
-  trades: Trade[]
-  totalReturn: number
-  winRate: number
-  maxDrawdown: number
-  totalTrades: number
-  avgPnl: number
-  sharpe: number
+	trades: Trade[];
+	totalReturn: number;
+	winRate: number;
+	maxDrawdown: number;
+	totalTrades: number;
+	avgPnl: number;
+	sharpe: number;
 }
 
-const RANGES: Range[] = ['5H', '1D', '1W', '1M', '3M', 'YTD', '1Y', '3Y', '5Y']
+const RANGES: Range[] = ["5H", "1D", "1W", "1M", "3M", "YTD", "1Y", "3Y", "5Y"];
 const MA_DEFS: { key: MAKey; period: number; color: string }[] = [
-  { key: 'ma20', period: 20, color: '#f59e0b' },
-  { key: 'ma50', period: 50, color: '#60a5fa' },
-  { key: 'ma200', period: 200, color: '#f472b6' },
-]
+	{ key: "ma20", period: 20, color: "#f59e0b" },
+	{ key: "ma50", period: 50, color: "#60a5fa" },
+	{ key: "ma200", period: 200, color: "#f472b6" },
+];
+
+const SAR_COLOR = "#f97316"; // orange-500
 
 const STRATEGIES: { id: StrategyId; label: string; desc: string }[] = [
-  { id: 'ma_cross', label: 'MA Crossover', desc: 'Buy when fast MA crosses above slow MA, sell on cross below' },
-  { id: 'rsi', label: 'RSI Mean Reversion', desc: 'Buy when RSI recovers above 30, sell when RSI falls back below 70' },
-  { id: 'breakout', label: 'Breakout', desc: 'Buy on N-day high breakout, sell on N-day low breakdown' },
-]
+	{
+		id: "ma_cross",
+		label: "MA Crossover",
+		desc: "Buy when fast MA crosses above slow MA, sell on cross below",
+	},
+	{
+		id: "rsi",
+		label: "RSI Mean Reversion",
+		desc: "Buy when RSI recovers above 30, sell when RSI falls back below 70",
+	},
+	{
+		id: "breakout",
+		label: "Breakout",
+		desc: "Buy on N-day high breakout, sell on N-day low breakdown",
+	},
+	{
+		id: "macd",
+		label: "MACD",
+		desc: "Buy when MACD line crosses above signal line, sell on cross below",
+	},
+	{
+		id: "bollinger",
+		label: "Bollinger Bands",
+		desc: "Buy when price crosses above lower band, sell when price crosses below upper band",
+	},
+	{
+		id: "psar",
+		label: "Parabolic SAR",
+		desc: "Buy when SAR flips below price (dots move under candles), sell when SAR flips above price",
+	},
+];
 
 // ---- State ----
-const activeRange = ref<Range>('1Y')
-const chartType = ref<ChartType>('candlestick')
-const activeTool = ref<DrawTool>('pointer')
-const activeMA = ref<Set<MAKey>>(new Set())
-const logScale = ref(false)
-const drawings = ref<Drawing[]>([])
+const activeRange = ref<Range>("1Y");
+const chartType = ref<ChartType>("candlestick");
+const activeTool = ref<DrawTool>("pointer");
+const activeMA = ref<Set<MAKey>>(new Set());
+const sarActive = ref(false);
+const sarStep = ref(0.02);
+const sarMax = ref(0.2);
+const logScale = ref(false);
+const drawings = ref<Drawing[]>([]);
 
 // Backtest state
-const backtestOpen = ref(false)
-const selectedStrategy = ref<StrategyId>('ma_cross')
+const backtestOpen = ref(false);
+const selectedStrategy = ref<StrategyId>("ma_cross");
 const btParams = reactive({
-  fastMA: 20,
-  slowMA: 50,
-  rsiPeriod: 14,
-  breakoutPeriod: 20,
-  capital: 10_000_000,
-})
-const btResult = ref<BacktestResult | null>(null)
-const btRunning = ref(false)
-const aiExplanation = ref('')
-const aiLoading = ref(false)
+	fastMA: 20,
+	slowMA: 50,
+	rsiPeriod: 14,
+	breakoutPeriod: 20,
+	macdFast: 12,
+	macdSlow: 26,
+	macdSignal: 9,
+	bbPeriod: 20,
+	bbStdDev: 2,
+	sarStep: 0.02,
+	sarMax: 0.2,
+	capital: 10_000_000,
+});
+const btResult = ref<BacktestResult | null>(null);
+const btRunning = ref(false);
+const btDirty = ref(true);
+const aiExplanation = ref("");
+const aiLoading = ref(false);
 
-type TradeRating = 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell'
+type TradeRating = "strong_buy" | "buy" | "hold" | "sell" | "strong_sell";
 interface TradeSetup {
-  entry: number
-  target: number
-  stopLoss: number
-  rating: TradeRating
-  summary: string
+	entry: number;
+	target: number;
+	stopLoss: number;
+	rating: TradeRating;
+	summary: string;
 }
 
-const RATING_CONFIG: Record<TradeRating, { label: string; bg: string; text: string; bar: string; fill: number }> = {
-  strong_buy:  { label: 'Strong Buy',  bg: 'bg-emerald-500/15', text: 'text-emerald-300', bar: 'bg-emerald-400', fill: 100 },
-  buy:         { label: 'Buy',         bg: 'bg-emerald-500/8',  text: 'text-emerald-400', bar: 'bg-emerald-500', fill: 75  },
-  hold:        { label: 'Hold',        bg: 'bg-yellow-500/10',  text: 'text-yellow-300',  bar: 'bg-yellow-400',  fill: 50  },
-  sell:        { label: 'Sell',        bg: 'bg-red-500/8',      text: 'text-red-400',     bar: 'bg-red-500',     fill: 25  },
-  strong_sell: { label: 'Strong Sell', bg: 'bg-red-500/15',     text: 'text-red-300',     bar: 'bg-red-400',     fill: 5   },
-}
-const tradeSetup = ref<TradeSetup | null>(null)
-const setupLoading = ref(false)
-const aiRunning = ref(false)
-const aiRationale = ref('')
+const RATING_CONFIG: Record<
+	TradeRating,
+	{ label: string; bg: string; text: string; bar: string; fill: number }
+> = {
+	strong_buy: {
+		label: "Strong Buy",
+		bg: "bg-emerald-500/15",
+		text: "text-emerald-300",
+		bar: "bg-emerald-400",
+		fill: 100,
+	},
+	buy: {
+		label: "Buy",
+		bg: "bg-emerald-500/8",
+		text: "text-emerald-400",
+		bar: "bg-emerald-500",
+		fill: 75,
+	},
+	hold: {
+		label: "Hold",
+		bg: "bg-yellow-500/10",
+		text: "text-yellow-300",
+		bar: "bg-yellow-400",
+		fill: 50,
+	},
+	sell: {
+		label: "Sell",
+		bg: "bg-red-500/8",
+		text: "text-red-400",
+		bar: "bg-red-500",
+		fill: 25,
+	},
+	strong_sell: {
+		label: "Strong Sell",
+		bg: "bg-red-500/15",
+		text: "text-red-300",
+		bar: "bg-red-400",
+		fill: 5,
+	},
+};
+const tradeSetup = ref<TradeSetup | null>(null);
+const setupLoading = ref(false);
+const setupDirty = ref(true);
+const aiRunning = ref(false);
+const aiRationale = ref("");
+const explainDirty = ref(true);
 
 // Signal series on chart
-let buySignalSeries: ISeriesApi<'Line'> | null = null
-let sellSignalSeries: ISeriesApi<'Line'> | null = null
-let setupSeries: ISeriesApi<'Line'>[] = []
+let buySignalSeries: ISeriesApi<"Line"> | null = null;
+let sellSignalSeries: ISeriesApi<"Line"> | null = null;
+let setupSeries: ISeriesApi<"Line">[] = [];
 
 // DOM refs
-const wrapperEl = ref<HTMLElement | null>(null)
-const mainEl = ref<HTMLElement | null>(null)
-const volumeEl = ref<HTMLElement | null>(null)
+const wrapperEl = ref<HTMLElement | null>(null);
+const mainEl = ref<HTMLElement | null>(null);
+const volumeEl = ref<HTMLElement | null>(null);
 
 // Chart instances
-let mainChart: IChartApi | null = null
-let volumeChart: IChartApi | null = null
-let candleSeries: ISeriesApi<'Candlestick'> | null = null
-let areaSeries: ISeriesApi<'Area'> | null = null
-let volumeSeries: ISeriesApi<'Histogram'> | null = null
-const maSeries = new Map<MAKey, ISeriesApi<'Line'>>()
+let mainChart: IChartApi | null = null;
+let volumeChart: IChartApi | null = null;
+let candleSeries: ISeriesApi<"Candlestick"> | null = null;
+let areaSeries: ISeriesApi<"Area"> | null = null;
+let volumeSeries: ISeriesApi<"Histogram"> | null = null;
+const maSeries = new Map<MAKey, ISeriesApi<"Line">>();
+let sarSeries: ISeriesApi<"Line"> | null = null;
 
-let drawingStart: { time: UTCTimestamp; price: number } | null = null
+let drawingStart: { time: UTCTimestamp; price: number } | null = null;
 
-const upColor = '#26a69a'
-const downColor = '#ef5350'
-const lineColor = computed(() => props.changePercent >= 0 ? upColor : downColor)
+const upColor = "#26a69a";
+const downColor = "#ef5350";
+const lineColor = computed(() =>
+	props.changePercent >= 0 ? upColor : downColor,
+);
 
 const tooltip = reactive({
-  visible: false, time: '', open: 0, high: 0, low: 0, close: 0, volume: 0, isUp: true,
-})
-const ctxMenu = reactive({ visible: false, x: 0, y: 0, drawingId: '' })
+	visible: false,
+	time: "",
+	open: 0,
+	high: 0,
+	low: 0,
+	close: 0,
+	volume: 0,
+	isUp: true,
+});
+const ctxMenu = reactive({ visible: false, x: 0, y: 0, drawingId: "" });
 
 type OHLCVPoint = {
-  time: string | number
-  open: number; high: number; low: number; close: number; volume: number
-}
-const rawData = ref<OHLCVPoint[]>([])
+	time: string | number;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
+};
+const rawData = ref<OHLCVPoint[]>([]);
 
 const { data: historyData, pending } = useApiFetch<OHLCVPoint[]>(
-  () => `/api/stocks/${props.ticker}/history?range=${activeRange.value}`,
-  { watch: [activeRange] },
-)
+	() => `/api/stocks/${props.ticker}/history?range=${activeRange.value}`,
+	{ watch: [activeRange] },
+);
 
 // ============================================================
 // BACKTEST ENGINE
 // ============================================================
 
 function calcSMA(closes: number[], period: number): (number | null)[] {
-  return closes.map((_, i) => {
-    if (i < period - 1) return null
-    return closes.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period
-  })
+	return closes.map((_, i) => {
+		if (i < period - 1) return null;
+		return (
+			closes.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period
+		);
+	});
 }
 
 function calcRSI(closes: number[], period: number): (number | null)[] {
-  const rsi: (number | null)[] = new Array(closes.length).fill(null)
-  if (closes.length < period + 1) return rsi
-  let avgGain = 0, avgLoss = 0
-  for (let i = 1; i <= period; i++) {
-    const diff = closes[i]! - closes[i - 1]!
-    if (diff > 0) avgGain += diff; else avgLoss += -diff
-  }
-  avgGain /= period; avgLoss /= period
-  rsi[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss)
-  for (let i = period + 1; i < closes.length; i++) {
-    const diff = closes[i]! - closes[i - 1]!
-    const gain = diff > 0 ? diff : 0
-    const loss = diff < 0 ? -diff : 0
-    avgGain = (avgGain * (period - 1) + gain) / period
-    avgLoss = (avgLoss * (period - 1) + loss) / period
-    rsi[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss)
-  }
-  return rsi
+	const rsi: (number | null)[] = new Array(closes.length).fill(null);
+	if (closes.length < period + 1) return rsi;
+	let avgGain = 0,
+		avgLoss = 0;
+	for (let i = 1; i <= period; i++) {
+		const diff = closes[i]! - closes[i - 1]!;
+		if (diff > 0) avgGain += diff;
+		else avgLoss += -diff;
+	}
+	avgGain /= period;
+	avgLoss /= period;
+	rsi[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+	for (let i = period + 1; i < closes.length; i++) {
+		const diff = closes[i]! - closes[i - 1]!;
+		const gain = diff > 0 ? diff : 0;
+		const loss = diff < 0 ? -diff : 0;
+		avgGain = (avgGain * (period - 1) + gain) / period;
+		avgLoss = (avgLoss * (period - 1) + loss) / period;
+		rsi[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+	}
+	return rsi;
+}
+
+function calcEMA(closes: number[], period: number): (number | null)[] {
+	const ema: (number | null)[] = new Array(closes.length).fill(null);
+	if (closes.length < period) return ema;
+	const k = 2 / (period + 1);
+	let prev = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+	ema[period - 1] = prev;
+	for (let i = period; i < closes.length; i++) {
+		prev = closes[i]! * k + prev * (1 - k);
+		ema[i] = prev;
+	}
+	return ema;
+}
+
+function calcMACD(
+	closes: number[],
+	fast: number,
+	slow: number,
+	signal: number,
+) {
+	const emaFast = calcEMA(closes, fast);
+	const emaSlow = calcEMA(closes, slow);
+	const macdLine: (number | null)[] = closes.map((_, i) => {
+		const f = emaFast[i],
+			s = emaSlow[i];
+		return f != null && s != null ? f - s : null;
+	});
+	// Signal line: EMA of MACD line values (skip nulls)
+	const macdValues = macdLine.map((v) => v ?? 0);
+	const signalLine = calcEMA(macdValues, signal);
+	// Zero out signal where macdLine was null
+	const firstValid = macdLine.findIndex((v) => v != null);
+	for (let i = 0; i < firstValid + signal - 1; i++) signalLine[i] = null;
+	return { macdLine, signalLine };
+}
+
+function calcBollinger(closes: number[], period: number, stdDevMult: number) {
+	const upper: (number | null)[] = new Array(closes.length).fill(null);
+	const lower: (number | null)[] = new Array(closes.length).fill(null);
+	for (let i = period - 1; i < closes.length; i++) {
+		const slice = closes.slice(i - period + 1, i + 1);
+		const mean = slice.reduce((a, b) => a + b, 0) / period;
+		const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / period;
+		const sd = Math.sqrt(variance);
+		upper[i] = mean + stdDevMult * sd;
+		lower[i] = mean - stdDevMult * sd;
+	}
+	return { upper, lower };
+}
+
+// Returns SAR value per bar. trend: 1 = bullish (dots below), -1 = bearish (dots above)
+function calcSAR(
+	data: OHLCVPoint[],
+	step: number,
+	maxAF: number,
+): { sar: number; trend: 1 | -1 }[] {
+	if (data.length < 2) return [];
+	const result: { sar: number; trend: 1 | -1 }[] = [];
+
+	// Initialise: guess trend from first two bars
+	let trend: 1 | -1 = data[1]!.close > data[0]!.close ? 1 : -1;
+	let af = step;
+	let ep = trend === 1 ? data[0]!.high : data[0]!.low;
+	let sar = trend === 1 ? data[0]!.low : data[0]!.high;
+
+	result.push({ sar, trend });
+
+	for (let i = 1; i < data.length; i++) {
+		const bar = data[i]!;
+		const prev = data[i - 1]!;
+		const prevPrev = i >= 2 ? data[i - 2]! : null;
+
+		// Project SAR for this bar
+		let newSar = sar + af * (ep - sar);
+
+		if (trend === 1) {
+			// Bullish: SAR must be below the two prior lows
+			newSar = Math.min(newSar, prev.low, prevPrev?.low ?? prev.low);
+			if (bar.low < newSar) {
+				// Reversal → bearish
+				trend = -1;
+				newSar = ep; // SAR jumps to prior EP (high)
+				ep = bar.low;
+				af = step;
+			} else {
+				if (bar.high > ep) {
+					ep = bar.high;
+					af = Math.min(af + step, maxAF);
+				}
+			}
+		} else {
+			// Bearish: SAR must be above the two prior highs
+			newSar = Math.max(newSar, prev.high, prevPrev?.high ?? prev.high);
+			if (bar.high > newSar) {
+				// Reversal → bullish
+				trend = 1;
+				newSar = ep; // SAR jumps to prior EP (low)
+				ep = bar.high;
+				af = step;
+			} else {
+				if (bar.low < ep) {
+					ep = bar.low;
+					af = Math.min(af + step, maxAF);
+				}
+			}
+		}
+
+		sar = newSar;
+		result.push({ sar, trend });
+	}
+	return result;
 }
 
 function runBacktest(): BacktestResult {
-  const data = rawData.value
-  if (!data.length) return emptyResult()
-  const closes = data.map(d => d.close)
-  const times = data.map(d => d.time as UTCTimestamp)
+	const data = rawData.value;
+	if (!data.length) return emptyResult();
+	const closes = data.map((d) => d.close);
+	const times = data.map((d) => d.time as UTCTimestamp);
 
-  type Signal = { idx: number; type: 'buy' | 'sell' }
-  const signals: Signal[] = []
+	type Signal = { idx: number; type: "buy" | "sell" };
+	const signals: Signal[] = [];
 
-  if (selectedStrategy.value === 'ma_cross') {
-    const fast = calcSMA(closes, btParams.fastMA)
-    const slow = calcSMA(closes, btParams.slowMA)
-    for (let i = 1; i < data.length; i++) {
-      const pf = fast[i - 1], ps = slow[i - 1]
-      const cf = fast[i], cs = slow[i]
-      if (pf == null || ps == null || cf == null || cs == null) continue
-      if (pf <= ps && cf > cs) signals.push({ idx: i, type: 'buy' })
-      else if (pf >= ps && cf < cs) signals.push({ idx: i, type: 'sell' })
-    }
-  } else if (selectedStrategy.value === 'rsi') {
-    const rsi = calcRSI(closes, btParams.rsiPeriod)
-    for (let i = 1; i < data.length; i++) {
-      const prev = rsi[i - 1], curr = rsi[i]
-      if (prev == null || curr == null) continue
-      if (prev < 30 && curr >= 30) signals.push({ idx: i, type: 'buy' })
-      else if (prev > 70 && curr <= 70) signals.push({ idx: i, type: 'sell' })
-    }
-  } else if (selectedStrategy.value === 'breakout') {
-    const n = btParams.breakoutPeriod
-    for (let i = n; i < data.length; i++) {
-      const window = data.slice(i - n, i)
-      const highest = Math.max(...window.map(d => d.high))
-      const lowest = Math.min(...window.map(d => d.low))
-      if (data[i]!.close > highest) signals.push({ idx: i, type: 'buy' })
-      else if (data[i]!.close < lowest) signals.push({ idx: i, type: 'sell' })
-    }
-  }
+	if (selectedStrategy.value === "ma_cross") {
+		const fast = calcSMA(closes, btParams.fastMA);
+		const slow = calcSMA(closes, btParams.slowMA);
+		for (let i = 1; i < data.length; i++) {
+			const pf = fast[i - 1],
+				ps = slow[i - 1];
+			const cf = fast[i],
+				cs = slow[i];
+			if (pf == null || ps == null || cf == null || cs == null) continue;
+			if (pf <= ps && cf > cs) signals.push({ idx: i, type: "buy" });
+			else if (pf >= ps && cf < cs) signals.push({ idx: i, type: "sell" });
+		}
+	} else if (selectedStrategy.value === "rsi") {
+		const rsi = calcRSI(closes, btParams.rsiPeriod);
+		for (let i = 1; i < data.length; i++) {
+			const prev = rsi[i - 1],
+				curr = rsi[i];
+			if (prev == null || curr == null) continue;
+			if (prev < 30 && curr >= 30) signals.push({ idx: i, type: "buy" });
+			else if (prev > 70 && curr <= 70) signals.push({ idx: i, type: "sell" });
+		}
+	} else if (selectedStrategy.value === "breakout") {
+		const n = btParams.breakoutPeriod;
+		for (let i = n; i < data.length; i++) {
+			const window = data.slice(i - n, i);
+			const highest = Math.max(...window.map((d) => d.high));
+			const lowest = Math.min(...window.map((d) => d.low));
+			if (data[i]!.close > highest) signals.push({ idx: i, type: "buy" });
+			else if (data[i]!.close < lowest) signals.push({ idx: i, type: "sell" });
+		}
+	} else if (selectedStrategy.value === "macd") {
+		const { macdLine, signalLine } = calcMACD(
+			closes,
+			btParams.macdFast,
+			btParams.macdSlow,
+			btParams.macdSignal,
+		);
+		for (let i = 1; i < data.length; i++) {
+			const pm = macdLine[i - 1],
+				ps = signalLine[i - 1];
+			const cm = macdLine[i],
+				cs = signalLine[i];
+			if (pm == null || ps == null || cm == null || cs == null) continue;
+			if (pm <= ps && cm > cs) signals.push({ idx: i, type: "buy" });
+			else if (pm >= ps && cm < cs) signals.push({ idx: i, type: "sell" });
+		}
+	} else if (selectedStrategy.value === "bollinger") {
+		const { upper, lower } = calcBollinger(
+			closes,
+			btParams.bbPeriod,
+			btParams.bbStdDev,
+		);
+		for (let i = 1; i < data.length; i++) {
+			const pc = closes[i - 1]!,
+				cc = closes[i]!;
+			const pl = lower[i - 1],
+				cl = lower[i];
+			const pu = upper[i - 1],
+				cu = upper[i];
+			if (pl == null || cl == null || pu == null || cu == null) continue;
+			if (pc <= pl && cc > cl) signals.push({ idx: i, type: "buy" });
+			else if (pc >= pu && cc < cu) signals.push({ idx: i, type: "sell" });
+		}
+	} else if (selectedStrategy.value === "psar") {
+		const sarData = calcSAR(data, btParams.sarStep, btParams.sarMax);
+		for (let i = 1; i < sarData.length; i++) {
+			const prev = sarData[i - 1]!;
+			const curr = sarData[i]!;
+			if (prev.trend === -1 && curr.trend === 1)
+				signals.push({ idx: i, type: "buy" });
+			else if (prev.trend === 1 && curr.trend === -1)
+				signals.push({ idx: i, type: "sell" });
+		}
+	}
 
-  // Simulate trades: enter on buy, exit on next sell
-  const trades: Trade[] = []
-  let inTrade = false
-  let entryIdx = 0
+	// Simulate trades: enter on buy, exit on next sell
+	const trades: Trade[] = [];
+	let inTrade = false;
+	let entryIdx = 0;
 
-  for (const sig of signals) {
-    if (sig.type === 'buy' && !inTrade) {
-      inTrade = true
-      entryIdx = sig.idx
-    } else if (sig.type === 'sell' && inTrade) {
-      inTrade = false
-      const entry = closes[entryIdx]!
-      const exit = closes[sig.idx]!
-      const pnlPct = ((exit - entry) / entry) * 100
-      trades.push({
-        entryTime: times[entryIdx]!,
-        exitTime: times[sig.idx]!,
-        entryPrice: entry,
-        exitPrice: exit,
-        type: 'long',
-        pnlPct,
-      })
-    }
-  }
+	for (const sig of signals) {
+		if (sig.type === "buy" && !inTrade) {
+			inTrade = true;
+			entryIdx = sig.idx;
+		} else if (sig.type === "sell" && inTrade) {
+			inTrade = false;
+			const entry = closes[entryIdx]!;
+			const exit = closes[sig.idx]!;
+			const pnlPct = ((exit - entry) / entry) * 100;
+			trades.push({
+				entryTime: times[entryIdx]!,
+				exitTime: times[sig.idx]!,
+				entryPrice: entry,
+				exitPrice: exit,
+				type: "long",
+				pnlPct,
+			});
+		}
+	}
 
-  if (!trades.length) return emptyResult()
+	if (!trades.length) return emptyResult();
 
-  const wins = trades.filter(t => t.pnlPct > 0)
-  const winRate = (wins.length / trades.length) * 100
-  const totalReturn = trades.reduce((acc, t) => acc * (1 + t.pnlPct / 100), 1) - 1
+	const wins = trades.filter((t) => t.pnlPct > 0);
+	const winRate = (wins.length / trades.length) * 100;
+	const totalReturn =
+		trades.reduce((acc, t) => acc * (1 + t.pnlPct / 100), 1) - 1;
 
-  // Max drawdown
-  let peak = 1, equity = 1, maxDD = 0
-  for (const t of trades) {
-    equity *= (1 + t.pnlPct / 100)
-    if (equity > peak) peak = equity
-    const dd = (peak - equity) / peak
-    if (dd > maxDD) maxDD = dd
-  }
+	// Max drawdown
+	let peak = 1,
+		equity = 1,
+		maxDD = 0;
+	for (const t of trades) {
+		equity *= 1 + t.pnlPct / 100;
+		if (equity > peak) peak = equity;
+		const dd = (peak - equity) / peak;
+		if (dd > maxDD) maxDD = dd;
+	}
 
-  const avgPnl = trades.reduce((s, t) => s + t.pnlPct, 0) / trades.length
-  const variance = trades.reduce((s, t) => s + (t.pnlPct - avgPnl) ** 2, 0) / trades.length
-  const sharpe = variance > 0 ? avgPnl / Math.sqrt(variance) : 0
+	const avgPnl = trades.reduce((s, t) => s + t.pnlPct, 0) / trades.length;
+	const variance =
+		trades.reduce((s, t) => s + (t.pnlPct - avgPnl) ** 2, 0) / trades.length;
+	const sharpe = variance > 0 ? avgPnl / Math.sqrt(variance) : 0;
 
-  return {
-    trades,
-    totalReturn: totalReturn * 100,
-    winRate,
-    maxDrawdown: maxDD * 100,
-    totalTrades: trades.length,
-    avgPnl,
-    sharpe,
-  }
+	return {
+		trades,
+		totalReturn: totalReturn * 100,
+		winRate,
+		maxDrawdown: maxDD * 100,
+		totalTrades: trades.length,
+		avgPnl,
+		sharpe,
+	};
 }
 
 function emptyResult(): BacktestResult {
-  return { trades: [], totalReturn: 0, winRate: 0, maxDrawdown: 0, totalTrades: 0, avgPnl: 0, sharpe: 0 }
+	return {
+		trades: [],
+		totalReturn: 0,
+		winRate: 0,
+		maxDrawdown: 0,
+		totalTrades: 0,
+		avgPnl: 0,
+		sharpe: 0,
+	};
 }
 
+watch(
+	[selectedStrategy, () => ({ ...btParams })],
+	() => (btDirty.value = true),
+	{ deep: true },
+);
+
+watch(btResult, () => {
+	setupDirty.value = true;
+	explainDirty.value = true;
+});
+
 function runBT() {
-  btRunning.value = true
-  clearSignalSeries()
-  setTimeout(() => {
-    btResult.value = runBacktest()
-    plotSignals(btResult.value.trades)
-    btRunning.value = false
-  }, 50)
+	btRunning.value = true;
+	btDirty.value = false;
+	clearSignalSeries();
+	setTimeout(() => {
+		btResult.value = runBacktest();
+		plotSignals(btResult.value.trades);
+		btRunning.value = false;
+	}, 50);
 }
 
 function clearSignalSeries() {
-  if (buySignalSeries) { mainChart?.removeSeries(buySignalSeries); buySignalSeries = null }
-  if (sellSignalSeries) { mainChart?.removeSeries(sellSignalSeries); sellSignalSeries = null }
+	if (buySignalSeries) {
+		mainChart?.removeSeries(buySignalSeries);
+		buySignalSeries = null;
+	}
+	if (sellSignalSeries) {
+		mainChart?.removeSeries(sellSignalSeries);
+		sellSignalSeries = null;
+	}
 }
 
 function plotSignals(trades: Trade[]) {
-  if (!mainChart || !trades.length) return
+	if (!mainChart || !trades.length) return;
 
-  // Build sparse series: only at signal points, null elsewhere
-  const allTimes = rawData.value.map(d => d.time as UTCTimestamp)
-  const buyPts = new Map<UTCTimestamp, number>()
-  const sellPts = new Map<UTCTimestamp, number>()
+	// Build sparse series: only at signal points, null elsewhere
+	const allTimes = rawData.value.map((d) => d.time as UTCTimestamp);
+	const buyPts = new Map<UTCTimestamp, number>();
+	const sellPts = new Map<UTCTimestamp, number>();
 
-  for (const t of trades) {
-    // Place buy marker slightly below candle low
-    const entryBar = rawData.value.find(d => d.time === t.entryTime)
-    const exitBar = rawData.value.find(d => d.time === t.exitTime)
-    if (entryBar) buyPts.set(t.entryTime, entryBar.low * 0.99)
-    if (exitBar) sellPts.set(t.exitTime, exitBar.high * 1.01)
-  }
+	for (const t of trades) {
+		// Place buy marker slightly below candle low
+		const entryBar = rawData.value.find((d) => d.time === t.entryTime);
+		const exitBar = rawData.value.find((d) => d.time === t.exitTime);
+		if (entryBar) buyPts.set(t.entryTime, entryBar.low * 0.99);
+		if (exitBar) sellPts.set(t.exitTime, exitBar.high * 1.01);
+	}
 
-  if (buyPts.size) {
-    buySignalSeries = mainChart.addSeries(LineSeries, {
-      color: 'transparent',
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 6,
-      crosshairMarkerBorderColor: '#26a69a',
-      crosshairMarkerBackgroundColor: '#26a69a',
-    })
-    buySignalSeries.setData(
-      allTimes
-        .filter(t => buyPts.has(t))
-        .map(t => ({ time: t, value: buyPts.get(t)! }))
-    )
-  }
+	if (buyPts.size) {
+		buySignalSeries = mainChart.addSeries(LineSeries, {
+			color: "transparent",
+			lineWidth: 1,
+			priceLineVisible: false,
+			lastValueVisible: false,
+			crosshairMarkerVisible: true,
+			crosshairMarkerRadius: 6,
+			crosshairMarkerBorderColor: "#26a69a",
+			crosshairMarkerBackgroundColor: "#26a69a",
+		});
+		buySignalSeries.setData(
+			allTimes
+				.filter((t) => buyPts.has(t))
+				.map((t) => ({ time: t, value: buyPts.get(t)! })),
+		);
+	}
 
-  if (sellPts.size) {
-    sellSignalSeries = mainChart.addSeries(LineSeries, {
-      color: 'transparent',
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 6,
-      crosshairMarkerBorderColor: '#ef5350',
-      crosshairMarkerBackgroundColor: '#ef5350',
-    })
-    sellSignalSeries.setData(
-      allTimes
-        .filter(t => sellPts.has(t))
-        .map(t => ({ time: t, value: sellPts.get(t)! }))
-    )
-  }
+	if (sellPts.size) {
+		sellSignalSeries = mainChart.addSeries(LineSeries, {
+			color: "transparent",
+			lineWidth: 1,
+			priceLineVisible: false,
+			lastValueVisible: false,
+			crosshairMarkerVisible: true,
+			crosshairMarkerRadius: 6,
+			crosshairMarkerBorderColor: "#ef5350",
+			crosshairMarkerBackgroundColor: "#ef5350",
+		});
+		sellSignalSeries.setData(
+			allTimes
+				.filter((t) => sellPts.has(t))
+				.map((t) => ({ time: t, value: sellPts.get(t)! })),
+		);
+	}
 }
 
 function clearSetupSeries() {
-  for (const s of setupSeries) mainChart?.removeSeries(s)
-  setupSeries = []
-  tradeSetup.value = null
+	for (const s of setupSeries) mainChart?.removeSeries(s);
+	setupSeries = [];
+	tradeSetup.value = null;
 }
 
 function clearBacktest() {
-  clearSignalSeries()
-  clearSetupSeries()
-  btResult.value = null
-  aiExplanation.value = ''
-  aiRationale.value = ''
+	clearSignalSeries();
+	clearSetupSeries();
+	btResult.value = null;
+	aiExplanation.value = "";
+	aiRationale.value = "";
 }
 
 async function aiRunBacktest() {
-  if (!rawData.value.length) return
-  aiRunning.value = true
-  clearBacktest()
-  try {
-    const sample = rawData.value.slice(-60).map(d => ({
-      time: d.time, open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volume,
-    }))
-    const res = await $fetch<{ strategy: StrategyId; params: Record<string, number>; rationale: string }>('/api/ai/auto-backtest', {
-      method: 'POST',
-      body: { ticker: props.ticker, range: activeRange.value, ohlcvSample: sample },
-    })
-    selectedStrategy.value = res.strategy
-    if (res.strategy === 'ma_cross') {
-      if (res.params.fastMA) btParams.fastMA = res.params.fastMA
-      if (res.params.slowMA) btParams.slowMA = res.params.slowMA
-    } else if (res.strategy === 'rsi') {
-      if (res.params.rsiPeriod) btParams.rsiPeriod = res.params.rsiPeriod
-    } else if (res.strategy === 'breakout') {
-      if (res.params.breakoutPeriod) btParams.breakoutPeriod = res.params.breakoutPeriod
-    }
-    aiRationale.value = res.rationale
-    await nextTick()
-    runBT()
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    aiRationale.value = `Error: ${msg}`
-  } finally {
-    aiRunning.value = false
-  }
+	if (!rawData.value.length) return;
+	aiRunning.value = true;
+	clearBacktest();
+	try {
+		const sample = rawData.value.slice(-60).map((d) => ({
+			time: d.time,
+			open: d.open,
+			high: d.high,
+			low: d.low,
+			close: d.close,
+			volume: d.volume,
+		}));
+		const res = await $fetch<{
+			strategy: StrategyId;
+			params: Record<string, number>;
+			rationale: string;
+		}>("/api/ai/auto-backtest", {
+			method: "POST",
+			body: {
+				ticker: props.ticker,
+				range: activeRange.value,
+				ohlcvSample: sample,
+			},
+		});
+		selectedStrategy.value = res.strategy;
+		if (res.strategy === "ma_cross") {
+			if (res.params.fastMA) btParams.fastMA = res.params.fastMA;
+			if (res.params.slowMA) btParams.slowMA = res.params.slowMA;
+		} else if (res.strategy === "rsi") {
+			if (res.params.rsiPeriod) btParams.rsiPeriod = res.params.rsiPeriod;
+		} else if (res.strategy === "breakout") {
+			if (res.params.breakoutPeriod)
+				btParams.breakoutPeriod = res.params.breakoutPeriod;
+		} else if (res.strategy === "macd") {
+			if (res.params.macdFast) btParams.macdFast = res.params.macdFast;
+			if (res.params.macdSlow) btParams.macdSlow = res.params.macdSlow;
+			if (res.params.macdSignal) btParams.macdSignal = res.params.macdSignal;
+		} else if (res.strategy === "bollinger") {
+			if (res.params.bbPeriod) btParams.bbPeriod = res.params.bbPeriod;
+			if (res.params.bbStdDev) btParams.bbStdDev = res.params.bbStdDev;
+		} else if (res.strategy === "psar") {
+			if (res.params.sarStep) btParams.sarStep = res.params.sarStep;
+			if (res.params.sarMax) btParams.sarMax = res.params.sarMax;
+		}
+		aiRationale.value = res.rationale;
+		await nextTick();
+		runBT();
+	} catch (err: unknown) {
+		const msg = err instanceof Error ? err.message : String(err);
+		aiRationale.value = `Error: ${msg}`;
+	} finally {
+		aiRunning.value = false;
+	}
 }
 
 async function drawTradeSetup() {
-  if (!btResult.value || !mainChart || !rawData.value.length) return
-  setupLoading.value = true
-  clearSetupSeries()
-  try {
-    const strategyLabel = STRATEGIES.find(s => s.id === selectedStrategy.value)?.label ?? selectedStrategy.value
-    const params: Record<string, number> = {}
-    if (selectedStrategy.value === 'ma_cross') { params.fastMA = btParams.fastMA; params.slowMA = btParams.slowMA }
-    else if (selectedStrategy.value === 'rsi') { params.rsiPeriod = btParams.rsiPeriod }
-    else if (selectedStrategy.value === 'breakout') { params.breakoutPeriod = btParams.breakoutPeriod }
+	if (!btResult.value || !mainChart || !rawData.value.length) return;
+	setupLoading.value = true;
+	clearSetupSeries();
+	try {
+		const strategyLabel =
+			STRATEGIES.find((s) => s.id === selectedStrategy.value)?.label ??
+			selectedStrategy.value;
+		const params: Record<string, number> = {};
+		if (selectedStrategy.value === "ma_cross") {
+			params.fastMA = btParams.fastMA;
+			params.slowMA = btParams.slowMA;
+		} else if (selectedStrategy.value === "rsi") {
+			params.rsiPeriod = btParams.rsiPeriod;
+		} else if (selectedStrategy.value === "breakout") {
+			params.breakoutPeriod = btParams.breakoutPeriod;
+		} else if (selectedStrategy.value === "macd") {
+			params.macdFast = btParams.macdFast;
+			params.macdSlow = btParams.macdSlow;
+			params.macdSignal = btParams.macdSignal;
+		} else if (selectedStrategy.value === "bollinger") {
+			params.bbPeriod = btParams.bbPeriod;
+			params.bbStdDev = btParams.bbStdDev;
+		} else if (selectedStrategy.value === "psar") {
+			params.sarStep = btParams.sarStep;
+			params.sarMax = btParams.sarMax;
+		}
 
-    const setup = await $fetch<TradeSetup>('/api/ai/trade-setup', {
-      method: 'POST',
-      body: { ticker: props.ticker, strategy: strategyLabel, params, range: activeRange.value, result: btResult.value },
-    })
+		const setup = await $fetch<TradeSetup>("/api/ai/trade-setup", {
+			method: "POST",
+			body: {
+				ticker: props.ticker,
+				strategy: strategyLabel,
+				params,
+				range: activeRange.value,
+				result: btResult.value,
+			},
+		});
 
-    tradeSetup.value = setup
+		tradeSetup.value = setup;
+		setupDirty.value = false;
 
-    const first = rawData.value[0]!
-    const last = rawData.value[rawData.value.length - 1]!
-    const times = [{ time: first.time as UTCTimestamp }, { time: last.time as UTCTimestamp }]
+		const first = rawData.value[0]!;
+		const last = rawData.value[rawData.value.length - 1]!;
+		const times = [
+			{ time: first.time as UTCTimestamp },
+			{ time: last.time as UTCTimestamp },
+		];
 
-    const entryS = mainChart.addSeries(LineSeries, { color: '#26a69a', lineWidth: 2, lineStyle: 0, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
-    entryS.setData(times.map(t => ({ ...t, value: setup.entry })))
+		const entryS = mainChart.addSeries(LineSeries, {
+			color: "#26a69a",
+			lineWidth: 2,
+			lineStyle: 0,
+			priceLineVisible: false,
+			lastValueVisible: true,
+			crosshairMarkerVisible: false,
+		});
+		entryS.setData(times.map((t) => ({ ...t, value: setup.entry })));
 
-    const targetS = mainChart.addSeries(LineSeries, { color: '#60a5fa', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
-    targetS.setData(times.map(t => ({ ...t, value: setup.target })))
+		const targetS = mainChart.addSeries(LineSeries, {
+			color: "#60a5fa",
+			lineWidth: 1,
+			lineStyle: 2,
+			priceLineVisible: false,
+			lastValueVisible: true,
+			crosshairMarkerVisible: false,
+		});
+		targetS.setData(times.map((t) => ({ ...t, value: setup.target })));
 
-    const stopS = mainChart.addSeries(LineSeries, { color: '#ef5350', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false })
-    stopS.setData(times.map(t => ({ ...t, value: setup.stopLoss })))
+		const stopS = mainChart.addSeries(LineSeries, {
+			color: "#ef5350",
+			lineWidth: 1,
+			lineStyle: 2,
+			priceLineVisible: false,
+			lastValueVisible: true,
+			crosshairMarkerVisible: false,
+		});
+		stopS.setData(times.map((t) => ({ ...t, value: setup.stopLoss })));
 
-    setupSeries = [entryS, targetS, stopS]
-  } catch {
-    tradeSetup.value = null
-  } finally {
-    setupLoading.value = false
-  }
+		setupSeries = [entryS, targetS, stopS];
+	} catch {
+		tradeSetup.value = null;
+	} finally {
+		setupLoading.value = false;
+	}
 }
 
 async function explainWithAI() {
-  if (!btResult.value) return
-  aiLoading.value = true
-  aiExplanation.value = ''
-  try {
-    const strategyLabel = STRATEGIES.find(s => s.id === selectedStrategy.value)?.label ?? selectedStrategy.value
-    const params: Record<string, number> = {}
-    if (selectedStrategy.value === 'ma_cross') { params.fastMA = btParams.fastMA; params.slowMA = btParams.slowMA }
-    else if (selectedStrategy.value === 'rsi') { params.rsiPeriod = btParams.rsiPeriod }
-    else if (selectedStrategy.value === 'breakout') { params.breakoutPeriod = btParams.breakoutPeriod }
+	if (!btResult.value) return;
+	aiLoading.value = true;
+	aiExplanation.value = "";
+	try {
+		const strategyLabel =
+			STRATEGIES.find((s) => s.id === selectedStrategy.value)?.label ??
+			selectedStrategy.value;
+		const params: Record<string, number> = {};
+		if (selectedStrategy.value === "ma_cross") {
+			params.fastMA = btParams.fastMA;
+			params.slowMA = btParams.slowMA;
+		} else if (selectedStrategy.value === "rsi") {
+			params.rsiPeriod = btParams.rsiPeriod;
+		} else if (selectedStrategy.value === "breakout") {
+			params.breakoutPeriod = btParams.breakoutPeriod;
+		} else if (selectedStrategy.value === "macd") {
+			params.macdFast = btParams.macdFast;
+			params.macdSlow = btParams.macdSlow;
+			params.macdSignal = btParams.macdSignal;
+		} else if (selectedStrategy.value === "bollinger") {
+			params.bbPeriod = btParams.bbPeriod;
+			params.bbStdDev = btParams.bbStdDev;
+		} else if (selectedStrategy.value === "psar") {
+			params.sarStep = btParams.sarStep;
+			params.sarMax = btParams.sarMax;
+		}
 
-    const res = await $fetch<{ explanation: string }>('/api/ai/explain-backtest', {
-      method: 'POST',
-      body: {
-        ticker: props.ticker,
-        strategy: strategyLabel,
-        params,
-        range: activeRange.value,
-        result: btResult.value,
-      },
-    })
-    aiExplanation.value = res.explanation
-  } catch {
-    aiExplanation.value = 'Failed to get explanation. Make sure ANTHROPIC_API_KEY is set in .env'
-  } finally {
-    aiLoading.value = false
-  }
+		const res = await $fetch<{ explanation: string }>(
+			"/api/ai/explain-backtest",
+			{
+				method: "POST",
+				body: {
+					ticker: props.ticker,
+					strategy: strategyLabel,
+					params,
+					range: activeRange.value,
+					result: btResult.value,
+				},
+			},
+		);
+		aiExplanation.value = res.explanation;
+		explainDirty.value = false;
+	} catch {
+		aiExplanation.value =
+			"Failed to get explanation. Make sure ANTHROPIC_API_KEY is set in .env";
+	} finally {
+		aiLoading.value = false;
+	}
 }
 
 // ============================================================
 // MA
 // ============================================================
 function calcMA(data: OHLCVPoint[], period: number): LineData[] {
-  const out: LineData[] = []
-  for (let i = period - 1; i < data.length; i++) {
-    const sum = data.slice(i - period + 1, i + 1).reduce((s, d) => s + d.close, 0)
-    out.push({ time: data[i]!.time as UTCTimestamp, value: sum / period })
-  }
-  return out
+	const out: LineData[] = [];
+	for (let i = period - 1; i < data.length; i++) {
+		const sum = data
+			.slice(i - period + 1, i + 1)
+			.reduce((s, d) => s + d.close, 0);
+		out.push({ time: data[i]!.time as UTCTimestamp, value: sum / period });
+	}
+	return out;
 }
 
 // ============================================================
 // CHART INIT
 // ============================================================
 function initMainChart() {
-  if (!mainEl.value) return
-  mainChart = createChart(mainEl.value, {
-    width: mainEl.value.clientWidth,
-    height: mainEl.value.clientHeight,
-    layout: {
-      background: { color: '#131722' },
-      textColor: '#d1d4dc',
-      fontFamily: 'Inter, system-ui, sans-serif',
-    },
-    grid: { vertLines: { color: '#1e2330' }, horzLines: { color: '#1e2330' } },
-    crosshair: {
-      mode: CrosshairMode.Normal,
-      vertLine: { color: '#758696', width: 1, style: 1, labelBackgroundColor: '#2a2e39' },
-      horzLine: { color: '#758696', width: 1, style: 1, labelBackgroundColor: '#2a2e39' },
-    },
-    rightPriceScale: { borderColor: '#2a2e39', scaleMargins: { top: 0.08, bottom: 0.02 } },
-    timeScale: { borderColor: '#2a2e39', timeVisible: true, secondsVisible: false },
-    handleScroll: true,
-    handleScale: true,
-  })
+	if (!mainEl.value) return;
+	mainChart = createChart(mainEl.value, {
+		width: mainEl.value.clientWidth,
+		height: mainEl.value.clientHeight,
+		layout: {
+			background: { color: "#131722" },
+			textColor: "#d1d4dc",
+			fontFamily: "Inter, system-ui, sans-serif",
+		},
+		grid: { vertLines: { color: "#1e2330" }, horzLines: { color: "#1e2330" } },
+		crosshair: {
+			mode: CrosshairMode.Normal,
+			vertLine: {
+				color: "#758696",
+				width: 1,
+				style: 1,
+				labelBackgroundColor: "#2a2e39",
+			},
+			horzLine: {
+				color: "#758696",
+				width: 1,
+				style: 1,
+				labelBackgroundColor: "#2a2e39",
+			},
+		},
+		rightPriceScale: {
+			borderColor: "#2a2e39",
+			scaleMargins: { top: 0.08, bottom: 0.02 },
+		},
+		timeScale: {
+			borderColor: "#2a2e39",
+			timeVisible: true,
+			secondsVisible: false,
+		},
+		handleScroll: true,
+		handleScale: true,
+	});
 
-  mainChart.subscribeCrosshairMove((param) => {
-    if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
-      tooltip.visible = false; return
-    }
-    const active = chartType.value === 'candlestick' ? candleSeries : areaSeries
-    if (!active) return
-    const d = param.seriesData.get(active)
-    if (!d) { tooltip.visible = false; return }
-    const isBar = 'open' in d
-    tooltip.visible = true
-    tooltip.time = formatTime(param.time as UTCTimestamp)
-    tooltip.open = isBar ? (d as BarData).open : (d as LineData).value
-    tooltip.high = isBar ? (d as BarData).high : (d as LineData).value
-    tooltip.low = isBar ? (d as BarData).low : (d as LineData).value
-    tooltip.close = isBar ? (d as BarData).close : (d as LineData).value
-    tooltip.isUp = tooltip.close >= tooltip.open
-    if (volumeSeries) {
-      const vd = param.seriesData.get(volumeSeries) as HistogramData | undefined
-      tooltip.volume = vd?.value ?? 0
-    }
-  })
+	mainChart.subscribeCrosshairMove((param) => {
+		if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
+			tooltip.visible = false;
+			return;
+		}
+		const active =
+			chartType.value === "candlestick" ? candleSeries : areaSeries;
+		if (!active) return;
+		const d = param.seriesData.get(active);
+		if (!d) {
+			tooltip.visible = false;
+			return;
+		}
+		const isBar = "open" in d;
+		tooltip.visible = true;
+		tooltip.time = formatTime(param.time as UTCTimestamp);
+		tooltip.open = isBar ? (d as BarData).open : (d as LineData).value;
+		tooltip.high = isBar ? (d as BarData).high : (d as LineData).value;
+		tooltip.low = isBar ? (d as BarData).low : (d as LineData).value;
+		tooltip.close = isBar ? (d as BarData).close : (d as LineData).value;
+		tooltip.isUp = tooltip.close >= tooltip.open;
+		if (volumeSeries) {
+			const vd = param.seriesData.get(volumeSeries) as
+				| HistogramData
+				| undefined;
+			tooltip.volume = vd?.value ?? 0;
+		}
+	});
 }
 
 function initVolumeChart() {
-  if (!volumeEl.value) return
-  volumeChart = createChart(volumeEl.value, {
-    width: volumeEl.value.clientWidth,
-    height: volumeEl.value.clientHeight,
-    layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
-    grid: { vertLines: { color: '#1e2330' }, horzLines: { color: 'transparent' } },
-    crosshair: {
-      mode: CrosshairMode.Normal,
-      vertLine: { color: '#758696', width: 1, style: 1, labelBackgroundColor: '#2a2e39' },
-      horzLine: { visible: false, labelVisible: false },
-    },
-    rightPriceScale: { borderColor: '#2a2e39', scaleMargins: { top: 0.1, bottom: 0 }, ticksVisible: false },
-    timeScale: { borderColor: '#2a2e39', visible: false },
-    handleScroll: false,
-    handleScale: false,
-  })
-  volumeSeries = volumeChart.addSeries(HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: 'right' })
-  mainChart?.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) volumeChart?.timeScale().setVisibleLogicalRange(r) })
-  volumeChart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) mainChart?.timeScale().setVisibleLogicalRange(r) })
+	if (!volumeEl.value) return;
+	volumeChart = createChart(volumeEl.value, {
+		width: volumeEl.value.clientWidth,
+		height: volumeEl.value.clientHeight,
+		layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
+		grid: {
+			vertLines: { color: "#1e2330" },
+			horzLines: { color: "transparent" },
+		},
+		crosshair: {
+			mode: CrosshairMode.Normal,
+			vertLine: {
+				color: "#758696",
+				width: 1,
+				style: 1,
+				labelBackgroundColor: "#2a2e39",
+			},
+			horzLine: { visible: false, labelVisible: false },
+		},
+		rightPriceScale: {
+			borderColor: "#2a2e39",
+			scaleMargins: { top: 0.1, bottom: 0 },
+			ticksVisible: false,
+		},
+		timeScale: { borderColor: "#2a2e39", visible: false },
+		handleScroll: false,
+		handleScale: false,
+	});
+	volumeSeries = volumeChart.addSeries(HistogramSeries, {
+		priceFormat: { type: "volume" },
+		priceScaleId: "right",
+	});
+	mainChart?.timeScale().subscribeVisibleLogicalRangeChange((r) => {
+		if (r) volumeChart?.timeScale().setVisibleLogicalRange(r);
+	});
+	volumeChart.timeScale().subscribeVisibleLogicalRangeChange((r) => {
+		if (r) mainChart?.timeScale().setVisibleLogicalRange(r);
+	});
 }
 
 function mountCandleSeries() {
-  if (!mainChart) return
-  candleSeries = mainChart.addSeries(CandlestickSeries, {
-    upColor, downColor, borderUpColor: upColor, borderDownColor: downColor, wickUpColor: upColor, wickDownColor: downColor,
-  })
+	if (!mainChart) return;
+	candleSeries = mainChart.addSeries(CandlestickSeries, {
+		upColor,
+		downColor,
+		borderUpColor: upColor,
+		borderDownColor: downColor,
+		wickUpColor: upColor,
+		wickDownColor: downColor,
+	});
 }
 
 function mountAreaSeries() {
-  if (!mainChart) return
-  areaSeries = mainChart.addSeries(AreaSeries, {
-    lineColor: lineColor.value, topColor: lineColor.value + '40', bottomColor: lineColor.value + '00',
-    lineWidth: 2, priceLineVisible: false,
-  })
+	if (!mainChart) return;
+	areaSeries = mainChart.addSeries(AreaSeries, {
+		lineColor: lineColor.value,
+		topColor: lineColor.value + "40",
+		bottomColor: lineColor.value + "00",
+		lineWidth: 2,
+		priceLineVisible: false,
+	});
 }
 
 function switchType(type: ChartType) {
-  chartType.value = type
-  if (candleSeries) { mainChart?.removeSeries(candleSeries); candleSeries = null }
-  if (areaSeries) { mainChart?.removeSeries(areaSeries); areaSeries = null }
-  type === 'candlestick' ? mountCandleSeries() : mountAreaSeries()
-  pushData()
+	chartType.value = type;
+	if (candleSeries) {
+		mainChart?.removeSeries(candleSeries);
+		candleSeries = null;
+	}
+	if (areaSeries) {
+		mainChart?.removeSeries(areaSeries);
+		areaSeries = null;
+	}
+	type === "candlestick" ? mountCandleSeries() : mountAreaSeries();
+	pushData();
 }
 
 function toggleMA(key: MAKey) {
-  if (activeMA.value.has(key)) {
-    activeMA.value.delete(key)
-    const s = maSeries.get(key)
-    if (s) { mainChart?.removeSeries(s); maSeries.delete(key) }
-  } else {
-    activeMA.value.add(key)
-    if (rawData.value.length) {
-      const def = MA_DEFS.find(d => d.key === key)!
-      const s = mainChart!.addSeries(LineSeries, {
-        color: def.color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-      })
-      s.setData(calcMA(rawData.value, def.period))
-      maSeries.set(key, s)
-    }
-  }
+	if (activeMA.value.has(key)) {
+		activeMA.value.delete(key);
+		const s = maSeries.get(key);
+		if (s) {
+			mainChart?.removeSeries(s);
+			maSeries.delete(key);
+		}
+	} else {
+		activeMA.value.add(key);
+		if (rawData.value.length) {
+			const def = MA_DEFS.find((d) => d.key === key)!;
+			const s = mainChart!.addSeries(LineSeries, {
+				color: def.color,
+				lineWidth: 1,
+				priceLineVisible: false,
+				lastValueVisible: false,
+				crosshairMarkerVisible: false,
+			});
+			s.setData(calcMA(rawData.value, def.period));
+			maSeries.set(key, s);
+		}
+	}
 }
 
 function refreshMAs() {
-  for (const key of activeMA.value) {
-    const s = maSeries.get(key)
-    const def = MA_DEFS.find(d => d.key === key)!
-    s?.setData(calcMA(rawData.value, def.period))
-  }
+	for (const key of activeMA.value) {
+		const s = maSeries.get(key);
+		const def = MA_DEFS.find((d) => d.key === key)!;
+		s?.setData(calcMA(rawData.value, def.period));
+	}
+}
+
+function buildSARData() {
+	const sarData = calcSAR(rawData.value, sarStep.value, sarMax.value);
+	// Split into bullish (below price) and bearish (above price) dot series
+	return sarData.map((d, i) => ({
+		time: rawData.value[i]!.time as UTCTimestamp,
+		value: d.sar,
+		// color: bullish dots green, bearish dots red (used via custom marker approach)
+		trend: d.trend,
+	}));
+}
+
+function toggleSAR() {
+	if (sarActive.value) {
+		sarActive.value = false;
+		if (sarSeries) {
+			mainChart?.removeSeries(sarSeries);
+			sarSeries = null;
+		}
+	} else {
+		sarActive.value = true;
+		if (mainChart && rawData.value.length) {
+			sarSeries = mainChart.addSeries(LineSeries, {
+				color: "transparent",
+				lineWidth: 1,
+				priceLineVisible: false,
+				lastValueVisible: false,
+				crosshairMarkerVisible: true,
+				crosshairMarkerRadius: 3,
+				crosshairMarkerBorderColor: SAR_COLOR,
+				crosshairMarkerBackgroundColor: SAR_COLOR,
+			});
+			refreshSAR();
+		}
+	}
+}
+
+function refreshSAR() {
+	if (!sarActive.value || !sarSeries || !rawData.value.length) return;
+	const pts = buildSARData();
+	// Render SAR values with color based on trend
+	sarSeries.setData(
+		pts.map((p) => ({
+			time: p.time,
+			value: p.value,
+			color: p.trend === 1 ? "#26a69a" : "#ef5350",
+		})),
+	);
 }
 
 function toggleLogScale() {
-  logScale.value = !logScale.value
-  mainChart?.priceScale('right').applyOptions({
-    mode: logScale.value ? PriceScaleMode.Logarithmic : PriceScaleMode.Normal,
-  })
+	logScale.value = !logScale.value;
+	mainChart?.priceScale("right").applyOptions({
+		mode: logScale.value ? PriceScaleMode.Logarithmic : PriceScaleMode.Normal,
+	});
 }
 
 // ---- Drawings ----
 function onChartClick(e: MouseEvent) {
-  if (activeTool.value === 'pointer' || !mainChart) return
-  const rect = mainEl.value!.getBoundingClientRect()
-  const activeSeries = chartType.value === 'candlestick' ? candleSeries : areaSeries
-  const price = activeSeries?.coordinateToPrice(e.clientY - rect.top) ?? null
-  const time = mainChart.timeScale().coordinateToTime(e.clientX - rect.left) as UTCTimestamp | null
-  if (price == null || time == null) return
-  if (activeTool.value === 'hline') { addHLine(price); return }
-  if (activeTool.value === 'trendline') {
-    if (!drawingStart) { drawingStart = { time, price } }
-    else { addTrendLine(drawingStart, { time, price }); drawingStart = null }
-  }
+	if (activeTool.value === "pointer" || !mainChart) return;
+	const rect = mainEl.value!.getBoundingClientRect();
+	const activeSeries =
+		chartType.value === "candlestick" ? candleSeries : areaSeries;
+	const price = activeSeries?.coordinateToPrice(e.clientY - rect.top) ?? null;
+	const time = mainChart
+		.timeScale()
+		.coordinateToTime(e.clientX - rect.left) as UTCTimestamp | null;
+	if (price == null || time == null) return;
+	if (activeTool.value === "hline") {
+		addHLine(price);
+		return;
+	}
+	if (activeTool.value === "trendline") {
+		if (!drawingStart) {
+			drawingStart = { time, price };
+		} else {
+			addTrendLine(drawingStart, { time, price });
+			drawingStart = null;
+		}
+	}
 }
 
 function addHLine(price: number) {
-  if (!mainChart || !rawData.value.length) return
-  const first = rawData.value[0]; const last = rawData.value[rawData.value.length - 1]
-  if (!first || !last) return
-  const s = mainChart.addSeries(LineSeries, { color: '#facc15', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })
-  s.setData([{ time: first.time as UTCTimestamp, value: price }, { time: last.time as UTCTimestamp, value: price }])
-  drawings.value.push({ id: crypto.randomUUID(), type: 'hline', series: s })
+	if (!mainChart || !rawData.value.length) return;
+	const first = rawData.value[0];
+	const last = rawData.value[rawData.value.length - 1];
+	if (!first || !last) return;
+	const s = mainChart.addSeries(LineSeries, {
+		color: "#facc15",
+		lineWidth: 1,
+		lineStyle: 2,
+		priceLineVisible: false,
+		lastValueVisible: false,
+		crosshairMarkerVisible: false,
+	});
+	s.setData([
+		{ time: first.time as UTCTimestamp, value: price },
+		{ time: last.time as UTCTimestamp, value: price },
+	]);
+	drawings.value.push({ id: crypto.randomUUID(), type: "hline", series: s });
 }
 
-function addTrendLine(a: { time: UTCTimestamp; price: number }, b: { time: UTCTimestamp; price: number }) {
-  if (!mainChart) return
-  const s = mainChart.addSeries(LineSeries, { color: '#a78bfa', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })
-  const [p1, p2] = a.time < b.time ? [a, b] : [b, a]
-  s.setData([{ time: p1.time, value: p1.price }, { time: p2.time, value: p2.price }])
-  drawings.value.push({ id: crypto.randomUUID(), type: 'trendline', series: s })
+function addTrendLine(
+	a: { time: UTCTimestamp; price: number },
+	b: { time: UTCTimestamp; price: number },
+) {
+	if (!mainChart) return;
+	const s = mainChart.addSeries(LineSeries, {
+		color: "#a78bfa",
+		lineWidth: 1,
+		priceLineVisible: false,
+		lastValueVisible: false,
+		crosshairMarkerVisible: false,
+	});
+	const [p1, p2] = a.time < b.time ? [a, b] : [b, a];
+	s.setData([
+		{ time: p1.time, value: p1.price },
+		{ time: p2.time, value: p2.price },
+	]);
+	drawings.value.push({
+		id: crypto.randomUUID(),
+		type: "trendline",
+		series: s,
+	});
 }
 
 function openContextMenu(e: MouseEvent) {
-  if (!drawings.value.length) return
-  e.preventDefault()
-  ctxMenu.x = e.clientX; ctxMenu.y = e.clientY
-  ctxMenu.drawingId = drawings.value[drawings.value.length - 1]!.id
-  ctxMenu.visible = true
+	if (!drawings.value.length) return;
+	e.preventDefault();
+	ctxMenu.x = e.clientX;
+	ctxMenu.y = e.clientY;
+	ctxMenu.drawingId = drawings.value[drawings.value.length - 1]!.id;
+	ctxMenu.visible = true;
 }
 
 function removeDrawing(id: string) {
-  const idx = drawings.value.findIndex(d => d.id === id)
-  if (idx === -1) return
-  mainChart?.removeSeries(drawings.value[idx]!.series)
-  drawings.value.splice(idx, 1)
-  ctxMenu.visible = false
+	const idx = drawings.value.findIndex((d) => d.id === id);
+	if (idx === -1) return;
+	mainChart?.removeSeries(drawings.value[idx]!.series);
+	drawings.value.splice(idx, 1);
+	ctxMenu.visible = false;
 }
 
 function clearAllDrawings() {
-  for (const d of drawings.value) mainChart?.removeSeries(d.series)
-  drawings.value = []
-  ctxMenu.visible = false
+	for (const d of drawings.value) mainChart?.removeSeries(d.series);
+	drawings.value = [];
+	ctxMenu.visible = false;
 }
 
 // ---- Data ----
 function pushData() {
-  if (!historyData.value?.length) return
-  rawData.value = historyData.value
-  const raw = rawData.value
-  if (chartType.value === 'candlestick' && candleSeries)
-    candleSeries.setData(raw.map(d => ({ time: d.time as UTCTimestamp, open: d.open, high: d.high, low: d.low, close: d.close })))
-  else if (chartType.value === 'area' && areaSeries)
-    areaSeries.setData(raw.map(d => ({ time: d.time as UTCTimestamp, value: d.close })))
-  if (volumeSeries) {
-    volumeSeries.setData(raw.map(d => ({ time: d.time as UTCTimestamp, value: d.volume, color: d.close >= d.open ? upColor + '99' : downColor + '99' })))
-    const first = raw[0]; const last = raw[raw.length - 1]
-    if (first && last) volumeChart?.timeScale().setVisibleRange({ from: first.time as UTCTimestamp, to: last.time as UTCTimestamp })
-  }
-  mainChart?.timeScale().fitContent()
-  refreshMAs()
-  if (btResult.value) clearBacktest()
+	if (!historyData.value?.length) return;
+	rawData.value = historyData.value;
+	const raw = rawData.value;
+	if (chartType.value === "candlestick" && candleSeries)
+		candleSeries.setData(
+			raw.map((d) => ({
+				time: d.time as UTCTimestamp,
+				open: d.open,
+				high: d.high,
+				low: d.low,
+				close: d.close,
+			})),
+		);
+	else if (chartType.value === "area" && areaSeries)
+		areaSeries.setData(
+			raw.map((d) => ({ time: d.time as UTCTimestamp, value: d.close })),
+		);
+	if (volumeSeries) {
+		volumeSeries.setData(
+			raw.map((d) => ({
+				time: d.time as UTCTimestamp,
+				value: d.volume,
+				color: d.close >= d.open ? upColor + "99" : downColor + "99",
+			})),
+		);
+		const first = raw[0];
+		const last = raw[raw.length - 1];
+		if (first && last)
+			volumeChart?.timeScale().setVisibleRange({
+				from: first.time as UTCTimestamp,
+				to: last.time as UTCTimestamp,
+			});
+	}
+	mainChart?.timeScale().fitContent();
+	refreshMAs();
+	refreshSAR();
+	if (btResult.value) clearBacktest();
 }
 
 function syncSize() {
-  if (mainChart && mainEl.value) mainChart.applyOptions({ width: mainEl.value.clientWidth, height: mainEl.value.clientHeight })
-  if (volumeChart && volumeEl.value) volumeChart.applyOptions({ width: volumeEl.value.clientWidth, height: volumeEl.value.clientHeight })
+	if (mainChart && mainEl.value)
+		mainChart.applyOptions({
+			width: mainEl.value.clientWidth,
+			height: mainEl.value.clientHeight,
+		});
+	if (volumeChart && volumeEl.value)
+		volumeChart.applyOptions({
+			width: volumeEl.value.clientWidth,
+			height: volumeEl.value.clientHeight,
+		});
 }
 
 function formatTime(t: UTCTimestamp) {
-  return new Date(t * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+	return new Date(t * 1000).toLocaleString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: false,
+	});
 }
 function fmtVol(v: number) {
-  if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B'
-  if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M'
-  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K'
-  return v.toString()
+	if (v >= 1e9) return (v / 1e9).toFixed(2) + "B";
+	if (v >= 1e6) return (v / 1e6).toFixed(2) + "M";
+	if (v >= 1e3) return (v / 1e3).toFixed(1) + "K";
+	return v.toString();
 }
-function fmtPct(v: number) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%' }
+function fmtPct(v: number) {
+	return (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
+}
 function fmtMoney(_v: number) {
-  const final = btParams.capital * (1 + (btResult.value?.totalReturn ?? 0) / 100)
-  return final.toLocaleString('id-ID', { maximumFractionDigits: 0 })
+	const final =
+		btParams.capital * (1 + (btResult.value?.totalReturn ?? 0) / 100);
+	return final.toLocaleString("id-ID", { maximumFractionDigits: 0 });
 }
-function closeCtx() { ctxMenu.visible = false }
+function closeCtx() {
+	ctxMenu.visible = false;
+}
 
 onMounted(async () => {
-  await nextTick()
-  initMainChart()
-  initVolumeChart()
-  mountCandleSeries()
-  pushData()
-  const ro = new ResizeObserver(syncSize)
-  if (wrapperEl.value) ro.observe(wrapperEl.value)
-})
+	await nextTick();
+	initMainChart();
+	initVolumeChart();
+	mountCandleSeries();
+	pushData();
+	const ro = new ResizeObserver(syncSize);
+	if (wrapperEl.value) ro.observe(wrapperEl.value);
+});
 
-watch(historyData, pushData)
-watch(() => props.ticker, async () => {
-  await nextTick()
-  candleSeries?.setData([]); areaSeries?.setData([]); volumeSeries?.setData([])
-  for (const s of maSeries.values()) s.setData([])
-  clearBacktest()
-})
-watch(lineColor, c => areaSeries?.applyOptions({ lineColor: c, topColor: c + '40', bottomColor: c + '00' }))
+watch(historyData, pushData);
+watch(
+	() => props.ticker,
+	async () => {
+		await nextTick();
+		candleSeries?.setData([]);
+		areaSeries?.setData([]);
+		volumeSeries?.setData([]);
+		for (const s of maSeries.values()) s.setData([]);
+		sarSeries?.setData([]);
+		clearBacktest();
+	},
+);
+watch(lineColor, (c) =>
+	areaSeries?.applyOptions({
+		lineColor: c,
+		topColor: c + "40",
+		bottomColor: c + "00",
+	}),
+);
 
-onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
+onUnmounted(() => {
+	mainChart?.remove();
+	volumeChart?.remove();
+});
 </script>
 
 <template>
@@ -823,6 +1415,17 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
         <div class="h-4 w-px bg-white/10" />
 
         <button
+          class="rounded px-2 py-0.5 text-[11px] font-semibold transition-colors"
+          :style="sarActive
+            ? { background: '#f9731622', color: '#f97316', outline: '1px solid #f9731655' }
+            : { color: '#ffffff30' }"
+          title="Parabolic SAR"
+          @click="toggleSAR"
+        >SAR</button>
+
+        <div class="h-4 w-px bg-white/10" />
+
+        <button
           class="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium transition-colors"
           :class="logScale ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'"
           @click="toggleLogScale"
@@ -903,11 +1506,11 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
           <div>
             <button
               class="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 py-2.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 disabled:opacity-40"
-              :disabled="aiRunning || !rawData.length"
+              :disabled="aiRunning || btRunning || !rawData.length || (!btDirty && !!btResult)"
               @click="aiRunBacktest"
             >
               <Sparkles class="h-3.5 w-3.5" />
-              {{ aiRunning ? 'Picking strategy…' : 'AI Pick & Run' }}
+              {{ aiRunning ? 'Picking strategy…' : (!btDirty && !!btResult) ? 'Change params to re-run' : 'AI Pick & Run' }}
             </button>
             <Transition name="fade">
               <p v-if="aiRationale" class="mt-2 text-[10px] leading-relaxed text-amber-300/60">{{ aiRationale }}</p>
@@ -966,6 +1569,53 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
                     class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
                 </div>
               </template>
+              <template v-else-if="selectedStrategy === 'macd'">
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Fast</label>
+                    <input v-model.number="btParams.macdFast" type="number" min="2" max="50"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Slow</label>
+                    <input v-model.number="btParams.macdSlow" type="number" min="2" max="200"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Signal</label>
+                    <input v-model.number="btParams.macdSignal" type="number" min="2" max="50"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                </div>
+              </template>
+              <template v-else-if="selectedStrategy === 'bollinger'">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Period</label>
+                    <input v-model.number="btParams.bbPeriod" type="number" min="5" max="200"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Std Dev</label>
+                    <input v-model.number="btParams.bbStdDev" type="number" min="0.5" max="4" step="0.5"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                </div>
+              </template>
+              <template v-else-if="selectedStrategy === 'psar'">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Step (AF)</label>
+                    <input v-model.number="btParams.sarStep" type="number" min="0.001" max="0.1" step="0.005"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-[10px] text-white/40">Max AF</label>
+                    <input v-model.number="btParams.sarMax" type="number" min="0.05" max="0.5" step="0.05"
+                      class="w-full rounded-md bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500/50" />
+                  </div>
+                </div>
+              </template>
               <div>
                 <label class="mb-1 block text-[10px] text-white/40">Initial Capital (IDR)</label>
                 <input v-model.number="btParams.capital" type="number" step="1000000"
@@ -977,11 +1627,11 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
           <!-- Run button -->
           <button
             class="flex w-full items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-violet-500 active:scale-95 disabled:opacity-40"
-            :disabled="btRunning || !rawData.length"
+            :disabled="btRunning || !rawData.length || (!btDirty && !!btResult)"
             @click="runBT"
           >
             <Play class="h-3.5 w-3.5" />
-            {{ btRunning ? 'Running…' : 'Run Backtest' }}
+            {{ btRunning ? 'Running…' : btResult && !btDirty ? 'Change params to re-run' : 'Run Backtest' }}
           </button>
 
           <!-- Results -->
@@ -1063,11 +1713,11 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
               <div>
                 <button
                   class="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/15 disabled:opacity-40"
-                  :disabled="setupLoading"
+                  :disabled="setupLoading || (!setupDirty && !!tradeSetup)"
                   @click="drawTradeSetup"
                 >
                   <Target class="h-3.5 w-3.5" />
-                  {{ setupLoading ? 'Analyzing…' : 'AI Trade Setup' }}
+                  {{ setupLoading ? 'Analyzing…' : (!setupDirty && !!tradeSetup) ? 'Re-run backtest to refresh' : 'AI Trade Setup' }}
                 </button>
 
                 <Transition name="fade">
@@ -1126,11 +1776,11 @@ onUnmounted(() => { mainChart?.remove(); volumeChart?.remove() })
               <div>
                 <button
                   class="flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 py-2.5 text-xs font-semibold text-violet-300 transition-colors hover:bg-violet-500/15 disabled:opacity-40"
-                  :disabled="aiLoading"
+                  :disabled="aiLoading || (!explainDirty && !!aiExplanation)"
                   @click="explainWithAI"
                 >
                   <Sparkles class="h-3.5 w-3.5" />
-                  {{ aiLoading ? 'Analyzing…' : 'Explain with AI' }}
+                  {{ aiLoading ? 'Analyzing…' : (!explainDirty && !!aiExplanation) ? 'Re-run backtest to refresh' : 'Explain with AI' }}
                 </button>
 
                 <Transition name="fade">

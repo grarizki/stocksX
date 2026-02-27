@@ -1,44 +1,86 @@
 <script setup lang="ts">
-import { TrendingUp, TrendingDown, BarChart2, Activity } from 'lucide-vue-next'
-import { formatCompact } from '@/lib/utils'
-import type { Stock } from '@/data/stocks'
+import { Activity, BarChart2, TrendingDown, TrendingUp } from "lucide-vue-next";
+import type { Stock } from "@/data/stocks";
+import { formatCompact } from "@/lib/utils";
 
-const { t } = useI18n()
-const activeTab = ref('gainers')
+const { t } = useI18n();
+const activeTab = ref("gainers");
 
 const tabs = computed(() => [
-  { value: 'gainers', label: t('home.gainers'), icon: TrendingUp, color: 'text-gain' },
-  { value: 'losers', label: t('home.losers'), icon: TrendingDown, color: 'text-loss' },
-  { value: 'volume', label: t('home.volume'), icon: BarChart2, color: 'text-blue-400' },
-  { value: 'frequency', label: t('home.frequency'), icon: Activity, color: 'text-yellow-400' },
-])
+	{
+		value: "gainers",
+		label: t("home.gainers"),
+		icon: TrendingUp,
+		color: "text-gain",
+	},
+	{
+		value: "losers",
+		label: t("home.losers"),
+		icon: TrendingDown,
+		color: "text-loss",
+	},
+	{
+		value: "volume",
+		label: t("home.volume"),
+		icon: BarChart2,
+		color: "text-blue-400",
+	},
+	{
+		value: "frequency",
+		label: t("home.frequency"),
+		icon: Activity,
+		color: "text-yellow-400",
+	},
+]);
 
-const { data: gainers, status: gainersStatus } = useApiFetch<Stock[]>('/api/stocks/movers', { query: { type: 'gainers', limit: 5 } })
-const { data: losers, status: losersStatus } = useApiFetch<Stock[]>('/api/stocks/movers', { query: { type: 'losers', limit: 5 } })
-const { data: volume, status: volumeStatus } = useApiFetch<Stock[]>('/api/stocks/movers', { query: { type: 'volume', limit: 5 } })
-const { data: frequency, status: frequencyStatus } = useApiFetch<Stock[]>('/api/stocks/movers', { query: { type: 'frequency', limit: 5 } })
+const { data: gainers, status: gainersStatus } = useApiFetch<Stock[]>(
+	"/api/stocks/movers",
+	{ query: { type: "gainers", limit: 5 } },
+);
+const { data: losers, status: losersStatus } = useApiFetch<Stock[]>(
+	"/api/stocks/movers",
+	{ query: { type: "losers", limit: 5 } },
+);
+const { data: volume, status: volumeStatus } = useApiFetch<Stock[]>(
+	"/api/stocks/movers",
+	{ query: { type: "volume", limit: 5 } },
+);
+const { data: frequency, status: frequencyStatus } = useApiFetch<Stock[]>(
+	"/api/stocks/movers",
+	{ query: { type: "frequency", limit: 5 } },
+);
 
 const currentStocks = computed<Stock[]>(() => {
-  switch (activeTab.value) {
-    case 'gainers': return gainers.value ?? []
-    case 'losers': return losers.value ?? []
-    case 'volume': return volume.value ?? []
-    case 'frequency': return frequency.value ?? []
-    default: return []
-  }
-})
+	switch (activeTab.value) {
+		case "gainers":
+			return gainers.value ?? [];
+		case "losers":
+			return losers.value ?? [];
+		case "volume":
+			return volume.value ?? [];
+		case "frequency":
+			return frequency.value ?? [];
+		default:
+			return [];
+	}
+});
 
 const isPending = computed(() => {
-  switch (activeTab.value) {
-    case 'gainers': return gainersStatus.value === 'pending'
-    case 'losers': return losersStatus.value === 'pending'
-    case 'volume': return volumeStatus.value === 'pending'
-    case 'frequency': return frequencyStatus.value === 'pending'
-    default: return false
-  }
-})
+	switch (activeTab.value) {
+		case "gainers":
+			return gainersStatus.value === "pending";
+		case "losers":
+			return losersStatus.value === "pending";
+		case "volume":
+			return volumeStatus.value === "pending";
+		case "frequency":
+			return frequencyStatus.value === "pending";
+		default:
+			return false;
+	}
+});
 
-const hoveredIdx = ref<number | null>(null)
+const hoveredIdx = ref<number | null>(null);
 </script>
 
 <template>

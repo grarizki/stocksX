@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
-import type { Stock } from '@/data/stocks'
-import { formatNumber } from '@/lib/utils'
+import { X } from "lucide-vue-next";
+import type { Stock } from "@/data/stocks";
+import { formatNumber } from "@/lib/utils";
 
-defineProps<{ stock: Stock }>()
-defineEmits<{ remove: [ticker: string] }>()
+defineProps<{ stock: Stock }>();
+defineEmits<{ remove: [ticker: string] }>();
 </script>
 
 <template>

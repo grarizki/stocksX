@@ -1,111 +1,139 @@
 <script setup lang="ts">
-import { Bar } from 'vue-chartjs'
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-} from 'chart.js'
-import { getForeignDomestic } from '@/data/brokerActivity'
+	BarElement,
+	CategoryScale,
+	Chart as ChartJS,
+	LinearScale,
+	Tooltip,
+} from "chart.js";
+import { Bar } from "vue-chartjs";
+import { getForeignDomestic } from "@/data/brokerActivity";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-const props = defineProps<{ ticker: string }>()
+const props = defineProps<{ ticker: string }>();
 
-type Range = '1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y'
-const RANGES: Range[] = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
-const activeRange = ref<Range>('1D')
+type Range = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y";
+const RANGES: Range[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];
+const activeRange = ref<Range>("1D");
 
-type FDMarket = 'Regular' | 'All Market'
-type FDMetric = 'Value' | 'Volume'
-const FD_MARKETS: FDMarket[] = ['Regular', 'All Market']
-const FD_METRICS: FDMetric[] = ['Value', 'Volume']
-const fdMarket = ref<FDMarket>('Regular')
-const fdMetric = ref<FDMetric>('Value')
+type FDMarket = "Regular" | "All Market";
+type FDMetric = "Value" | "Volume";
+const FD_MARKETS: FDMarket[] = ["Regular", "All Market"];
+const FD_METRICS: FDMetric[] = ["Value", "Volume"];
+const fdMarket = ref<FDMarket>("Regular");
+const fdMetric = ref<FDMetric>("Value");
 
-const fdData = computed(() => getForeignDomestic(props.ticker, activeRange.value, fdMarket.value))
-const fdIsValue = computed(() => fdMetric.value === 'Value')
+const fdData = computed(() =>
+	getForeignDomestic(props.ticker, activeRange.value, fdMarket.value),
+);
+const fdIsValue = computed(() => fdMetric.value === "Value");
 
 function fmtFD(v: number, isValue: boolean) {
-  if (isValue) {
-    const abs = Math.abs(v)
-    if (abs >= 1000) return `${(v / 1000).toFixed(2)} T`
-    if (abs >= 1) return `${v.toFixed(2)} B`
-    return `${(v * 1000).toFixed(0)} M`
-  } else {
-    return `${v.toFixed(2)} M`
-  }
+	if (isValue) {
+		const abs = Math.abs(v);
+		if (abs >= 1000) return `${(v / 1000).toFixed(2)} T`;
+		if (abs >= 1) return `${v.toFixed(2)} B`;
+		return `${(v * 1000).toFixed(0)} M`;
+	} else {
+		return `${v.toFixed(2)} M`;
+	}
 }
 
 const fdBarData = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const raw = isVal
-    ? { fBuy: d.fBuy, fSell: d.fSell, dBuy: d.dBuy, dSell: d.dSell }
-    : { fBuy: d.fBuyVol, fSell: d.fSellVol, dBuy: d.dBuyVol, dSell: d.dSellVol }
-  const scale = isVal && Math.max(raw.fBuy, raw.fSell, raw.dBuy, raw.dSell) >= 1000 ? 1000 : 1
-  const v = (n: number) => parseFloat((n / scale).toFixed(3))
-  return {
-    labels: ['Foreign', 'Domestic'],
-    datasets: [
-      { label: 'Buy',  data: [v(raw.fBuy), v(raw.dBuy)],   backgroundColor: ['#06b6d440', '#7c3aed40'], borderColor: ['#06b6d4', '#7c3aed'], borderWidth: 1.5, borderRadius: 4 },
-      { label: 'Sell', data: [v(raw.fSell), v(raw.dSell)], backgroundColor: ['#06b6d480', '#7c3aed80'], borderColor: ['#06b6d4', '#7c3aed'], borderWidth: 1.5, borderRadius: 4 },
-    ],
-  }
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const raw = isVal
+		? { fBuy: d.fBuy, fSell: d.fSell, dBuy: d.dBuy, dSell: d.dSell }
+		: {
+				fBuy: d.fBuyVol,
+				fSell: d.fSellVol,
+				dBuy: d.dBuyVol,
+				dSell: d.dSellVol,
+			};
+	const scale =
+		isVal && Math.max(raw.fBuy, raw.fSell, raw.dBuy, raw.dSell) >= 1000
+			? 1000
+			: 1;
+	const v = (n: number) => parseFloat((n / scale).toFixed(3));
+	return {
+		labels: ["Foreign", "Domestic"],
+		datasets: [
+			{
+				label: "Buy",
+				data: [v(raw.fBuy), v(raw.dBuy)],
+				backgroundColor: ["#06b6d440", "#7c3aed40"],
+				borderColor: ["#06b6d4", "#7c3aed"],
+				borderWidth: 1.5,
+				borderRadius: 4,
+			},
+			{
+				label: "Sell",
+				data: [v(raw.fSell), v(raw.dSell)],
+				backgroundColor: ["#06b6d480", "#7c3aed80"],
+				borderColor: ["#06b6d4", "#7c3aed"],
+				borderWidth: 1.5,
+				borderRadius: 4,
+			},
+		],
+	};
+});
 
 const fdBarOptions = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const maxVal = isVal
-    ? Math.max(d.fBuy, d.fSell, d.dBuy, d.dSell)
-    : Math.max(d.fBuyVol, d.fSellVol, d.dBuyVol, d.dSellVol)
-  const unit = isVal ? (maxVal >= 1000 ? 'T' : maxVal >= 1 ? 'B' : 'M') : 'M'
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1f2937',
-        titleColor: '#9ca3af',
-        bodyColor: '#d1d5db',
-        callbacks: {
-          label: (ctx: any) => ` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)} ${unit}`,
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } } },
-      y: {
-        grid: { color: '#1f293733' },
-        ticks: {
-          color: '#6b7280',
-          font: { size: 9 },
-          callback: (v: any) => `${Number(v).toFixed(1)}${unit}`,
-        },
-      },
-    },
-  }
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const maxVal = isVal
+		? Math.max(d.fBuy, d.fSell, d.dBuy, d.dSell)
+		: Math.max(d.fBuyVol, d.fSellVol, d.dBuyVol, d.dSellVol);
+	const unit = isVal ? (maxVal >= 1000 ? "T" : maxVal >= 1 ? "B" : "M") : "M";
+	return {
+		responsive: true,
+		maintainAspectRatio: false,
+		plugins: {
+			legend: { display: false },
+			tooltip: {
+				backgroundColor: "#1f2937",
+				titleColor: "#9ca3af",
+				bodyColor: "#d1d5db",
+				callbacks: {
+					label: (ctx: any) =>
+						` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(2)} ${unit}`,
+				},
+			},
+		},
+		scales: {
+			x: {
+				grid: { display: false },
+				ticks: { color: "#6b7280", font: { size: 10 } },
+			},
+			y: {
+				grid: { color: "#1f293733" },
+				ticks: {
+					color: "#6b7280",
+					font: { size: 9 },
+					callback: (v: any) => `${Number(v).toFixed(1)}${unit}`,
+				},
+			},
+		},
+	};
+});
 
 const fdForeignPct = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol
-  const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol
-  const total = fTotal + dTotal
-  return total > 0 ? ((fTotal / total) * 100).toFixed(2) : '0.00'
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol;
+	const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol;
+	const total = fTotal + dTotal;
+	return total > 0 ? ((fTotal / total) * 100).toFixed(2) : "0.00";
+});
 const fdDomesticPct = computed(() => {
-  const d = fdData.value
-  const isVal = fdIsValue.value
-  const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol
-  const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol
-  const total = fTotal + dTotal
-  return total > 0 ? ((dTotal / total) * 100).toFixed(2) : '0.00'
-})
+	const d = fdData.value;
+	const isVal = fdIsValue.value;
+	const fTotal = isVal ? d.fBuy + d.fSell : d.fBuyVol + d.fSellVol;
+	const dTotal = isVal ? d.dBuy + d.dSell : d.dBuyVol + d.dSellVol;
+	const total = fTotal + dTotal;
+	return total > 0 ? ((dTotal / total) * 100).toFixed(2) : "0.00";
+});
 </script>
 
 <template>

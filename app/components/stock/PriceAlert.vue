@@ -1,33 +1,39 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from 'lucide-vue-next'
-import { usePriceAlertStore } from '~/stores/priceAlert'
-import type { AlertCondition } from '~/stores/priceAlert'
+import { Plus, Trash2 } from "lucide-vue-next";
+import type { AlertCondition } from "~/stores/priceAlert";
+import { usePriceAlertStore } from "~/stores/priceAlert";
 
-const props = defineProps<{ ticker: string; price: number }>()
+const props = defineProps<{ ticker: string; price: number }>();
 
-const { t } = useI18n()
-const store = usePriceAlertStore()
+const { t } = useI18n();
+const store = usePriceAlertStore();
 
-const activeAlerts = computed(() => store.alertsForTicker(props.ticker))
-const alertLog = computed(() => store.logForTicker(props.ticker))
+const activeAlerts = computed(() => store.alertsForTicker(props.ticker));
+const alertLog = computed(() => store.logForTicker(props.ticker));
 
-const condition = ref<AlertCondition>('above')
-const targetPrice = ref<string>('')
-const error = ref('')
+const condition = ref<AlertCondition>("above");
+const targetPrice = ref<string>("");
+const error = ref("");
 
 function submit() {
-  const val = Number(targetPrice.value)
-  if (!val || val <= 0) {
-    error.value = t('stock.priceAlert.invalidPrice')
-    return
-  }
-  error.value = ''
-  store.addAlert(props.ticker, condition.value, val)
-  targetPrice.value = ''
+	const val = Number(targetPrice.value);
+	if (!val || val <= 0) {
+		error.value = t("stock.priceAlert.invalidPrice");
+		return;
+	}
+	error.value = "";
+	store.addAlert(props.ticker, condition.value, val);
+	targetPrice.value = "";
 }
 
 function formatDate(ts: number) {
-  return new Date(ts).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+	return new Date(ts).toLocaleDateString("id-ID", {
+		day: "2-digit",
+		month: "short",
+		year: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 }
 </script>
 

@@ -1,33 +1,36 @@
 <script setup lang="ts">
-import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { Eye, EyeOff, Loader2 } from "lucide-vue-next";
 
-definePageMeta({ layout: 'blank' })
+definePageMeta({ layout: "blank" });
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('auth.createAccount')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("auth.createAccount")} - StoxLyz`) });
 
-const localePath = useLocalePath()
-const userStore = useUserStore()
-const name = ref('')
-const email = ref('')
-const password = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const error = ref('')
+const localePath = useLocalePath();
+const userStore = useUserStore();
+const name = ref("");
+const email = ref("");
+const password = ref("");
+const showPassword = ref(false);
+const loading = ref(false);
+const error = ref("");
 
 async function handleRegister() {
-  error.value = ''
-  loading.value = true
-  await new Promise(r => setTimeout(r, 600))
-  loading.value = false
+	error.value = "";
+	loading.value = true;
+	await new Promise((r) => setTimeout(r, 600));
+	loading.value = false;
 
-  try {
-    await userStore.setProfile({ name: name.value, email: email.value, role: 'user' })
-    navigateTo(localePath('/home'))
-  }
-  catch {
-    error.value = t('auth.registerError')
-  }
+	try {
+		await userStore.setProfile({
+			name: name.value,
+			email: email.value,
+			role: "user",
+		});
+		navigateTo(localePath("/home"));
+	} catch {
+		error.value = t("auth.registerError");
+	}
 }
 </script>
 

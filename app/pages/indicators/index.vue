@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { LayoutGrid, Table2 } from 'lucide-vue-next'
-import { useIndicators } from '~/composables/useIndicators'
+import { LayoutGrid, Table2 } from "lucide-vue-next";
+import { useIndicators } from "~/composables/useIndicators";
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('indicators.title')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("indicators.title")} - StoxLyz`) });
 
-const { getIndicators } = useIndicators()
-const allIndicators = getIndicators()
+const { getIndicators } = useIndicators();
+const allIndicators = getIndicators();
 
-const viewMode = ref<'grid' | 'table'>('grid')
+const viewMode = ref<"grid" | "table">("grid");
 </script>
 
 <template>

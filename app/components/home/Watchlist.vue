@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { useWatchlistStore } from '~/stores/watchlist'
-import type { Stock } from '@/data/stocks'
+import type { Stock } from "@/data/stocks";
+import { useWatchlistStore } from "~/stores/watchlist";
 
-const { t } = useI18n()
-const localePath = useLocalePath()
-const watchlistStore = useWatchlistStore()
+const { t } = useI18n();
+const localePath = useLocalePath();
+const watchlistStore = useWatchlistStore();
 
-const tickersQuery = computed(() => watchlistStore.items.join(','))
+const tickersQuery = computed(() => watchlistStore.items.join(","));
 
-const { data: fetchedStocks, status } = useApiFetch<Stock[]>('/api/stocks/quotes', {
-  query: computed(() => ({ tickers: tickersQuery.value })),
-  watch: [tickersQuery],
-})
+const { data: fetchedStocks, status } = useApiFetch<Stock[]>(
+	"/api/stocks/quotes",
+	{
+		query: computed(() => ({ tickers: tickersQuery.value })),
+		watch: [tickersQuery],
+	},
+);
 
-const stocks = computed<Stock[]>(() => fetchedStocks.value ?? [])
+const stocks = computed<Stock[]>(() => fetchedStocks.value ?? []);
 </script>
 
 <template>

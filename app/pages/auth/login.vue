@@ -1,40 +1,49 @@
 <script setup lang="ts">
-import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { Eye, EyeOff, Loader2 } from "lucide-vue-next";
 
-definePageMeta({ layout: 'blank' })
+definePageMeta({ layout: "blank" });
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('auth.signIn')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("auth.signIn")} - StoxLyz`) });
 
-const localePath = useLocalePath()
-const userStore = useUserStore()
-const email = ref('')
-const password = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const error = ref('')
+const localePath = useLocalePath();
+const userStore = useUserStore();
+const email = ref("");
+const password = ref("");
+const showPassword = ref(false);
+const loading = ref(false);
+const error = ref("");
 
 const DUMMY_USERS = [
-  { email: 'super@stoxlyz.com', password: 'w2uf>#@?O28NzNF?££', name: 'Super Admin', role: 'superadmin' as const },
-]
+	{
+		email: "super@stoxlyz.com",
+		password: "w2uf>#@?O28NzNF?££",
+		name: "Super Admin",
+		role: "superadmin" as const,
+	},
+];
 
 async function handleLogin() {
-  error.value = ''
-  loading.value = true
-  await new Promise(r => setTimeout(r, 600))
-  loading.value = false
+	error.value = "";
+	loading.value = true;
+	await new Promise((r) => setTimeout(r, 600));
+	loading.value = false;
 
-  const match = DUMMY_USERS.find(
-    u => u.email === email.value && u.password === password.value,
-  )
+	const match = DUMMY_USERS.find(
+		(u) => u.email === email.value && u.password === password.value,
+	);
 
-  if (!match) {
-    error.value = t('auth.invalidCredentials')
-    return
-  }
+	if (!match) {
+		error.value = t("auth.invalidCredentials");
+		return;
+	}
 
-  await userStore.setProfile({ name: match.name, email: match.email, role: match.role })
-  navigateTo(localePath('/home'))
+	await userStore.setProfile({
+		name: match.name,
+		email: match.email,
+		role: match.role,
+	});
+	navigateTo(localePath("/home"));
 }
 </script>
 

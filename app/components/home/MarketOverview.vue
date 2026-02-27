@@ -1,34 +1,51 @@
 <script setup lang="ts">
-import { TrendingUp, TrendingDown } from 'lucide-vue-next'
+import { TrendingDown, TrendingUp } from "lucide-vue-next";
 
-const { data: indices } = useApiFetch('/api/market/indices')
+const { data: indices } = useApiFetch("/api/market/indices");
 
-type IndexItem = { ticker: string; name: string; price: number; change: number; changePercent: number }
+type IndexItem = {
+	ticker: string;
+	name: string;
+	price: number;
+	change: number;
+	changePercent: number;
+};
 
-const primaryIndex = computed<IndexItem | null>(() => (indices.value as IndexItem[])?.[0] ?? null)
+const primaryIndex = computed<IndexItem | null>(
+	() => (indices.value as IndexItem[])?.[0] ?? null,
+);
 
 // Animated counter for primary index
-const counter = ref(0)
-const visible = ref(false)
+const counter = ref(0);
+const visible = ref(false);
 
-watch(primaryIndex, (idx) => {
-  if (!idx) return
-  const target = idx.price
-  const duration = 1200
-  const start = performance.now()
-  function tick(now: number) {
-    const progress = Math.min((now - start) / duration, 1)
-    const eased = 1 - Math.pow(1 - progress, 3)
-    counter.value = target * eased
-    if (progress < 1) requestAnimationFrame(tick)
-  }
-  requestAnimationFrame(tick)
-}, { immediate: true })
+watch(
+	primaryIndex,
+	(idx) => {
+		if (!idx) return;
+		const target = idx.price;
+		const duration = 1200;
+		const start = performance.now();
+		function tick(now: number) {
+			const progress = Math.min((now - start) / duration, 1);
+			const eased = 1 - (1 - progress) ** 3;
+			counter.value = target * eased;
+			if (progress < 1) requestAnimationFrame(tick);
+		}
+		requestAnimationFrame(tick);
+	},
+	{ immediate: true },
+);
 
-onMounted(() => { visible.value = true })
+onMounted(() => {
+	visible.value = true;
+});
 
 function formatPrice(val: number) {
-  return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+	return val.toLocaleString("id-ID", {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	});
 }
 </script>
 

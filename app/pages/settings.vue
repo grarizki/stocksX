@@ -1,42 +1,49 @@
 <script setup lang="ts">
-import { Sun, Moon, Monitor, Globe, Bell, BellOff, Shield } from 'lucide-vue-next'
-import { storeToRefs } from 'pinia'
+import {
+	Bell,
+	BellOff,
+	Globe,
+	Monitor,
+	Moon,
+	Shield,
+	Sun,
+} from "lucide-vue-next";
+import { storeToRefs } from "pinia";
 
-const { t } = useI18n()
-useHead({ title: computed(() => `${t('nav.settings')} - StoxLyz`) })
+const { t } = useI18n();
+useHead({ title: computed(() => `${t("nav.settings")} - StoxLyz`) });
 
-const colorMode = useColorMode()
-const switchLocalePath = useSwitchLocalePath()
-const userStore = useUserStore()
-const { notifications, language } = storeToRefs(userStore)
+const colorMode = useColorMode();
+const switchLocalePath = useSwitchLocalePath();
+const userStore = useUserStore();
+const { notifications, language } = storeToRefs(userStore);
 
 const themes = computed(() => [
-  { value: 'light', label: t('settings.light'), icon: Sun },
-  { value: 'dark', label: t('settings.dark'), icon: Moon },
-  { value: 'system', label: t('settings.system'), icon: Monitor },
-])
+	{ value: "light", label: t("settings.light"), icon: Sun },
+	{ value: "dark", label: t("settings.dark"), icon: Moon },
+	{ value: "system", label: t("settings.system"), icon: Monitor },
+]);
 
 function selectTheme(value: string) {
-  colorMode.preference = value
-  userStore.setTheme(value as 'dark' | 'light' | 'system')
+	colorMode.preference = value;
+	userStore.setTheme(value as "dark" | "light" | "system");
 }
 
-async function selectLanguage(lang: 'id' | 'en') {
-  userStore.setLanguage(lang)
-  await navigateTo(switchLocalePath(lang))
+async function selectLanguage(lang: "id" | "en") {
+	userStore.setLanguage(lang);
+	await navigateTo(switchLocalePath(lang));
 }
 
 async function toggleNotifications() {
-  if (!notifications.value) {
-    if (!('Notification' in window)) return
-    const permission = await Notification.requestPermission()
-    if (permission === 'granted') {
-      userStore.toggleNotifications()
-    }
-  }
-  else {
-    userStore.toggleNotifications()
-  }
+	if (!notifications.value) {
+		if (!("Notification" in window)) return;
+		const permission = await Notification.requestPermission();
+		if (permission === "granted") {
+			userStore.toggleNotifications();
+		}
+	} else {
+		userStore.toggleNotifications();
+	}
 }
 </script>
 

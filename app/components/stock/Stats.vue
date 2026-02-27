@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import type { Stock } from '@/data/stocks'
-import { formatCompact, formatNumber } from '@/lib/utils'
+import type { Stock } from "@/data/stocks";
+import { formatCompact, formatNumber } from "@/lib/utils";
 
-const { t } = useI18n()
-const props = defineProps<{ stock: Stock }>()
+const { t } = useI18n();
+const props = defineProps<{ stock: Stock }>();
 
 const stats = computed(() => [
-  { label: t('stock.marketCap'), value: formatCompact(props.stock.marketCap) },
-  { label: t('stock.peRatio'), value: props.stock.pe.toFixed(2) },
-  { label: t('stock.pbValue'), value: props.stock.pbv.toFixed(2) },
-  { label: t('stock.volume'), value: formatCompact(props.stock.volume) },
-  { label: t('stock.divYield'), value: `${props.stock.dividendYield.toFixed(2)}%` },
-  { label: t('stock.high52w'), value: formatNumber(props.stock.high52w) },
-  { label: t('stock.low52w'), value: formatNumber(props.stock.low52w) },
-  { label: t('stock.dayRange'), value: `${formatNumber(props.stock.price - Math.abs(props.stock.change))} - ${formatNumber(props.stock.price + 50)}` },
-])
+	{ label: t("stock.marketCap"), value: formatCompact(props.stock.marketCap) },
+	{ label: t("stock.peRatio"), value: props.stock.pe.toFixed(2) },
+	{ label: t("stock.pbValue"), value: props.stock.pbv.toFixed(2) },
+	{ label: t("stock.volume"), value: formatCompact(props.stock.volume) },
+	{
+		label: t("stock.divYield"),
+		value: `${props.stock.dividendYield.toFixed(2)}%`,
+	},
+	{ label: t("stock.high52w"), value: formatNumber(props.stock.high52w) },
+	{ label: t("stock.low52w"), value: formatNumber(props.stock.low52w) },
+	{
+		label: t("stock.dayRange"),
+		value: `${formatNumber(props.stock.price - Math.abs(props.stock.change))} - ${formatNumber(props.stock.price + 50)}`,
+	},
+]);
 </script>
 
 <template>

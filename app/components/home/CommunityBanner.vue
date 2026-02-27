@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { MessageCircle, Users, ArrowRight, Sparkles } from 'lucide-vue-next'
+import { ArrowRight, MessageCircle, Sparkles, Users } from "lucide-vue-next";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const memberCount = ref(0)
-const targetMembers = 12_450
+const memberCount = ref(0);
+const targetMembers = 12_450;
 
 onMounted(() => {
-  const duration = 1500
-  const start = performance.now()
-  function tick(now: number) {
-    const progress = Math.min((now - start) / duration, 1)
-    const eased = 1 - Math.pow(1 - progress, 3)
-    memberCount.value = Math.round(targetMembers * eased)
-    if (progress < 1) requestAnimationFrame(tick)
-  }
-  requestAnimationFrame(tick)
-})
+	const duration = 1500;
+	const start = performance.now();
+	function tick(now: number) {
+		const progress = Math.min((now - start) / duration, 1);
+		const eased = 1 - (1 - progress) ** 3;
+		memberCount.value = Math.round(targetMembers * eased);
+		if (progress < 1) requestAnimationFrame(tick);
+	}
+	requestAnimationFrame(tick);
+});
 </script>
 
 <template>

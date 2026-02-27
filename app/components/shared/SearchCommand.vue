@@ -1,61 +1,66 @@
 <script setup lang="ts">
-import { Newspaper, ExternalLink, TrendingUp } from 'lucide-vue-next'
-import { IDX_STOCKS } from '@/data/idxStocks'
+import { ExternalLink, Newspaper, TrendingUp } from "lucide-vue-next";
+import { IDX_STOCKS } from "@/data/idxStocks";
 
-const { t } = useI18n()
-const localePath = useLocalePath()
-const router = useRouter()
+const { t } = useI18n();
+const localePath = useLocalePath();
+const router = useRouter();
 
-const open = defineModel<boolean>('open', { default: false })
+const open = defineModel<boolean>("open", { default: false });
 
-const searchQuery = ref('')
-const debouncedQuery = ref('')
+const searchQuery = ref("");
+const debouncedQuery = ref("");
 
-let debounceTimer: ReturnType<typeof setTimeout>
+let debounceTimer: ReturnType<typeof setTimeout>;
 watch(searchQuery, (val) => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => {
-    debouncedQuery.value = val.trim()
-  }, 350)
-})
+	clearTimeout(debounceTimer);
+	debounceTimer = setTimeout(() => {
+		debouncedQuery.value = val.trim();
+	}, 350);
+});
 
-const { data: newsData } = useApiFetch('/api/news', {
-  query: computed(() => ({ q: debouncedQuery.value || 'stock market', limit: 8 })),
-  watch: [debouncedQuery],
-})
+const { data: newsData } = useApiFetch("/api/news", {
+	query: computed(() => ({
+		q: debouncedQuery.value || "stock market",
+		limit: 8,
+	})),
+	watch: [debouncedQuery],
+});
 
-const filteredNews = computed(() => (newsData.value as any[]) ?? [])
+const filteredNews = computed(() => (newsData.value as any[]) ?? []);
 
 const filteredStocks = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return []
-  return IDX_STOCKS.filter(
-    (s) => s.ticker.replace('.JK', '').toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
-  ).slice(0, 10)
-})
+	const q = searchQuery.value.trim().toLowerCase();
+	if (!q) return [];
+	return IDX_STOCKS.filter(
+		(s) =>
+			s.ticker.replace(".JK", "").toLowerCase().includes(q) ||
+			s.name.toLowerCase().includes(q),
+	).slice(0, 10);
+});
 
 function openArticle(url: string) {
-  open.value = false
-  searchQuery.value = ''
-  window.open(url, '_blank', 'noopener,noreferrer')
+	open.value = false;
+	searchQuery.value = "";
+	window.open(url, "_blank", "noopener,noreferrer");
 }
 
 function goToStock(ticker: string) {
-  open.value = false
-  searchQuery.value = ''
-  router.push(localePath(`/stocks/${ticker.replace('.JK', '')}`))
+	open.value = false;
+	searchQuery.value = "";
+	router.push(localePath(`/stocks/${ticker.replace(".JK", "")}`));
 }
 
 onMounted(() => {
-  const handler = (e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault()
-      open.value = !open.value
-    }
-  }
-  document.addEventListener('keydown', handler)
-  onUnmounted(() => document.removeEventListener('keydown', handler))
-})
+	const handler = (e: KeyboardEvent) => {
+		if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+			e.preventDefault();
+			open.value = !open.value;
+		}
+	};
+	document.addEventListener("keydown", handler);
+	onUnmounted(() => document.removeEventListener("keydown", handler));
+});
 </script>
 
 <template>

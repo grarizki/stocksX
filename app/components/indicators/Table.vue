@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { EconomicIndicator } from '@/data/indicators'
+import type { EconomicIndicator } from "@/data/indicators";
 
-defineProps<{ indicators: EconomicIndicator[] }>()
+defineProps<{ indicators: EconomicIndicator[] }>();
 </script>
 
 <template>

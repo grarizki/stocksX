@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Zap, TrendingUp } from 'lucide-vue-next'
+import { TrendingUp, Zap } from "lucide-vue-next";
 
 defineProps<{
-  ticker: string
-  name: string
-  dayTradeMultiplier?: number
-  tradingLimitHaircut?: number
-}>()
+	ticker: string;
+	name: string;
+	dayTradeMultiplier?: number;
+	tradingLimitHaircut?: number;
+}>();
 
-const { t } = useI18n()
+const { t } = useI18n();
 </script>
 
 <template>

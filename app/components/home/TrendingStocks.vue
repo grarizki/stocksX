@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { Flame } from 'lucide-vue-next'
-import type { Stock } from '@/data/stocks'
+import { Flame } from "lucide-vue-next";
+import type { Stock } from "@/data/stocks";
 
-const { data: trending, status } = useApiFetch<Stock[]>('/api/stocks/movers', {
-  query: { type: 'volume', limit: 8 },
-})
+const { data: trending, status } = useApiFetch<Stock[]>("/api/stocks/movers", {
+	query: { type: "volume", limit: 8 },
+});
 
 const marqueeItems = computed(() => {
-  const items = trending.value ?? []
-  return [...items, ...items]
-})
+	const items = trending.value ?? [];
+	return [...items, ...items];
+});
 
-const isPaused = ref(false)
+const isPaused = ref(false);
 </script>
 
 <template>
