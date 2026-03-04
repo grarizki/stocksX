@@ -1,0 +1,19 @@
+diff --git a/node_modules/@nuxtjs/color-mode/dist/runtime/plugin.client.js b/node_modules/@nuxtjs/color-mode/dist/runtime/plugin.client.js
+index 0d2e78e..7cb0158 100644
+--- a/node_modules/@nuxtjs/color-mode/dist/runtime/plugin.client.js
++++ b/node_modules/@nuxtjs/color-mode/dist/runtime/plugin.client.js
+@@ -1,4 +1,4 @@
+-import { computed, reactive, watch } from "vue";
++import { computed, shallowReactive, watch } from "vue";
+ import { defineNuxtPlugin, useRouter, useHead, useState } from "#imports";
+ import { globalName, storageKey, dataValue, disableTransition, storage } from "#build/color-mode-options.mjs";
+ let helper = window[globalName];
+@@ -14,7 +14,7 @@ if (import.meta.test && !helper) {
+   };
+ }
+ export default defineNuxtPlugin((nuxtApp) => {
+-  const colorMode = useState("color-mode", () => reactive({
++  const colorMode = useState("color-mode", () => shallowReactive({
+     // For SPA mode or fallback
+     preference: helper.preference,
+     value: helper.value,
