@@ -5,7 +5,12 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!!**/dist"]
+		"includes": ["**", "!!**/dist", "!!**/*.vue"]
+	},
+	"css": {
+		"linter": {
+			"enabled": false
+		}
 	},
 	"formatter": {
 		"enabled": true,

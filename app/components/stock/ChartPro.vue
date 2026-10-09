@@ -28,7 +28,9 @@ import {
 	TrendingUp,
 	X,
 } from "lucide-vue-next";
+import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
+
 
 const props = defineProps<{
 	ticker: string;
@@ -147,6 +149,13 @@ const btResult = ref<BacktestResult | null>(null);
 const btRunning = ref(false);
 const btDirty = ref(true);
 const aiExplanation = ref("");
+const sanitizedAiExplanation = computed(() => {
+	if (!aiExplanation.value) {
+		return "";
+	}
+	const rawHtml = marked.parse(aiExplanation.value);
+	return typeof rawHtml === "string" ? DOMPurify.sanitize(rawHtml) : "";
+});
 const aiLoading = ref(false);
 
 type TradeRating = "strong_buy" | "buy" | "hold" | "sell" | "strong_sell";
@@ -1787,7 +1796,7 @@ onUnmounted(() => {
                   <div
                     v-if="aiExplanation"
                     class="prose prose-invert prose-xs mt-3 max-w-none rounded-lg border border-violet-500/20 bg-violet-500/5 p-3 text-xs leading-relaxed text-white/70 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:text-white/90 [&_h1,h2,h3]:font-semibold [&_h1,h2,h3]:text-white/80 [&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1"
-                    v-html="marked(aiExplanation)"
+                    v-html="sanitizedAiExplanation"
                   />
                 </Transition>
               </div>

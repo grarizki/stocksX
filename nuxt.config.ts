@@ -1,9 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",
-	devtools: { enabled: true },
+	devtools: { enabled: process.env.NODE_ENV === "development" },
 	ssr: false,
-	debug: true,
+	debug: false,
 
 	modules: [
 		"@nuxtjs/tailwindcss",
@@ -105,6 +105,14 @@ export default defineNuxtConfig({
 	},
 
 	nitro: {
+		preset: "cloudflare-module",
+		cloudflare: {
+			deployConfig: true,
+			nodeCompat: true,
+		},
+		alias: {
+			"@deno/shim-deno": "./server/runtime/yahooDeno.ts",
+		},
 		compressPublicAssets: true,
 		routeRules: {
 			// Allow bfcache on all HTML pages — no no-store
@@ -115,19 +123,6 @@ export default defineNuxtConfig({
 			"/_nuxt/**": {
 				headers: { "Cache-Control": "public, max-age=31536000, immutable" },
 			},
-		},
-	},
-
-	runtimeConfig: {
-		public: {
-			STOXLYZ_BASE_URL: process.env.STOXLYZ_BASE_URL,
-			firebaseApiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
-			firebaseAuthDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-			firebaseProjectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID,
-			firebaseStorageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-			firebaseMessagingSenderId:
-				process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-			firebaseAppId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID,
 		},
 	},
 });

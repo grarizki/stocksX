@@ -1,0 +1,30 @@
+{
+	"name": "stocksx",
+	"account_id": "30f3fa5b2d1317956eb887754b033c51",
+	"compatibility_date": "2025-07-15",
+	"workers_dev": true,
+	"keep_vars": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "stocksx-db",
+			"database_id": "7dbfc656-fc32-4457-b40c-4bf9ec37ee05"
+		}
+	],
+	"unsafe": {
+		"bindings": [
+			{
+				"type": "ratelimit",
+				"name": "REGISTER_LIMITER",
+				"namespace_id": "stocksx-register",
+				"simple": { "limit": 5, "period": 60 }
+			},
+			{
+				"type": "ratelimit",
+				"name": "LOGIN_LIMITER",
+				"namespace_id": "stocksx-login",
+				"simple": { "limit": 10, "period": 60 }
+			}
+		]
+	}
+}
