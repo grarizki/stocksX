@@ -29,7 +29,7 @@ const isActive = (to: string) => {
 };
 
 async function handleLogout() {
-	await userStore.logoutWithFirebase();
+	await userStore.logout();
 	await navigateTo(localePath("/auth/login"));
 }
 

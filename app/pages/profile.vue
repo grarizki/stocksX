@@ -11,7 +11,7 @@ const localePath = useLocalePath();
 const userStore = useUserStore();
 
 async function handleLogout() {
-	await userStore.logoutWithFirebase();
+	await userStore.logout();
 	await navigateTo(localePath("/auth/login"));
 }
 </script>
@@ -26,7 +26,6 @@ async function handleLogout() {
         <CardContent class="pt-6">
           <div class="flex flex-col items-center gap-4 text-center">
             <Avatar class="h-20 w-20">
-              <AvatarImage v-if="userStore.profile.avatarUrl" :src="userStore.profile.avatarUrl" :alt="userStore.profile.name" />
               <AvatarFallback class="text-2xl">{{ userStore.initials }}</AvatarFallback>
             </Avatar>
 

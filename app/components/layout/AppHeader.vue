@@ -31,7 +31,7 @@ useEventListener("keydown", (e: KeyboardEvent) => {
 });
 
 async function handleLogout() {
-	await userStore.logoutWithFirebase();
+	await userStore.logout();
 	await navigateTo(localePath("/auth/login"));
 }
 
@@ -114,7 +114,6 @@ async function handleLanguageSwitch() {
               :aria-label="$t('nav.userMenu')"
             >
               <Avatar class="h-8 w-8">
-                <AvatarImage v-if="userStore.profile?.avatarUrl" :src="userStore.profile.avatarUrl" :alt="userStore.profile?.name" />
                 <AvatarFallback class="text-xs">{{ userStore.initials }}</AvatarFallback>
               </Avatar>
             </Button>
