@@ -83,7 +83,6 @@ export const useUserStore = defineStore("user", () => {
 			authReady.value = true;
 		}
 	};
-	const loadToken = restoreSession;
 
 	loadPrefs();
 
@@ -178,30 +177,23 @@ export const useUserStore = defineStore("user", () => {
 			const idToken = await result.user.getIdToken();
 			console.log("[Login] Got Firebase ID token (length:", idToken.length, ")");
 
-			const config = useRuntimeConfig();
-			const baseUrl =
-				(config.public.STOXLYZ_BASE_URL as string) || "http://127.0.0.1:8000";
-			console.log("[Login] Calling backend at:", `${baseUrl}/auth/firebase-login`);
+			const sessionResponse = await $fetch<{
+				success: boolean;
+				user: UserProfile | null;
+			}>("/api/auth/firebase-session", {
+				method: "POST",
+				body: { idToken },
+			}).catch(() => null);
 
-			const response = await $fetch<AuthResponse>(
-				`${baseUrl}/auth/firebase-login`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${idToken}`,
-					},
-					body: { email, displayName: result.user.displayName || "" },
-				},
-			);
-
-			console.log("[Login] Backend response:", response);
-
-			await setProfile({
-				name: response.user.name,
-				email: response.user.email,
-				role: response.user.role,
-			});
+			if (sessionResponse?.success && sessionResponse.user) {
+				setProfile(sessionResponse.user);
+			} else {
+				setProfile({
+					name: result.user.displayName || email.split("@")[0] || "User",
+					email,
+					role: "user",
+				});
+			}
 
 			return { success: true };
 		} catch (err: any) {
@@ -254,27 +246,23 @@ export const useUserStore = defineStore("user", () => {
 			await updateProfile(result.user, { displayName });
 			const idToken = await result.user.getIdToken();
 
-			const config = useRuntimeConfig();
-			const baseUrl =
-				(config.public.STOXLYZ_BASE_URL as string) || "http://127.0.0.1:8000";
+			const sessionResponse = await $fetch<{
+				success: boolean;
+				user: UserProfile | null;
+			}>("/api/auth/firebase-session", {
+				method: "POST",
+				body: { idToken },
+			}).catch(() => null);
 
-			const response = await $fetch<AuthResponse>(
-				`${baseUrl}/auth/firebase-register`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${idToken}`,
-					},
-					body: { email, displayName },
-				},
-			);
-
-			await setProfile({
-				name: response.user.name,
-				email: response.user.email,
-				role: response.user.role,
-			});
+			if (sessionResponse?.success && sessionResponse.user) {
+				setProfile(sessionResponse.user);
+			} else {
+				setProfile({
+					name: displayName || email.split("@")[0] || "User",
+					email,
+					role: "user",
+				});
+			}
 
 			return { success: true };
 		} catch (err: any) {
@@ -314,32 +302,24 @@ export const useUserStore = defineStore("user", () => {
 			const result = await signInWithPopup(nuxtApp.$firebaseAuth, provider);
 			const idToken = await result.user.getIdToken();
 
-			const config = useRuntimeConfig();
-			const baseUrl =
-				(config.public.STOXLYZ_BASE_URL as string) || "http://127.0.0.1:8000";
+			const sessionResponse = await $fetch<{
+				success: boolean;
+				user: UserProfile | null;
+			}>("/api/auth/firebase-session", {
+				method: "POST",
+				body: { idToken },
+			}).catch(() => null);
 
-			const response = await $fetch<AuthResponse>(
-				`${baseUrl}/auth/firebase-login`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${idToken}`,
-					},
-					body: {
-						email: result.user.email || "",
-						displayName: result.user.displayName || "",
-						photoURL: result.user.photoURL || undefined,
-					},
-				},
-			);
-
-			await setProfile({
-				name: response.user.name,
-				email: response.user.email,
-				role: response.user.role,
-				avatarUrl: response.user.avatarUrl,
-			});
+			if (sessionResponse?.success && sessionResponse.user) {
+				setProfile(sessionResponse.user);
+			} else {
+				setProfile({
+					name: result.user.displayName || result.user.email?.split("@")[0] || "User",
+					email: result.user.email || "",
+					role: "user",
+					avatarUrl: result.user.photoURL || undefined,
+				});
+			}
 
 			return { success: true };
 		} catch (err: any) {
@@ -377,7 +357,6 @@ export const useUserStore = defineStore("user", () => {
 		isSuperAdmin,
 		isAdmin,
 		initials,
-		loadToken,
 		restoreSession,
 		setTheme,
 		setLanguage,
