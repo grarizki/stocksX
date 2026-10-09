@@ -1,4 +1,5 @@
 import { readBody, createError, setResponseHeader } from 'h3'
+import type { H3Event } from 'h3'
 import { AUTH_ERROR_CODES } from '../../../shared/types/auth.error'
 import {
   validateName,
@@ -6,7 +7,7 @@ import {
   validateEmail,
   hashPasswordRaw,
   insertAccount,
-  enforceRegistrationRateLimit,
+  limitRegister,
   getD1Database,
   resolveRequestOrigin,
   TRUSTED_ORIGIN,
@@ -27,7 +28,7 @@ const ALLOWED_REGISTER_FIELDS: Record<string, true> = {
 export default defineEventHandler(async (event) => {
   enforceSameOriginRegistration(event)
 
-  await enforceRegistrationRateLimit(event)
+  await limitRegister(event)
 
   const body = await readRegisterBody(event)
   const { name, email, password } = body
@@ -56,7 +57,7 @@ function enforceSameOriginRegistration(event: H3Event): void {
 }
 
 async function readRegisterBody(event: H3Event): Promise<RegisterBody> {
-  const body = await readBody< unknown >(event, { maxBodySize: 8192 })
+  const body = await readBody<Record<string, unknown>>(event)
   if (body === null || typeof body !== 'object') {
     throw createError({
       statusCode: 400,
@@ -81,7 +82,7 @@ async function readRegisterBody(event: H3Event): Promise<RegisterBody> {
   }
 }
 
-function validateRegistrationFields(fields: RegisterBody): H3Error | null {
+function validateRegistrationFields(fields: RegisterBody): Error | null {
   const nameResult = validateName(fields.name)
   if (!nameResult.valid) {
     return createError({ statusCode: 400, data: { code: nameResult.errorCode } })

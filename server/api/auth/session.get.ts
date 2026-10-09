@@ -1,45 +1,43 @@
-import type { H3Event } from "h3";
-import { verifyIdToken } from "../../utils/firebaseAdmin";
-
-export interface SessionUser {
-	name: string;
-	email: string;
-	role: "superadmin" | "admin" | "user";
-}
+import type { H3Event } from 'h3'
+import { createError, getCookie } from 'h3'
+import { AUTH_ERROR_CODES } from '../../../shared/types/auth.error'
+import type { UserProfile } from '../../../shared/types/account'
+import {
+  getD1Database,
+  getSessionCookieName,
+  hashSessionToken,
+  resolveSessionByTokenHash,
+} from '../../utils/accounts'
 
 export interface SessionResponse {
-	authenticated: boolean;
-	user: SessionUser | null;
+  user: UserProfile
 }
 
 export default defineEventHandler(async (event: H3Event): Promise<SessionResponse> => {
-	const accessToken = getCookie(event, "stoxlyz_token");
+  const cookieName = getSessionCookieName(event)
+  if (!cookieName) {
+    throw createError({ statusCode: 401, data: { code: AUTH_ERROR_CODES.UNAUTHENTICATED } })
+  }
 
-	if (!accessToken) {
-		return {
-			authenticated: false,
-			user: null,
-		};
-	}
+  const token = getCookie(event, cookieName)
+  if (!token) {
+    throw createError({ statusCode: 401, data: { code: AUTH_ERROR_CODES.UNAUTHENTICATED } })
+  }
 
-	const decodedFirebaseToken = await verifyIdToken(accessToken);
-	if (decodedFirebaseToken) {
-		const rawRole = decodedFirebaseToken.role;
-		const safeRole =
-			rawRole === "superadmin" || rawRole === "admin" ? rawRole : "user";
+  let db
+  try {
+    db = getD1Database()
+  } catch {
+    throw createError({ statusCode: 503, data: { code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE } })
+  }
 
-		return {
-			authenticated: true,
-			user: {
-				name: decodedFirebaseToken.name || decodedFirebaseToken.email || "User",
-				email: decodedFirebaseToken.email || "",
-				role: safeRole,
-			},
-		};
-	}
+  const tokenHash = await hashSessionToken(token)
+  const session = await resolveSessionByTokenHash(db, tokenHash)
 
-	return {
-		authenticated: false,
-		user: null,
-	};
-});
+  if (!session) {
+    throw createError({ statusCode: 401, data: { code: AUTH_ERROR_CODES.UNAUTHENTICATED } })
+  }
+
+  event.node.res.setHeader('Cache-Control', 'no-store')
+  return { user: session.user }
+})

@@ -124,20 +124,26 @@ export async function verifyPasswordWithHash(password: string, storedHash: strin
   return crypto.subtle.timingSafeEqual(derivedBuffer, storedBuffer)
 }
 
-const DUMMY_PASSWORD_HASH = '1:600000:' + '0'.repeat(32) + ':' + '0'.repeat(64)
+export const DUMMY_PASSWORD_HASH = '1:600000:' + '0'.repeat(32) + ':' + '0'.repeat(64)
 
 export async function verifyPasswordFixedHash(password: string, storedHash: string): Promise<boolean> {
   const result1 = await verifyPasswordWithHash(password, storedHash)
-  const result2 = await verifyPasswordWithHash(password, DUMMY_PASSWORD_HASH)
-  return result1 || result2
+  if (result1) return true
+  return verifyPasswordWithHash(password, DUMMY_PASSWORD_HASH)
 }
 
-export function generateSessionToken(): SessionTokenData {
+export async function generateSessionToken(): Promise<SessionTokenData> {
   const rawBytes = new Uint8Array(SESSION_TOKEN_BYTES)
   crypto.getRandomValues(rawBytes)
   const raw = Buffer.from(rawBytes).toString('hex')
-  const hash = Buffer.from(crypto.subtle.digestSync(new TextEncoder().encode(raw))).toString('hex')
+  const digestBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
+  const hash = Buffer.from(digestBuffer).toString('hex')
   return { raw, hash }
+}
+
+export async function hashSessionToken(raw: string): Promise<string> {
+  const digestBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
+  return Buffer.from(digestBuffer).toString('hex')
 }
 
 export function getCookieName(isProduction: boolean): string {
