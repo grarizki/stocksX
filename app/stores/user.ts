@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
-import { signToken, verifyToken } from "~/lib/jwt";
 
 export type UserRole = "superadmin" | "admin" | "user";
 
@@ -69,24 +68,22 @@ export const useUserStore = defineStore("user", () => {
 		}
 	};
 
-	// Verify JWT from localStorage and restore profile — exported for auth plugin
-	const loadToken = async () => {
+	// Restore server session if cookie is present
+	const restoreSession = async () => {
 		if (!import.meta.client) return;
-		const token = localStorage.getItem(TOKEN_KEY);
-		if (token) {
-			const payload = await verifyToken(token);
-			if (payload) {
-				profile.value = {
-					name: payload.name,
-					email: payload.sub,
-					role: payload.role,
-				};
-			} else {
-				localStorage.removeItem(TOKEN_KEY);
+		try {
+			const session = await $fetch<{
+				authenticated: boolean;
+				user: UserProfile | null;
+			}>("/api/auth/session").catch(() => null);
+			if (session?.authenticated && session.user) {
+				profile.value = session.user;
 			}
+		} finally {
+			authReady.value = true;
 		}
-		authReady.value = true;
 	};
+	const loadToken = restoreSession;
 
 	loadPrefs();
 
@@ -119,15 +116,7 @@ export const useUserStore = defineStore("user", () => {
 		notifications.value = !notifications.value;
 	};
 
-	// Sign a JWT and store it; populate profile from claims
-	const setProfile = async (value: UserProfile) => {
-		if (!import.meta.client) return;
-		const token = await signToken({
-			sub: value.email,
-			name: value.name,
-			role: value.role,
-		});
-		localStorage.setItem(TOKEN_KEY, token);
+	const setProfile = (value: UserProfile) => {
 		profile.value = value;
 	};
 
@@ -389,6 +378,7 @@ export const useUserStore = defineStore("user", () => {
 		isAdmin,
 		initials,
 		loadToken,
+		restoreSession,
 		setTheme,
 		setLanguage,
 		toggleNotifications,

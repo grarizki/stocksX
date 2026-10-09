@@ -3,6 +3,9 @@
 .data
 .nuxt
 .nitro
+.wrangler
+.dev.vars
+.dev.vars.*
 .cache
 dist
 

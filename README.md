@@ -50,12 +50,12 @@ A modern, full-featured Indonesian stock market information platform built for r
 | **Date Handling** | v-calendar |
 | **Internationalization** | @nuxtjs/i18n |
 | **Code Quality** | Biome (formatter + linter), Vitest |
-| **Deployment** | GitHub Pages (static generation) |
+| **Deployment** | Cloudflare Workers with static assets and Nitro APIs |
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ or 20+
+- Node.js 22+
 - npm or pnpm
 
 ### Installation
@@ -79,6 +79,7 @@ The app will be available at `http://localhost:3000`
 ```bash
 npm run dev          # Start dev server with hot reload
 npm run build        # Build for production
+npm run deploy       # Build and deploy to Cloudflare Workers
 npm run generate     # Generate static site → .output/public/
 npm run preview      # Preview production build
 npm run lint         # Run Biome linter
@@ -302,22 +303,35 @@ The application is fully responsive with:
 
 ## 🚢 Deployment
 
-The project is configured for automated deployment to GitHub Pages:
+Deploy the Nuxt application and its Nitro API routes to Cloudflare Workers. Static-only generation does not include the server APIs.
 
-1. Every push to `master` triggers a GitHub Actions workflow
-2. The workflow runs `npm run generate` to create a static site
-3. Generated files from `.output/public/` are deployed to `gh-pages` branch
-4. Site is available at: `https://yourusername.github.io/stocksX/`
+Production URL: https://stocksx.nightdelaluna.workers.dev
+
+`wrangler.json` defines the Worker name and account. The Cloudflare Nitro preset generates `.output/server/wrangler.json` and `.wrangler/deploy/config.json` during the build. Keep these generated files out of version control.
 
 ### Manual Deployment
 
 ```bash
-# Generate static site
-npm run generate
+# Authenticate with the target Cloudflare account
+npx --yes wrangler@4.149.0 login
 
-# Deploy to GitHub Pages (requires gh-pages package)
-npx gh-pages -d .output/public
+# Build the Worker and static assets, then deploy
+npm run deploy
 ```
+
+### Automatic Deployment
+
+`.github/workflows/deploy.yml` deploys on pushes to `master` and supports manual runs. Configure a GitHub Actions secret named `CLOUDFLARE_API_TOKEN`, scoped to this account with Workers Scripts Edit and Account Settings Read permissions. Local OAuth login credentials are not copied to GitHub.
+
+Set the six `NUXT_PUBLIC_FIREBASE_*` GitHub Actions variables listed in `.env.example` so CI builds include the Firebase client configuration. Add `STOXLYZ_BASE_URL` only when an HTTPS authentication backend is available.
+
+### Production Limitations
+
+- Login and registration require the separate authentication backend described above. The current local configuration points to `http://127.0.0.1:8000`; these account features are unavailable in this deployment.
+- `app/middleware/auth.global.ts` requires authentication for dashboard and stock-detail screens. Unauthenticated visitors see the landing and authentication pages; included public APIs remain reachable. Protected screens remain inaccessible until the authentication backend is configured.
+- The Anthropic key is intentionally not provisioned on Cloudflare. AI endpoints accept anonymous requests and can incur charges if enabled. Do not put the key in public configuration or build variables.
+- Firebase OAuth requires the deployed hostname in Firebase Authentication's authorized domains before account features can be enabled.
+- The Yahoo Finance runtime adapter in `server/runtime/yahooDeno.ts` provides the platform and terminal detection used by the client without loading the full Node Deno shim, whose filesystem globals are incompatible with Workers.
 
 ## 🧪 Testing
 
