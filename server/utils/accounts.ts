@@ -10,7 +10,7 @@ const HASH_BYTES = 32
 const SESSION_TOKEN_BYTES = 32
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_BODY_BYTES = 8192
-const TRUSTED_ORIGIN =
+export const TRUSTED_ORIGIN =
   process.env.TRUSTED_ORIGIN ?? 'https://stocksx.nightdelaluna.workers.dev'
 
 interface PasswordPart {
@@ -197,6 +197,7 @@ export function getD1Database(): D1Database {
   return db as D1Database
 }
 
+export const enforceRegistrationRateLimit = limitRegister;
 export async function limitRegister(event: H3Event): Promise<void> {
   const limiter = getRateLimiter()
   if (!limiter) return

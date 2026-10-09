@@ -65,7 +65,12 @@ module.exports = {
 				sm: "calc(var(--radius) - 4px)",
 			},
 			fontFamily: {
-				sans: ["Inter", "system-ui", "sans-serif"],
+				sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+				mono: ['"JetBrains Mono"', "monospace"],
+			},
+			transitionTimingFunction: {
+				kinetic: "cubic-bezier(0.32, 0.72, 0, 1)",
+				spring: "cubic-bezier(0.16, 1, 0.3, 1)",
 			},
 			keyframes: {
 				"accordion-down": {

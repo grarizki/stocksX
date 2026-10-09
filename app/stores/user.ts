@@ -1,29 +1,50 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
+import type { UserProfile, AccountRoleValues } from "../../shared/types/account";
+import { AUTH_ERROR_CODES } from "../../shared/types/auth.error";
 
-export type UserRole = "superadmin" | "admin" | "user";
-
-export interface UserProfile {
-	name: string;
-	email: string;
-	role: UserRole;
-	avatarUrl?: string;
-}
+export type UserRole = AccountRoleValues[keyof AccountRoleValues];
 
 interface AuthResponse {
-	user: {
-		name: string;
-		email: string;
-		role: UserRole;
-		avatarUrl?: string;
-	};
+	success: boolean;
+	code?: string;
 }
 
-const TOKEN_KEY = "StoxLyz-auth-token";
+interface SessionPayload {
+	authenticated: boolean;
+	user: UserProfile | null;
+}
+
+interface LoginPayload {
+	success?: boolean;
+	response?: boolean;
+	user: UserProfile | null;
+}
+
+interface RegisterPayload {
+	success: boolean;
+	account?: { id: string };
+}
+
 const PREFS_KEY = "StoxLyz-user-prefs";
 
 const VALID_THEMES = ["dark", "light", "system"] as const;
 const VALID_LANGUAGES = ["id", "en"] as const;
+
+const extractErrorCode = (err: unknown): string | null => {
+	if (
+		err &&
+		typeof err === "object" &&
+		"data" in err &&
+		err.data !== null &&
+		typeof err.data === "object" &&
+		"code" in err.data
+	) {
+		const code = err.data.code;
+		if (typeof code === "string") return code;
+	}
+	return null;
+};
 
 export const useUserStore = defineStore("user", () => {
 	const theme = ref<"dark" | "light" | "system">("system");
@@ -31,6 +52,7 @@ export const useUserStore = defineStore("user", () => {
 	const notifications = ref<boolean>(true);
 	const profile = ref<UserProfile | null>(null);
 	const authReady = ref(false);
+	const authError = ref<string | null>(null);
 
 	const isLoggedIn = computed(() => profile.value !== null);
 	const isSuperAdmin = computed(() => profile.value?.role === "superadmin");
@@ -53,13 +75,17 @@ export const useUserStore = defineStore("user", () => {
 		const stored = localStorage.getItem(PREFS_KEY);
 		if (!stored) return;
 		try {
-			const prefs = JSON.parse(stored);
-			theme.value = VALID_THEMES.includes(prefs.theme) ? prefs.theme : "system";
-			language.value = VALID_LANGUAGES.includes(prefs.language)
-				? prefs.language
+			const parsed = JSON.parse(stored);
+			theme.value = VALID_THEMES.includes(parsed.theme)
+				? (parsed.theme as "dark" | "light" | "system")
+				: "system";
+			language.value = VALID_LANGUAGES.includes(parsed.language)
+				? (parsed.language as "id" | "en")
 				: "id";
 			notifications.value =
-				typeof prefs.notifications === "boolean" ? prefs.notifications : true;
+				typeof parsed.notifications === "boolean"
+					? parsed.notifications
+					: true;
 		} catch (err) {
 			console.warn(
 				"[user store] Failed to parse preferences from storage:",
@@ -67,24 +93,6 @@ export const useUserStore = defineStore("user", () => {
 			);
 		}
 	};
-
-	// Restore server session if cookie is present
-	const restoreSession = async () => {
-		if (!import.meta.client) return;
-		try {
-			const session = await $fetch<{
-				authenticated: boolean;
-				user: UserProfile | null;
-			}>("/api/auth/session").catch(() => null);
-			if (session?.authenticated && session.user) {
-				profile.value = session.user;
-			}
-		} finally {
-			authReady.value = true;
-		}
-	};
-
-	loadPrefs();
 
 	// Persist preferences whenever they change
 	const persistPrefs = () => {
@@ -103,6 +111,104 @@ export const useUserStore = defineStore("user", () => {
 		watch([theme, language, notifications], persistPrefs, { deep: true });
 	}
 
+	// Restore server session if cookie is present
+	const restoreSession = async () => {
+		if (!import.meta.client) return;
+		authError.value = null;
+		try {
+			const session = await $fetch<SessionPayload>("/api/auth/session").catch(
+				() => null,
+			);
+			if (session?.authenticated && session.user) {
+				profile.value = session.user;
+				authError.value = null;
+			} else {
+				profile.value = null;
+				authError.value = AUTH_ERROR_CODES.UNAUTHENTICATED;
+			}
+		} catch (err) {
+			console.error("[user store] Session restore failed:", err);
+			profile.value = null;
+			authError.value =
+				extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+		} finally {
+			authReady.value = true;
+		}
+	};
+
+	loadPrefs();
+
+	// Authentication methods - server-backed
+	const login = async (
+		email: string,
+		password: string,
+	): Promise<AuthResponse> => {
+		if (!import.meta.client) {
+			return { success: false, code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE };
+		}
+		authError.value = null;
+		try {
+			const result = await $fetch<LoginPayload>("/api/auth/login", {
+				method: "POST",
+				body: { email, password },
+			});
+
+			const ok = result.success === true || result.response === true;
+			if (ok && result.user) {
+				profile.value = result.user;
+				authError.value = null;
+				return { success: true };
+			}
+			profile.value = null;
+			authError.value = AUTH_ERROR_CODES.INVALID_CREDENTIALS;
+			return { success: false, code: AUTH_ERROR_CODES.INVALID_CREDENTIALS };
+		} catch (err) {
+			console.error("[user store] Login failed:", err);
+			profile.value = null;
+			const code = extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			authError.value = code;
+			return { success: false, code };
+		}
+	};
+
+	const register = async (
+		name: string,
+		email: string,
+		password: string,
+	): Promise<AuthResponse> => {
+		if (!import.meta.client) {
+			return { success: false, code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE };
+		}
+		authError.value = null;
+		try {
+			const result = await $fetch<RegisterPayload>("/api/auth/register", {
+				method: "POST",
+				body: { name, email, password },
+			});
+
+			if (result.success) {
+				authError.value = null;
+				return { success: true };
+			}
+			const code = AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			authError.value = code;
+			return { success: false, code };
+		} catch (err) {
+			console.error("[user store] Registration failed:", err);
+			const code = extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			authError.value = code;
+			return { success: false, code };
+		}
+	};
+
+	const logout = async () => {
+		if (import.meta.client) {
+			await $fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+		}
+		profile.value = null;
+		authError.value = null;
+	};
+
 	const setTheme = (value: "dark" | "light" | "system") => {
 		theme.value = value;
 	};
@@ -119,240 +225,13 @@ export const useUserStore = defineStore("user", () => {
 		profile.value = value;
 	};
 
-	const logout = async () => {
-		if (import.meta.client) {
-			localStorage.removeItem(TOKEN_KEY);
-			await $fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-		}
-		profile.value = null;
-	};
-
-	const setFirebaseUser = (user: {
-		uid: string;
-		email: string;
-		displayName: string;
-		photoURL?: string;
-		role: UserRole;
-	}) => {
-		profile.value = {
-			name: user.displayName || user.email.split("@")[0] || "User",
-			email: user.email,
-			role: user.role,
-			avatarUrl: user.photoURL,
-		};
-	};
-
-	const clearFirebaseUser = () => {
-		profile.value = null;
-	};
-
-	const loginWithFirebase = async (email: string, password: string) => {
-		if (!import.meta.client)
-			return { success: false, error: "Server-side operation not allowed" };
-
-		try {
-			const nuxtApp = useNuxtApp();
-
-			if (!nuxtApp.$firebaseAuth) {
-				console.error(
-					"[Firebase] Firebase not initialized - check your .env configuration",
-				);
-				return {
-					success: false,
-					error:
-						"Firebase not initialized. Please check your configuration in .env file.",
-				};
-			}
-
-			const { signInWithEmailAndPassword } = await import("firebase/auth");
-
-			console.log("[Login] Attempting Firebase login for:", email);
-			const result = await signInWithEmailAndPassword(
-				nuxtApp.$firebaseAuth,
-				email,
-				password,
-			);
-			console.log("[Login] Firebase login successful, UID:", result.user.uid);
-			
-			const idToken = await result.user.getIdToken();
-			console.log("[Login] Got Firebase ID token (length:", idToken.length, ")");
-
-			const sessionResponse = await $fetch<{
-				success: boolean;
-				user: UserProfile | null;
-			}>("/api/auth/firebase-session", {
-				method: "POST",
-				body: { idToken },
-			}).catch(() => null);
-
-			if (sessionResponse?.success && sessionResponse.user) {
-				setProfile(sessionResponse.user);
-			} else {
-				setProfile({
-					name: result.user.displayName || email.split("@")[0] || "User",
-					email,
-					role: "user",
-				});
-			}
-
-			return { success: true };
-		} catch (err: any) {
-			console.error("[user store] Firebase login failed:", err);
-			console.error("[user store] Error details:", {
-				message: err.message,
-				status: err.status,
-				statusCode: err.statusCode,
-				data: err.data,
-				cause: err.cause,
-			});
-			return {
-				success: false,
-				error: err.message || "Login failed",
-			};
-		}
-	};
-
-	const registerWithFirebase = async (
-		email: string,
-		password: string,
-		displayName: string,
-	) => {
-		if (!import.meta.client)
-			return { success: false, error: "Server-side operation not allowed" };
-
-		try {
-			const nuxtApp = useNuxtApp();
-
-			if (!nuxtApp.$firebaseAuth) {
-				console.error(
-					"[Firebase] Firebase not initialized - check your .env configuration",
-				);
-				return {
-					success: false,
-					error:
-						"Firebase not initialized. Please check your configuration in .env file.",
-				};
-			}
-
-			const { createUserWithEmailAndPassword, updateProfile } = await import(
-				"firebase/auth"
-			);
-
-			const result = await createUserWithEmailAndPassword(
-				nuxtApp.$firebaseAuth,
-				email,
-				password,
-			);
-			await updateProfile(result.user, { displayName });
-			const idToken = await result.user.getIdToken();
-
-			const sessionResponse = await $fetch<{
-				success: boolean;
-				user: UserProfile | null;
-			}>("/api/auth/firebase-session", {
-				method: "POST",
-				body: { idToken },
-			}).catch(() => null);
-
-			if (sessionResponse?.success && sessionResponse.user) {
-				setProfile(sessionResponse.user);
-			} else {
-				setProfile({
-					name: displayName || email.split("@")[0] || "User",
-					email,
-					role: "user",
-				});
-			}
-
-			return { success: true };
-		} catch (err: any) {
-			console.error("[user store] Firebase registration failed:", err);
-			return {
-				success: false,
-				error: err.message || "Registration failed",
-			};
-		}
-	};
-
-	const loginWithGoogle = async () => {
-		if (!import.meta.client)
-			return { success: false, error: "Server-side operation not allowed" };
-
-		try {
-			const nuxtApp = useNuxtApp();
-
-			if (!nuxtApp.$firebaseAuth) {
-				console.error(
-					"[Firebase] Firebase not initialized - check your .env configuration",
-				);
-				return {
-					success: false,
-					error:
-						"Firebase not initialized. Please check your configuration in .env file.",
-				};
-			}
-
-			const { signInWithPopup, GoogleAuthProvider } = await import(
-				"firebase/auth"
-			);
-
-			const provider = new GoogleAuthProvider();
-			provider.setCustomParameters({ prompt: "select_account" });
-
-			const result = await signInWithPopup(nuxtApp.$firebaseAuth, provider);
-			const idToken = await result.user.getIdToken();
-
-			const sessionResponse = await $fetch<{
-				success: boolean;
-				user: UserProfile | null;
-			}>("/api/auth/firebase-session", {
-				method: "POST",
-				body: { idToken },
-			}).catch(() => null);
-
-			if (sessionResponse?.success && sessionResponse.user) {
-				setProfile(sessionResponse.user);
-			} else {
-				setProfile({
-					name: result.user.displayName || result.user.email?.split("@")[0] || "User",
-					email: result.user.email || "",
-					role: "user",
-					avatarUrl: result.user.photoURL || undefined,
-				});
-			}
-
-			return { success: true };
-		} catch (err: any) {
-			console.error("[user store] Google login failed:", err);
-			return {
-				success: false,
-				error: err.message || "Google login failed",
-			};
-		}
-	};
-
-	const logoutWithFirebase = async () => {
-		if (!import.meta.client) return;
-
-		try {
-			const nuxtApp = useNuxtApp();
-			if (nuxtApp.$firebaseAuth) {
-				const { signOut } = await import("firebase/auth");
-				await signOut(nuxtApp.$firebaseAuth);
-			}
-		} catch (err) {
-			console.error("[user store] Firebase logout failed:", err);
-		}
-
-		logout();
-	};
-
 	return {
 		theme,
 		language,
 		notifications,
 		profile,
 		authReady,
+		authError,
 		isLoggedIn,
 		isSuperAdmin,
 		isAdmin,
@@ -362,12 +241,8 @@ export const useUserStore = defineStore("user", () => {
 		setLanguage,
 		toggleNotifications,
 		setProfile,
+		login,
+		register,
 		logout,
-		loginWithFirebase,
-		registerWithFirebase,
-		loginWithGoogle,
-		logoutWithFirebase,
-		setFirebaseUser,
-		clearFirebaseUser,
 	};
 });
