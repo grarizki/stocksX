@@ -112,11 +112,11 @@ beforeAll(async () => {
 					d1Databases: { DB: "stocksx-integration" },
 					ratelimits: {
 						REGISTER_LIMITER: {
-							namespace_id: "stocksx-register-test",
+							namespace_id: "99231",
 							simple: { limit: 5, period: 60 },
 						},
 						LOGIN_LIMITER: {
-							namespace_id: "stocksx-login-test",
+							namespace_id: "99232",
 							simple: { limit: 10, period: 60 },
 						},
 					},

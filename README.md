@@ -279,7 +279,7 @@ Deploy the Nuxt application and its Nitro API routes to Cloudflare Workers. Stat
 
 Production URL: https://stocksx.nightdelaluna.workers.dev
 
-`wrangler.json` defines the Worker name, account, the `DB` D1 binding, and the `REGISTER_LIMITER`/`LOGIN_LIMITER` rate-limit bindings. The Cloudflare Nitro preset generates `.output/server/wrangler.json` and `.wrangler/deploy/config.json` during the build. Keep these generated files out of version control.
+`wrangler.json` defines the Worker name, account, the `DB` D1 binding, and the `REGISTER_LIMITER`/`LOGIN_LIMITER` rate-limit bindings. Rate-limit `namespace_id` values are integers that are unique per Cloudflare account and share counters across Workers that reuse them; the registration and login limiters use distinct ids. The Cloudflare Nitro preset generates `.output/server/wrangler.json` and `.wrangler/deploy/config.json` during the build. Keep these generated files out of version control.
 
 ### Database Migrations
 
