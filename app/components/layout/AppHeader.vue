@@ -57,7 +57,7 @@ async function handleLanguageSwitch() {
           <span class="text-sm font-bold text-primary-foreground">SL</span>
         </div>
         <span class="text-lg font-bold tracking-tight">
-          Stox<span class="text-blue-500">Lyz</span>
+          Stock<span class="text-blue-500">lyz</span>
         </span>
       </NuxtLink>
 

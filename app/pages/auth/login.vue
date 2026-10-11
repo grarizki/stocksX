@@ -42,7 +42,7 @@ async function handleLogin() {
         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500">
           <span class="text-xs font-bold text-primary-foreground">SL</span>
         </div>
-        <span class="font-bold tracking-tight">Stox<span class="text-blue-500">Lyz</span></span>
+        <span class="font-bold tracking-tight">Stock<span class="text-blue-500">lyz</span></span>
       </NuxtLink>
       <NuxtLink :to="localePath('/')" class="text-sm text-muted-foreground hover:text-foreground">
         Back

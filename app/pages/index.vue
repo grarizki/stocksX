@@ -163,7 +163,7 @@ onMounted(() => {
               <span class="font-mono text-xs font-bold text-emerald-400">SL</span>
             </div>
             <span class="font-mono text-xs uppercase tracking-[0.25em] text-white/90">
-              Stox<span class="text-emerald-400 font-semibold">Lyz</span>
+              Stock<span class="text-emerald-400 font-semibold">lyz</span>
             </span>
           </NuxtLink>
 
@@ -490,7 +490,7 @@ onMounted(() => {
       <footer class="w-full border-t border-white/5 py-12 px-4 mt-20">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 font-mono text-[11px] text-white/40">
           <div class="flex items-center gap-3">
-            <span class="font-bold tracking-wider text-white">Stox<span class="text-emerald-400">X</span></span>
+            <span class="font-bold tracking-wider text-white">Stock<span class="text-emerald-400">lyz</span></span>
             <span>&copy; {{ new Date().getFullYear() }} Quantum Intelligence Platform</span>
           </div>
 
