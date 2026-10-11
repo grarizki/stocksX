@@ -160,10 +160,10 @@ onMounted(() => {
           <!-- Terminal Mark -->
           <NuxtLink :to="localePath('/')" class="group flex items-center gap-2.5 pr-2">
             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/30 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105">
-              <span class="font-mono text-xs font-bold text-emerald-400">SX</span>
+              <span class="font-mono text-xs font-bold text-emerald-400">SL</span>
             </div>
             <span class="font-mono text-xs uppercase tracking-[0.25em] text-white/90">
-              Stox<span class="text-emerald-400 font-semibold">X</span>
+              Stox<span class="text-emerald-400 font-semibold">Lyz</span>
             </span>
           </NuxtLink>
 
