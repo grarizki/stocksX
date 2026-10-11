@@ -406,7 +406,7 @@ onMounted(() => {
             High-Performance Data Fabric for Active Capital.
           </h2>
           <p class="text-white/60 text-sm sm:text-base font-light">
-            Every layer of StoxX is built with ruthless precision: real-time streaming, edge-rendered micro-APIs, and mathematically validated market intelligence.
+            Every layer of Stocklyz is built with ruthless precision: real-time streaming, edge-rendered micro-APIs, and mathematically validated market intelligence.
           </p>
         </div>
 
