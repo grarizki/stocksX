@@ -20,7 +20,7 @@ const { data: stock } = useApiFetch<StockDetail>(
 useHead({
 	title: computed(() =>
 		stock.value
-			? `${ticker.value.replace(".JK", "")} Chart - StoxLyz`
+			? `${ticker.value.replace(".JK", "")} Chart - Stocklyz`
 			: "Chart",
 	),
 });

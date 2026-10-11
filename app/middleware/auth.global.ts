@@ -2,7 +2,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
 	const userStore = useUserStore();
 	const localePath = useLocalePath();
 
-	// Wait for session restoration to complete
 	if (!userStore.authReady) {
 		await new Promise<void>((resolve) => {
 			const stop = watch(
@@ -24,23 +23,30 @@ export default defineNuxtRouteMiddleware(async (to) => {
 		to.path === "/id" ||
 		to.path.endsWith("/landing");
 
-	// If we have an auth error (expired session, unauthenticated), clear profile
-	if (userStore.authError && userStore.authError !== "UNAUTHENTICATED") {
-		userStore.profile = null;
-		userStore.authError = null;
+	// A service failure is retryable, not evidence that the account is absent.
+	if (userStore.authError === "SERVICE_UNAVAILABLE") {
+		throw createError({
+			statusCode: 503,
+			statusMessage: "Authentication service unavailable",
+			fatal: false,
+		});
 	}
 
 	if (!userStore.isLoggedIn && !isAuthPage && !isLandingPage) {
-		// Re-verify session before redirecting to catch expired sessions
-		if (userStore.authError === "UNAUTHENTICATED" || !userStore.profile) {
-			await userStore.restoreSession();
+		// Re-verify the session before treating the visitor as signed out,
+		// so an expired or revoked session cannot pass on stale local state.
+		await userStore.restoreSession();
+		if (userStore.isLoggedIn) return;
+		if (userStore.authError === "SERVICE_UNAVAILABLE") {
+			throw createError({
+				statusCode: 503,
+				statusMessage: "Authentication service unavailable",
+				fatal: false,
+			});
 		}
-		if (!userStore.isLoggedIn) {
-			return navigateTo(localePath("/auth/login"));
-		}
+		return navigateTo(localePath("/auth/login"));
 	}
 
-	// Redirect logged-in users away from auth pages to home dashboard
 	if (userStore.isLoggedIn && isAuthPage) {
 		return navigateTo(localePath("/home"));
 	}

@@ -20,8 +20,8 @@ export type AlertLogEntry = {
 	triggeredAt: number;
 };
 
-const STORAGE_KEY = "StoxLyz-price-alerts";
-const LOG_KEY = "StoxLyz-price-alert-log";
+const STORAGE_KEY = "Stocklyz-price-alerts";
+const LOG_KEY = "Stocklyz-price-alert-log";
 
 export const usePriceAlertStore = defineStore("priceAlert", () => {
 	const alerts = ref<PriceAlert[]>([]);

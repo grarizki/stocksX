@@ -11,7 +11,7 @@ import {
 import { storeToRefs } from "pinia";
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("nav.settings")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("nav.settings")} - Stocklyz`) });
 
 const colorMode = useColorMode();
 const switchLocalePath = useSwitchLocalePath();
@@ -138,7 +138,7 @@ async function toggleNotifications() {
 
       <!-- App info -->
       <div class="py-4 text-center text-xs text-muted-foreground">
-        <p>StoxLyz v1.0.0</p>
+        <p>Stocklyz v1.0.0</p>
         <p class="mt-1">{{ $t('settings.madeWith') }}</p>
       </div>
     </div>

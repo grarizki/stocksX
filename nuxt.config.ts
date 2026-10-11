@@ -46,7 +46,7 @@ export default defineNuxtConfig({
 
 	app: {
 		head: {
-			title: "StoxLyz - Your Trusted Market",
+			title: "Stocklyz - Your Trusted Market",
 			htmlAttrs: { lang: "id" },
 			meta: [
 				{
@@ -61,8 +61,8 @@ export default defineNuxtConfig({
 				// Open Graph
 				{ property: "og:type", content: "website" },
 				{ property: "og:url", content: "https://stoxlyz.com" },
-				{ property: "og:site_name", content: "StoxLyz" },
-				{ property: "og:title", content: "StoxLyz - Your Trusted Market" },
+				{ property: "og:site_name", content: "Stocklyz" },
+				{ property: "og:title", content: "Stocklyz - Your Trusted Market" },
 				{
 					property: "og:description",
 					content: "Indonesian stock market information for retail investors",
@@ -71,7 +71,7 @@ export default defineNuxtConfig({
 				{ property: "og:locale:alternate", content: "en_US" },
 				// Twitter / X Card
 				{ name: "twitter:card", content: "summary" },
-				{ name: "twitter:title", content: "StoxLyz - Your Trusted Market" },
+				{ name: "twitter:title", content: "Stocklyz - Your Trusted Market" },
 				{
 					name: "twitter:description",
 					content: "Indonesian stock market information for retail investors",
@@ -89,7 +89,7 @@ export default defineNuxtConfig({
 				{
 					rel: "preload",
 					as: "style",
-					href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+					href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap",
 					onload: "this.onload=null;this.rel='stylesheet'",
 				},
 			],
@@ -97,7 +97,7 @@ export default defineNuxtConfig({
 			noscript: [
 				{
 					innerHTML:
-						'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">',
+						'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap">',
 				},
 			],
 		},
@@ -118,6 +118,13 @@ export default defineNuxtConfig({
 			// Allow bfcache on all HTML pages — no no-store
 			"/**": {
 				headers: { "Cache-Control": "public, max-age=0, must-revalidate" },
+			},
+			// Authentication and account responses must never be cached
+			"/api/auth/**": {
+				headers: { "Cache-Control": "no-store" },
+			},
+			"/api/admin/**": {
+				headers: { "Cache-Control": "no-store" },
 			},
 			// Static assets can be cached long-term
 			"/_nuxt/**": {

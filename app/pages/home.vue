@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("home.ihsgComposite")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("home.ihsgComposite")} - Stocklyz`) });
 </script>
 
 <template>

@@ -11,12 +11,13 @@ import {
 } from "lucide-vue-next";
 import { roleVariant } from "~/composables/useRoleVariant";
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const localePath = useLocalePath();
 const switchLocalePath = useSwitchLocalePath();
 const userStore = useUserStore();
 
 const showSearch = ref(false);
+const logoutError = ref("");
 const colorMode = useColorMode();
 function toggleColorMode() {
 	colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
@@ -31,7 +32,12 @@ useEventListener("keydown", (e: KeyboardEvent) => {
 });
 
 async function handleLogout() {
-	await userStore.logoutWithFirebase();
+	logoutError.value = "";
+	const result = await userStore.logout();
+	if (!result.success) {
+		logoutError.value = t("auth.SERVICE_UNAVAILABLE");
+		return;
+	}
 	await navigateTo(localePath("/auth/login"));
 }
 
@@ -51,7 +57,7 @@ async function handleLanguageSwitch() {
           <span class="text-sm font-bold text-primary-foreground">SL</span>
         </div>
         <span class="text-lg font-bold tracking-tight">
-          Stox<span class="text-blue-500">Lyz</span>
+          Stock<span class="text-blue-500">lyz</span>
         </span>
       </NuxtLink>
 
@@ -114,7 +120,6 @@ async function handleLanguageSwitch() {
               :aria-label="$t('nav.userMenu')"
             >
               <Avatar class="h-8 w-8">
-                <AvatarImage v-if="userStore.profile?.avatarUrl" :src="userStore.profile.avatarUrl" :alt="userStore.profile?.name" />
                 <AvatarFallback class="text-xs">{{ userStore.initials }}</AvatarFallback>
               </Avatar>
             </Button>
@@ -163,5 +168,13 @@ async function handleLanguageSwitch() {
 
     <!-- Search Command -->
     <SharedSearchCommand v-model:open="showSearch" />
+
+    <p
+      v-if="logoutError"
+      role="alert"
+      class="border-t border-destructive/40 bg-destructive/10 px-4 py-1.5 text-xs text-destructive"
+    >
+      {{ logoutError }}
+    </p>
   </header>
 </template>

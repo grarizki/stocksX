@@ -5,13 +5,19 @@ import { roleVariant } from "~/composables/useRoleVariant";
 definePageMeta({});
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("nav.profile")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("nav.profile")} - Stocklyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();
+const logoutError = ref("");
 
 async function handleLogout() {
-	await userStore.logoutWithFirebase();
+	logoutError.value = "";
+	const result = await userStore.logout();
+	if (!result.success) {
+		logoutError.value = t("auth.SERVICE_UNAVAILABLE");
+		return;
+	}
 	await navigateTo(localePath("/auth/login"));
 }
 </script>
@@ -26,7 +32,6 @@ async function handleLogout() {
         <CardContent class="pt-6">
           <div class="flex flex-col items-center gap-4 text-center">
             <Avatar class="h-20 w-20">
-              <AvatarImage v-if="userStore.profile.avatarUrl" :src="userStore.profile.avatarUrl" :alt="userStore.profile.name" />
               <AvatarFallback class="text-2xl">{{ userStore.initials }}</AvatarFallback>
             </Avatar>
 
@@ -81,6 +86,7 @@ async function handleLogout() {
           <LogOut class="h-4 w-4" aria-hidden="true" />
           {{ $t('profile.logout') }}
         </Button>
+        <p v-if="logoutError" role="alert" class="text-sm text-destructive">{{ logoutError }}</p>
       </div>
     </template>
   </div>

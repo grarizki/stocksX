@@ -2,7 +2,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("news.title")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("news.title")} - Stocklyz`) });
 
 const { articles, pending, fetchAll } = useNews();
 onMounted(fetchAll);

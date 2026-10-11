@@ -10,5 +10,22 @@ export function useApiFetch<T>(
 	const url =
 		typeof path === "function" ? () => `${base}${path()}` : `${base}${path}`;
 
-	return useFetch<T>(url as any, options as any);
+	const userStore = useUserStore();
+	const localePath = useLocalePath();
+	const router = useRouter();
+
+	return useFetch<T>(
+		url as unknown as string,
+		{
+			...options,
+			onResponseError: ({ response }) => {
+				// A server-side session expiry must drop local state and send the
+				// visitor to login, regardless of which screen issued the request.
+				if (response.status === 401) {
+					userStore.profile = null;
+					router.push(localePath("/auth/login"));
+				}
+			},
+		} as Parameters<typeof useFetch<T>>[1],
+	);
 }

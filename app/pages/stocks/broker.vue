@@ -3,7 +3,7 @@ import { ChevronDown, LineChart } from "lucide-vue-next";
 import type { BrokerTableRow } from "@/data/brokerActivity";
 import { BROKER_NAMES, getBrokerTable } from "@/data/brokerActivity";
 
-useHead({ title: "Broker Activity - StoxLyz" });
+useHead({ title: "Broker Activity - Stocklyz" });
 
 type Range = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y";
 const RANGES: Range[] = ["1D", "1W", "1M", "3M", "YTD", "1Y"];

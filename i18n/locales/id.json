@@ -16,7 +16,7 @@
 	},
 	"home": {
 		"community": "Komunitas",
-		"joinCommunity": "Gabung Komunitas StoxLyz",
+		"joinCommunity": "Gabung Komunitas Stocklyz",
 		"communityDesc": "Diskusi saham, analisis bersama, dan sinyal market real-time dari sesama investor ritel Indonesia.",
 		"members": "anggota",
 		"online": "{n} online",
@@ -154,7 +154,10 @@
 			"shares": "Saham",
 			"percentage": "%",
 			"value": "Nilai (IDR)",
-			"noData": "Tidak ada data kepemilikan."
+			"noData": "Tidak ada data kepemilikan.",
+			"error": "Gagal memuat data kepemilikan.",
+			"retry": "Coba lagi",
+			"notes": "Catatan"
 		},
 		"notation": {
 			"title": "Notasi Khusus",
@@ -237,7 +240,7 @@
 		"off": "Nonaktif",
 		"legal": "Hukum & Kepatuhan",
 		"ojk": "Diawasi oleh OJK",
-		"legalDesc": "StoxLyz hanya menyediakan informasi dan bukan merupakan pialang efek berlisensi. Selalu konsultasikan dengan penasihat investasi terdaftar.",
+		"legalDesc": "Stocklyz hanya menyediakan informasi dan bukan merupakan pialang efek berlisensi. Selalu konsultasikan dengan penasihat investasi terdaftar.",
 		"madeWith": "Dibuat dengan sepenuh hati untuk investor Indonesia"
 	},
 	"auth": {
@@ -263,11 +266,17 @@
 		"showPassword": "Tampilkan kata sandi",
 		"hidePassword": "Sembunyikan kata sandi",
 		"registerError": "Registrasi gagal. Silakan coba lagi.",
-		"demoAccounts": "atau coba akun demo",
-		"orContinueWith": "atau lanjutkan dengan",
-		"signInWithGoogle": "Masuk dengan Google",
-		"googleSignInFailed": "Masuk dengan Google gagal. Silakan coba lagi.",
-		"weakPassword": "Kata sandi minimal 6 karakter."
+		"registeredNotice": "Akun dibuat. Masuk dengan email dan kata sandi Anda.",
+		"migrationNotice": "Sebelumnya masuk dengan Firebase atau Google? Cara itu sudah tidak berlaku. Daftar ulang dengan email dan kata sandi Anda.",
+		"passwordPolicy": "Kata sandi harus 15–128 karakter dan maksimal 512 byte.",
+		"INVALID_INPUT": "Periksa nama, email, dan kata sandi Anda.",
+		"INVALID_CREDENTIALS": "Email atau kata sandi salah.",
+		"EMAIL_EXISTS": "Akun dengan email ini sudah ada.",
+		"ALREADY_AUTHENTICATED": "Anda sudah masuk.",
+		"UNAUTHENTICATED": "Sesi Anda berakhir. Silakan masuk lagi.",
+		"FORBIDDEN": "Tindakan ini tidak diizinkan dari sini.",
+		"RATE_LIMITED": "Terlalu banyak percobaan. Tunggu satu menit lalu coba lagi.",
+		"SERVICE_UNAVAILABLE": "Layanan sementara tidak tersedia. Silakan coba lagi."
 	},
 	"profile": {
 		"title": "Profil",
@@ -291,7 +300,12 @@
 		"colEmail": "Email",
 		"colRole": "Peran",
 		"colStatus": "Status",
-		"statusActive": "aktif"
+		"statusActive": "aktif",
+		"retry": "Coba lagi",
+		"noUsers": "Belum ada akun.",
+		"previous": "Sebelumnya",
+		"next": "Berikutnya",
+		"pageOf": "Halaman {page} dari {total}"
 	},
 	"disclaimer": {
 		"title": "Disclaimer Investasi",

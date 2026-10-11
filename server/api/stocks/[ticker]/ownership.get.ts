@@ -1,30 +1,21 @@
-export default defineEventHandler(async (event) => {
-	const raw = getRouterParam(event, "ticker")!.toUpperCase();
-	const ticker = raw.endsWith(".JK") ? raw.slice(0, -3) : raw;
+import type { H3Event } from "h3";
+import type { OwnershipRow } from "../../../../shared/types/account";
+import {
+	addNoStoreHeaders,
+	normalizeOwnershipTicker,
+	queryOwnershipByStockCode,
+	requireAccount,
+} from "../../../utils/accounts";
 
-	const access_token = getCookie(event, "stoxlyz_token");
-	if (!access_token) {
-		throw createError({ statusCode: 401, message: "Unauthorized" });
-	}
+export default defineEventHandler(
+	async (event: H3Event): Promise<OwnershipRow[]> => {
+		const { db } = await requireAccount(event);
+		const ticker = normalizeOwnershipTicker(
+			getRouterParam(event, "ticker") ?? "",
+		);
 
-	const baseUrl = process.env.STOXLYZ_BASE_URL ?? "http://127.0.0.1:8000";
-
-	try {
-		const res = await $fetch<{
-			share_code: string;
-			count: number;
-			records: {
-				share_code: string;
-				investor_code: string;
-				percentage: number;
-				confidence: number;
-				notes: string | null;
-			}[];
-		}>(`${baseUrl}/ownership/${ticker}`, {
-			headers: { Authorization: `Bearer ${access_token}` },
-		});
-		return res?.records ?? [];
-	} catch {
-		return [];
-	}
-});
+		const records = await queryOwnershipByStockCode(db, ticker);
+		addNoStoreHeaders(event);
+		return records;
+	},
+);
