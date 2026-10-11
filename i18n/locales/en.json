@@ -16,7 +16,7 @@
 	},
 	"home": {
 		"community": "Community",
-		"joinCommunity": "Join StoxLyz Community",
+		"joinCommunity": "Join Stocklyz Community",
 		"communityDesc": "Stock discussions, analysis together, and real-time market signals from fellow Indonesian retail investors.",
 		"members": "members",
 		"online": "{n} online",
@@ -240,7 +240,7 @@
 		"off": "Off",
 		"legal": "Legal & Compliance",
 		"ojk": "Regulated by OJK",
-		"legalDesc": "StoxLyz provides information only and is not a licensed securities broker. Always consult with a registered investment advisor.",
+		"legalDesc": "Stocklyz provides information only and is not a licensed securities broker. Always consult with a registered investment advisor.",
 		"madeWith": "Made with care for Indonesian investors"
 	},
 	"auth": {

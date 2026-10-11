@@ -38,7 +38,7 @@ const hasAlerts = computed(() =>
 useHead({
 	title: computed(() =>
 		stock.value
-			? `${stock.value.ticker.replace(".JK", "")} - ${stock.value.name} - StoxLyz`
+			? `${stock.value.ticker.replace(".JK", "")} - ${stock.value.name} - Stocklyz`
 			: "Stock Not Found",
 	),
 });

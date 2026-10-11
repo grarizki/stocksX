@@ -5,7 +5,7 @@ import { roleVariant } from "~/composables/useRoleVariant";
 definePageMeta({});
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("nav.profile")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("nav.profile")} - Stocklyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();

@@ -14,7 +14,7 @@ export const useWatchlistStore = defineStore("watchlist", () => {
 
 	const loadFromStorage = () => {
 		if (import.meta.client) {
-			const stored = localStorage.getItem("StoxLyz-watchlist");
+			const stored = localStorage.getItem("Stocklyz-watchlist");
 			if (stored) {
 				try {
 					items.value = JSON.parse(stored);
@@ -37,7 +37,7 @@ export const useWatchlistStore = defineStore("watchlist", () => {
 		watch(
 			items,
 			(newItems) => {
-				localStorage.setItem("StoxLyz-watchlist", JSON.stringify(newItems));
+				localStorage.setItem("Stocklyz-watchlist", JSON.stringify(newItems));
 			},
 			{ deep: true },
 		);

@@ -1,6 +1,6 @@
 # StocksX Market Information
 
-StocksX, branded as StoxLyz in the application, helps retail investors explore the Indonesian stock market.
+StocksX, branded as Stocklyz in the application, helps retail investors explore the Indonesian stock market.
 
 ## Language
 

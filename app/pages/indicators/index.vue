@@ -3,7 +3,7 @@ import { LayoutGrid, Table2 } from "lucide-vue-next";
 import { useIndicators } from "~/composables/useIndicators";
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("indicators.title")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("indicators.title")} - Stocklyz`) });
 
 const { getIndicators } = useIndicators();
 const allIndicators = getIndicators();

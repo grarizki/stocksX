@@ -5,7 +5,7 @@ import { useWatchlistStore } from "~/stores/watchlist";
 
 const { t } = useI18n();
 
-useHead({ title: computed(() => `${t("watchlist.title")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("watchlist.title")} - Stocklyz`) });
 
 const watchlistStore = useWatchlistStore();
 

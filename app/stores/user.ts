@@ -26,7 +26,7 @@ interface RegisterPayload {
 	account?: { id: string };
 }
 
-const PREFS_KEY = "StoxLyz-user-prefs";
+const PREFS_KEY = "Stocklyz-user-prefs";
 
 const VALID_THEMES = ["dark", "light", "system"] as const;
 const VALID_LANGUAGES = ["id", "en"] as const;

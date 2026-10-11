@@ -261,7 +261,7 @@ Safe profile responses contain the account ID, display name, canonical email, an
 
 ### Migration from Legacy Auth
 
-The previous Firebase/Google sign-in and the browser-signed demo JWT are gone. There is no credential import: Firebase's stored passwords cannot be read, so returning users register again with email and password. On first load the client removes the old `StoxLyz-auth-token` localStorage entry, any `firebase:authUser:*` entries, and the legacy `stoxlyz_token` cookie, while preserving watchlist, price-alert, and preference keys. No old-token acceptance path remains; pre-migration Firebase and demo sessions cannot authorize the new endpoints.
+The previous Firebase/Google sign-in and the browser-signed demo JWT are gone. There is no credential import: Firebase's stored passwords cannot be read, so returning users register again with email and password. On first load the client removes the old `Stocklyz-auth-token` localStorage entry, any `firebase:authUser:*` entries, and the legacy `stocklyz_token` cookie, while preserving watchlist, price-alert, and preference keys. No old-token acceptance path remains; pre-migration Firebase and demo sessions cannot authorize the new endpoints.
 
 ## 🌐 Internationalization
 

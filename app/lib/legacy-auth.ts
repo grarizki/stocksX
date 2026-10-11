@@ -1,3 +1,5 @@
+// Names written by the retired Firebase backend and the demo-JWT client, kept
+// verbatim so returning visitors get that stale state cleared.
 export const LEGACY_COOKIE_NAMES = ["stoxlyz_token"];
 const LEGACY_STORAGE_KEYS = [
 	"StoxLyz-auth-token",

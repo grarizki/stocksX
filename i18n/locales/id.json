@@ -16,7 +16,7 @@
 	},
 	"home": {
 		"community": "Komunitas",
-		"joinCommunity": "Gabung Komunitas StoxLyz",
+		"joinCommunity": "Gabung Komunitas Stocklyz",
 		"communityDesc": "Diskusi saham, analisis bersama, dan sinyal market real-time dari sesama investor ritel Indonesia.",
 		"members": "anggota",
 		"online": "{n} online",
@@ -240,7 +240,7 @@
 		"off": "Nonaktif",
 		"legal": "Hukum & Kepatuhan",
 		"ojk": "Diawasi oleh OJK",
-		"legalDesc": "StoxLyz hanya menyediakan informasi dan bukan merupakan pialang efek berlisensi. Selalu konsultasikan dengan penasihat investasi terdaftar.",
+		"legalDesc": "Stocklyz hanya menyediakan informasi dan bukan merupakan pialang efek berlisensi. Selalu konsultasikan dengan penasihat investasi terdaftar.",
 		"madeWith": "Dibuat dengan sepenuh hati untuk investor Indonesia"
 	},
 	"auth": {

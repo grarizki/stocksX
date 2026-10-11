@@ -26,17 +26,17 @@ watch(article, () => {
 
 useHead({
 	title: computed(() =>
-		article.value ? `${article.value.title} - StoxLyz` : "Berita - StoxLyz",
+		article.value ? `${article.value.title} - Stocklyz` : "Berita - Stocklyz",
 	),
 });
 
 useSeoMeta({
-	ogTitle: computed(() => article.value?.title ?? "Berita - StoxLyz"),
+	ogTitle: computed(() => article.value?.title ?? "Berita - Stocklyz"),
 	ogDescription: computed(() => article.value?.contentSnippet ?? ""),
 	ogImage: computed(() => article.value?.image?.large ?? "/og-image.png"),
 	ogType: "article",
 	twitterCard: "summary_large_image",
-	twitterTitle: computed(() => article.value?.title ?? "Berita - StoxLyz"),
+	twitterTitle: computed(() => article.value?.title ?? "Berita - Stocklyz"),
 	twitterDescription: computed(() => article.value?.contentSnippet ?? ""),
 	twitterImage: computed(() => article.value?.image?.large ?? "/og-image.png"),
 });

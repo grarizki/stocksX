@@ -14,7 +14,7 @@ import { useWatchlistStore } from "~/stores/watchlist";
 
 const { t } = useI18n();
 const localePath = useLocalePath();
-useHead({ title: computed(() => `${t("stocks.title")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("stocks.title")} - Stocklyz`) });
 
 const SECTOR_ID: Record<string, string> = {
 	All: "Semua",

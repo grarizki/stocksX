@@ -46,7 +46,7 @@ export default defineNuxtConfig({
 
 	app: {
 		head: {
-			title: "StoxLyz - Your Trusted Market",
+			title: "Stocklyz - Your Trusted Market",
 			htmlAttrs: { lang: "id" },
 			meta: [
 				{
@@ -61,8 +61,8 @@ export default defineNuxtConfig({
 				// Open Graph
 				{ property: "og:type", content: "website" },
 				{ property: "og:url", content: "https://stoxlyz.com" },
-				{ property: "og:site_name", content: "StoxLyz" },
-				{ property: "og:title", content: "StoxLyz - Your Trusted Market" },
+				{ property: "og:site_name", content: "Stocklyz" },
+				{ property: "og:title", content: "Stocklyz - Your Trusted Market" },
 				{
 					property: "og:description",
 					content: "Indonesian stock market information for retail investors",
@@ -71,7 +71,7 @@ export default defineNuxtConfig({
 				{ property: "og:locale:alternate", content: "en_US" },
 				// Twitter / X Card
 				{ name: "twitter:card", content: "summary" },
-				{ name: "twitter:title", content: "StoxLyz - Your Trusted Market" },
+				{ name: "twitter:title", content: "Stocklyz - Your Trusted Market" },
 				{
 					name: "twitter:description",
 					content: "Indonesian stock market information for retail investors",

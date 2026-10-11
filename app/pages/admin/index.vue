@@ -6,7 +6,7 @@ import type { AdminAccountsResponse } from "../../../shared/types/account";
 definePageMeta({ middleware: ["admin"] });
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("admin.title")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("admin.title")} - Stocklyz`) });
 
 const userStore = useUserStore();
 const page = ref(1);

@@ -18,7 +18,7 @@ import {
 
 definePageMeta({ layout: "blank" });
 
-useHead({ title: "StoxLyz — Quantum-Grade Indonesian Market Terminal" });
+useHead({ title: "Stocklyz — Quantum-Grade Indonesian Market Terminal" });
 
 const { t } = useI18n();
 const localePath = useLocalePath();

@@ -4,7 +4,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-vue-next";
 definePageMeta({ layout: "blank" });
 
 const { t } = useI18n();
-useHead({ title: computed(() => `${t("auth.signIn")} - StoxLyz`) });
+useHead({ title: computed(() => `${t("auth.signIn")} - Stocklyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();

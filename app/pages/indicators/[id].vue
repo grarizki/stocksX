@@ -34,7 +34,7 @@ const indicator = computed(
 
 useHead({
 	title: computed(() =>
-		indicator.value ? `${indicator.value.name} - StoxLyz` : "Indicator",
+		indicator.value ? `${indicator.value.name} - Stocklyz` : "Indicator",
 	),
 });
 
