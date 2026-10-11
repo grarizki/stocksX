@@ -14,6 +14,7 @@ const { t } = useI18n();
 const route = useRoute();
 const localePath = useLocalePath();
 const userStore = useUserStore();
+const logoutError = ref("");
 
 const navItems = computed(() => [
 	{ label: t("nav.home"), icon: Home, to: "/home" },
@@ -29,7 +30,12 @@ const isActive = (to: string) => {
 };
 
 async function handleLogout() {
-	await userStore.logout();
+	logoutError.value = "";
+	const result = await userStore.logout();
+	if (!result.success) {
+		logoutError.value = t("auth.SERVICE_UNAVAILABLE");
+		return;
+	}
 	await navigateTo(localePath("/auth/login"));
 }
 
@@ -105,6 +111,7 @@ const initials = computed(() => {
           <LogOut class="h-4 w-4" />
         </button>
       </div>
+      <p v-if="logoutError" role="alert" class="px-3 text-xs text-destructive">{{ logoutError }}</p>
     </template>
   </aside>
 </template>

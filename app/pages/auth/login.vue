@@ -8,11 +8,13 @@ useHead({ title: computed(() => `${t("auth.signIn")} - StoxLyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();
-const email = ref("");
+const route = useRoute();
+const email = ref(typeof route.query.email === "string" ? route.query.email : "");
 const password = ref("");
 const showPassword = ref(false);
 const loading = ref(false);
 const error = ref("");
+const showRegisteredNotice = ref(route.query.registered === "1");
 
 async function handleLogin() {
 	error.value = "";
@@ -94,6 +96,10 @@ async function handleLogin() {
               <Eye v-else class="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
+        </div>
+
+        <div v-if="showRegisteredNotice" role="status" class="rounded-lg border border-border/50 bg-muted/30 p-3">
+          <p class="text-xs text-muted-foreground">{{ $t('auth.registeredNotice') }}</p>
         </div>
 
         <p v-if="error" role="alert" aria-live="assertive" class="text-sm text-destructive">{{ error }}</p>

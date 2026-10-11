@@ -27,9 +27,9 @@ A modern, full-featured Indonesian stock market information platform built for r
 ### 🔐 User Features
 - **Watchlist** — Save and track your favorite stocks with localStorage persistence
 - **Price Alerts** — Set custom price notifications for stocks
-- **User Authentication** — JWT-based login/register system
-- **Role-based Access** — User, Admin, and Super Admin roles
-- **Profile Management** — Customizable user profiles
+- **User Authentication** — Cloudflare-native registration/login with D1-backed server sessions
+- **Role-based Access** — User, Admin, and Super Admin roles resolved from D1 on every request
+- **Profile Management** — Server-authoritative profile backed by the account record
 
 ### 🎨 User Experience
 - **Responsive Design** — Mobile-first approach with adaptive layouts
@@ -50,6 +50,7 @@ A modern, full-featured Indonesian stock market information platform built for r
 | **Date Handling** | v-calendar |
 | **Internationalization** | @nuxtjs/i18n |
 | **Code Quality** | Biome (formatter + linter), Vitest |
+| **Data** | Cloudflare D1 (accounts, sessions, ownership records) |
 | **Deployment** | Cloudflare Workers with static assets and Nitro APIs |
 
 ## 🚀 Getting Started
@@ -84,7 +85,10 @@ npm run generate     # Generate static site → .output/public/
 npm run preview      # Preview production build
 npm run lint         # Run Biome linter
 npm run format       # Format code with Biome
-npm test             # Run Vitest tests
+npm test             # Run unit tests
+npm run test:integration  # Build the Worker, then run the D1/Workers integration suite
+npm run test:all     # Unit + integration suites
+
 ```
 
 ## 📁 Project Structure
@@ -143,8 +147,8 @@ stocksX/
 │   │   ├── useStocks.ts
 │   │   ├── useNews.ts
 │   │   ├── useIndicators.ts
-│   │   ├── useAuth.ts
-│   │   └── useSearch.ts
+│   │   ├── useApiFetch.ts
+│   │   └── useRoleVariant.ts
 │   │
 │   ├── stores/                  # Pinia stores
 │   │   ├── watchlist.ts         # Watchlist state management
@@ -159,15 +163,29 @@ stocksX/
 │   │   └── sectors.ts
 │   │
 │   ├── lib/                     # Utility functions
-│   │   └── jwt.ts               # JWT token handling
+│   │   └── legacy-auth.ts       # One-time purge of pre-migration client auth state
+│   │
+│   ├── plugins/
+│   │   └── auth.client.ts       # Purges legacy state, then restores the server session
 │   │
 │   ├── middleware/              # Route middleware
-│   │   ├── auth.ts              # Authentication guard
-│   │   └── admin.ts             # Admin role guard
+│   │   ├── auth.global.ts       # Server-verified session guard
+│   │   └── admin.ts             # Admin role guard for /admin
 │   │
 │   └── layouts/                 # Layout templates
 │       ├── default.vue
 │       └── blank.vue
+│
+├── server/                      # Nitro API routes and utilities
+│   ├── api/
+│   │   ├── auth/                # register, login, logout, session
+│   │   ├── admin/               # Role-protected account listing
+│   │   └── stocks/[ticker]/     # Market + ownership endpoints
+│   ├── utils/accounts.ts        # Password hashing, sessions, rate limits, queries
+│   └── types/cloudflare.d.ts    # D1, rate-limit, and Workers context types
+│
+├── migrations/                  # D1 schema migrations
+│   └── 0001_initial_schema.sql
 │
 ├── i18n/                        # Internationalization
 │   └── locales/
@@ -179,102 +197,56 @@ stocksX/
 ├── tailwind.config.js           # Tailwind CSS configuration
 └── components.json              # shadcn-vue configuration
 ```
-
 ## 🔐 Authentication & Authorization
 
-The app uses **Firebase Authentication** with a hybrid JWT approach:
+Accounts and sessions are owned entirely by the Cloudflare deployment: Nitro API routes on the Worker, state in Cloudflare D1. There is no Firebase, Google, or external authentication backend, and no browser-side JWT.
 
 ### Authentication Flow
-1. User signs in via Firebase (Email/Password or Google OAuth)
-2. Firebase ID token is sent to backend for verification
-3. Backend exchanges Firebase token for app JWT
-4. App JWT is stored in localStorage for session management
-5. Protected routes check JWT validity
+1. `POST /api/auth/register` creates an account and returns `201` with a success result. It never creates a session; the register page redirects to the localized login page with a registration notice.
+2. `POST /api/auth/login` verifies the password in the Worker and issues an opaque session token, sent as an `HttpOnly` cookie and stored in D1 only as a SHA-256 digest.
+3. `GET /api/auth/session` is the authoritative profile source. Route middleware and the auth plugin restore from it; expired or revoked sessions return `401`.
+4. `POST /api/auth/logout` deletes the presented session row and clears the cookie. Replaying the old token fails; a logout without a session stays idempotent.
+
+### Credential and Session Rules
+- Passwords are hashed in the Worker with PBKDF2-HMAC-SHA256, 600,000 iterations, a random 16-byte salt per account, and a 32-byte derived key. Unknown emails run the same verification path against a fixed dummy hash so both failure modes return one `INVALID_CREDENTIALS` response.
+- Passwords are 15–128 Unicode code points (maximum 512 UTF-8 bytes). Names are non-empty and at most 100 characters. Emails are trimmed, lowercased, at most 254 characters, and unique by database constraint.
+- Session tokens are 32 random bytes. Only their SHA-256 digest, the account ID, and the seven-day expiry are stored in D1.
+- The production cookie is the host-only `__Host-stocksx_session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain`). Requests served over local HTTP (`localhost`/`127.0.0.1`) use the distinct `stocksx_session_dev` name so local development works over HTTP.
+- Browser authentication mutations require an exact same-origin `Origin`; cross-origin, absent, or opaque origins get `403`. Requests are JSON with an 8 KiB body cap.
+- Public registration always creates the `user` role. The role is read from D1 on every authenticated request, so promotions take effect without a re-login and stale browser state cannot grant access.
+- Authentication and account responses are sent with `Cache-Control: no-store`, including error responses.
+
+### Rate Limiting
+Cloudflare rate-limiting bindings guard the expensive paths before hashing: five registrations per minute per client IP (`REGISTER_LIMITER`) and ten logins per minute per client IP plus ten per canonical-email hash (`LOGIN_LIMITER`). Over-limit requests return `429` with `Retry-After: 60`. Limits are approximate and scoped per Cloudflare location, so they are abuse mitigation, not an exact counter; clients behind a shared IP share the registration allowance.
 
 ### User Roles
-- **User** — Access to all public features (home, watchlist, news, stock details, profile)
-- **Admin** — User privileges + access to `/admin` panel
+- **User** — Public features plus the dashboard, stock details, and ownership data
+- **Admin** — User privileges plus the read-only `GET /api/admin/accounts` listing (bounded pages, real totals)
 - **Super Admin** — Admin privileges with elevated permissions
 
-### Firebase Setup
+Promote an operator account with a trusted command — never through a public endpoint:
 
-#### 1. Create Firebase Project
-
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project or select existing
-3. Enable **Authentication** in the Firebase console
-
-#### 2. Enable Authentication Providers
-
-**Email/Password:**
-- Go to Authentication → Sign-in method
-- Enable "Email/Password"
-
-**Google Sign-In:**
-- Enable "Google" provider
-- Configure OAuth consent screen in Google Cloud Console
-- Add authorized domains (localhost for development, your domain for production)
-
-#### 3. Get Firebase Config
-
-1. Go to Project Settings → General
-2. Scroll to "Your apps" → SDK setup and configuration
-3. Select "CDN" tab or "npm" for config values
-4. Copy the configuration values
-
-#### 4. Configure Environment Variables
-
-Create or update `.env` file in the project root:
-
-```env
-# Firebase Auth Configuration
-NUXT_PUBLIC_FIREBASE_API_KEY="your_api_key_here"
-NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your_project.firebaseapp.com"
-NUXT_PUBLIC_FIREBASE_PROJECT_ID="your_project_id"
-NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your_project.appspot.com"
-NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
-NUXT_PUBLIC_FIREBASE_APP_ID="your_app_id"
+```bash
+npx wrangler d1 execute DB --remote \
+  --command "UPDATE accounts SET role = 'admin' WHERE email = 'operator@example.com';"
 ```
 
-#### 5. Backend Firebase Setup
+### Endpoints
 
-The backend (`backend-data-stocks/`) uses Firebase Admin SDK:
+| Endpoint | Auth | Success | Failures |
+|----------|------|---------|----------|
+| `POST /api/auth/register` | Same-origin | `201` + account ID, no cookie | `400` invalid input, `409` duplicate or already signed in, `403` cross-origin, `429` rate limited, `413` oversized body |
+| `POST /api/auth/login` | Same-origin | `200` + safe profile, sets cookie | `401` invalid credentials, `400` invalid input, `403` cross-origin, `429` rate limited |
+| `GET /api/auth/session` | Session cookie | `200` + safe profile | `401` unauthenticated, `503` D1 unavailable |
+| `POST /api/auth/logout` | Same-origin | `200` (idempotent) | `403` cross-origin |
+| `GET /api/admin/accounts` | Admin session | `200` + paged accounts and totals | `401`, `403`, `503` |
+| `GET /api/stocks/[ticker]/ownership` | Session cookie | `200` + ownership records array | `401`, `503` |
 
-1. Install dependencies:
-   ```bash
-   pip install firebase-admin python-jose[cryptography]
-   ```
-
-2. Set up Firebase Admin credentials:
-   - Download service account key from Firebase Console → Project Settings → Service Accounts
-   - Set environment variable: `GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json`
-   - Or use Application Default Credentials in production
-
-3. Configure backend `.env`:
-   ```env
-   DATA_URL=your_data_url
-   JWT_SECRET=your-secret-key-change-in-production
-   JWT_EXPIRE_MINUTES=1440
-   GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
-   ```
-
-### API Endpoints
-
-- `POST /auth/firebase-login` — Login with Firebase ID token
-- `POST /auth/firebase-register` — Register new user with Firebase ID token
-- `POST /token` — OAuth2-compatible endpoint (username/password)
+Safe profile responses contain the account ID, display name, canonical email, and stored role only — never password metadata, session digests, or raw tokens.
 
 ### Migration from Legacy Auth
 
-If you're migrating from the previous JWT-only auth system:
-
-1. **Update user credentials** - Users need to create Firebase accounts
-2. **Update login pages** - Already done in this version
-3. **Test authentication flow** - Verify login/register/logout works
-4. **Update backend** - Deploy new Firebase-enabled backend
-5. **Monitor migration** - Check for auth errors in logs
-
----
+The previous Firebase/Google sign-in and the browser-signed demo JWT are gone. There is no credential import: Firebase's stored passwords cannot be read, so returning users register again with email and password. On first load the client removes the old `StoxLyz-auth-token` localStorage entry, any `firebase:authUser:*` entries, and the legacy `stoxlyz_token` cookie, while preserving watchlist, price-alert, and preference keys. No old-token acceptance path remains; pre-migration Firebase and demo sessions cannot authorize the new endpoints.
 
 ## 🌐 Internationalization
 
@@ -307,7 +279,21 @@ Deploy the Nuxt application and its Nitro API routes to Cloudflare Workers. Stat
 
 Production URL: https://stocksx.nightdelaluna.workers.dev
 
-`wrangler.json` defines the Worker name and account. The Cloudflare Nitro preset generates `.output/server/wrangler.json` and `.wrangler/deploy/config.json` during the build. Keep these generated files out of version control.
+`wrangler.json` defines the Worker name, account, the `DB` D1 binding, and the `REGISTER_LIMITER`/`LOGIN_LIMITER` rate-limit bindings. The Cloudflare Nitro preset generates `.output/server/wrangler.json` and `.wrangler/deploy/config.json` during the build. Keep these generated files out of version control.
+
+### Database Migrations
+
+Schema changes live in `migrations/` and are applied with Wrangler:
+
+```bash
+# Apply migrations to the remote D1 database (CI runs this before every deploy)
+npx wrangler d1 migrations apply DB --remote
+
+# Local development database used by `wrangler dev`
+npx wrangler d1 migrations apply DB --local
+```
+
+Current schema: `accounts`, `sessions`, and `ownership_records` (`migrations/0001_initial_schema.sql`).
 
 ### Manual Deployment
 
@@ -315,36 +301,43 @@ Production URL: https://stocksx.nightdelaluna.workers.dev
 # Authenticate with the target Cloudflare account
 npx --yes wrangler@4.149.0 login
 
-# Build the Worker and static assets, then deploy
+# Apply migrations, then build the Worker and static assets and deploy
+npx wrangler d1 migrations apply DB --remote
 npm run deploy
 ```
 
 ### Automatic Deployment
 
-`.github/workflows/deploy.yml` deploys on pushes to `master` and supports manual runs. Configure a GitHub Actions secret named `CLOUDFLARE_API_TOKEN`, scoped to this account with Workers Scripts Edit and Account Settings Read permissions. Local OAuth login credentials are not copied to GitHub.
+`.github/workflows/deploy.yml` runs the unit and integration suites, applies D1 migrations, and deploys on pushes to `master`; it also supports manual runs. Configure a GitHub Actions secret named `CLOUDFLARE_API_TOKEN`, scoped to this account with Workers Scripts Edit, D1 Edit, and Account Settings Read permissions. Local OAuth login credentials are not copied to GitHub. No application environment variables are required — authentication needs no external provider configuration.
 
-Set the six `NUXT_PUBLIC_FIREBASE_*` GitHub Actions variables listed in `.env.example` so CI builds include the Firebase client configuration. Add `STOXLYZ_BASE_URL` only when an HTTPS authentication backend is available.
+### Production Requirements
 
-### Production Limitations
-
-- Login and registration require the separate authentication backend described above. The current local configuration points to `http://127.0.0.1:8000`; these account features are unavailable in this deployment.
-- `app/middleware/auth.global.ts` requires authentication for dashboard and stock-detail screens. Unauthenticated visitors see the landing and authentication pages; included public APIs remain reachable. Protected screens remain inaccessible until the authentication backend is configured.
+- Password hashing runs 600,000 PBKDF2 iterations inside the Worker. Verify the deployed CPU allowance covers it before enabling accounts; do not lower the work factor to fit a plan limit. The integration suite exercises hashing under the current compatibility date and flags, and the deployed login/register path must be timed once after cutover.
+- Rate-limit bindings require a Workers plan that supports them; registration and login degrade to unthrottled handling only if the bindings are absent.
+- `app/middleware/auth.global.ts` requires a server-verified session for dashboard and stock-detail screens. Unauthenticated visitors see the landing and authentication pages, and public market APIs stay reachable.
+- Ownership records are served from `ownership_records` in D1 and are empty until seeded; seed them with `npx wrangler d1 execute DB --remote --file <seed.sql>`.
 - The Anthropic key is intentionally not provisioned on Cloudflare. AI endpoints accept anonymous requests and can incur charges if enabled. Do not put the key in public configuration or build variables.
-- Firebase OAuth requires the deployed hostname in Firebase Authentication's authorized domains before account features can be enabled.
 - The Yahoo Finance runtime adapter in `server/runtime/yahooDeno.ts` provides the platform and terminal detection used by the client without loading the full Node Deno shim, whose filesystem globals are incompatible with Workers.
 
 ## 🧪 Testing
 
 ```bash
-# Run unit tests
+# Unit tests (fast, no build required)
 npm test
 
-# Run tests in watch mode
-npm run test:watch
+# D1/Workers integration suite: builds the Worker, runs it in workerd with a real
+# local D1 database, and exercises register/login/session/logout, cookie and
+# no-store behavior, origin and rate-limit rejections, and admin/ownership access
+npm run test:integration
 
-# Generate coverage report
-npm run test:coverage
+# Both suites, in the order CI runs them
+npm run test:all
+
+# Unit tests in watch mode
+npm run test:watch
 ```
+
+The integration suite runs the built Worker under `workerd` with real D1 and rate-limit bindings — D1 is never mocked. Run `npm run build` first (the `test:integration` script does it for you).
 
 ## 🤝 Contributing
 

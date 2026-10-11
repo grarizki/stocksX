@@ -11,12 +11,13 @@ import {
 } from "lucide-vue-next";
 import { roleVariant } from "~/composables/useRoleVariant";
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const localePath = useLocalePath();
 const switchLocalePath = useSwitchLocalePath();
 const userStore = useUserStore();
 
 const showSearch = ref(false);
+const logoutError = ref("");
 const colorMode = useColorMode();
 function toggleColorMode() {
 	colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
@@ -31,7 +32,12 @@ useEventListener("keydown", (e: KeyboardEvent) => {
 });
 
 async function handleLogout() {
-	await userStore.logout();
+	logoutError.value = "";
+	const result = await userStore.logout();
+	if (!result.success) {
+		logoutError.value = t("auth.SERVICE_UNAVAILABLE");
+		return;
+	}
 	await navigateTo(localePath("/auth/login"));
 }
 
@@ -162,5 +168,13 @@ async function handleLanguageSwitch() {
 
     <!-- Search Command -->
     <SharedSearchCommand v-model:open="showSearch" />
+
+    <p
+      v-if="logoutError"
+      role="alert"
+      class="border-t border-destructive/40 bg-destructive/10 px-4 py-1.5 text-xs text-destructive"
+    >
+      {{ logoutError }}
+    </p>
   </header>
 </template>

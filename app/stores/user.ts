@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
-import type { UserProfile, AccountRoleValues } from "../../shared/types/account";
+import type {
+	AccountRoleValues,
+	UserProfile,
+} from "../../shared/types/account";
 import { AUTH_ERROR_CODES } from "../../shared/types/auth.error";
 
 export type UserRole = AccountRoleValues[keyof AccountRoleValues];
@@ -11,13 +14,10 @@ interface AuthResponse {
 }
 
 interface SessionPayload {
-	authenticated: boolean;
-	user: UserProfile | null;
+	user: UserProfile;
 }
 
 interface LoginPayload {
-	success?: boolean;
-	response?: boolean;
 	user: UserProfile | null;
 }
 
@@ -31,18 +31,18 @@ const PREFS_KEY = "StoxLyz-user-prefs";
 const VALID_THEMES = ["dark", "light", "system"] as const;
 const VALID_LANGUAGES = ["id", "en"] as const;
 
+const readCode = (value: unknown): string | null => {
+	if (!value || typeof value !== "object" || !("code" in value)) return null;
+	return typeof value.code === "string" ? value.code : null;
+};
+
 const extractErrorCode = (err: unknown): string | null => {
-	if (
-		err &&
-		typeof err === "object" &&
-		"data" in err &&
-		err.data !== null &&
-		typeof err.data === "object" &&
-		"code" in err.data
-	) {
-		const code = err.data.code;
-		if (typeof code === "string") return code;
-	}
+	if (!err || typeof err !== "object" || !("data" in err)) return null;
+	const body = err.data;
+	const direct = readCode(body);
+	if (direct) return direct;
+	if (body && typeof body === "object" && "data" in body)
+		return readCode(body.data);
 	return null;
 };
 
@@ -83,9 +83,7 @@ export const useUserStore = defineStore("user", () => {
 				? (parsed.language as "id" | "en")
 				: "id";
 			notifications.value =
-				typeof parsed.notifications === "boolean"
-					? parsed.notifications
-					: true;
+				typeof parsed.notifications === "boolean" ? parsed.notifications : true;
 		} catch (err) {
 			console.warn(
 				"[user store] Failed to parse preferences from storage:",
@@ -116,21 +114,19 @@ export const useUserStore = defineStore("user", () => {
 		if (!import.meta.client) return;
 		authError.value = null;
 		try {
-			const session = await $fetch<SessionPayload>("/api/auth/session").catch(
-				() => null,
-			);
-			if (session?.authenticated && session.user) {
-				profile.value = session.user;
-				authError.value = null;
-			} else {
-				profile.value = null;
-				authError.value = AUTH_ERROR_CODES.UNAUTHENTICATED;
-			}
+			const session = await $fetch<SessionPayload>("/api/auth/session");
+			profile.value = session.user;
+			authError.value = null;
 		} catch (err) {
-			console.error("[user store] Session restore failed:", err);
 			profile.value = null;
+			const code = extractErrorCode(err);
 			authError.value =
-				extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+				code === AUTH_ERROR_CODES.UNAUTHENTICATED
+					? AUTH_ERROR_CODES.UNAUTHENTICATED
+					: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			if (authError.value === AUTH_ERROR_CODES.SERVICE_UNAVAILABLE) {
+				console.error("[user store] Session restore failed:", err);
+			}
 		} finally {
 			authReady.value = true;
 		}
@@ -153,8 +149,7 @@ export const useUserStore = defineStore("user", () => {
 				body: { email, password },
 			});
 
-			const ok = result.success === true || result.response === true;
-			if (ok && result.user) {
+			if (result.user) {
 				profile.value = result.user;
 				authError.value = null;
 				return { success: true };
@@ -165,7 +160,8 @@ export const useUserStore = defineStore("user", () => {
 		} catch (err) {
 			console.error("[user store] Login failed:", err);
 			profile.value = null;
-			const code = extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			const code =
+				extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
 			authError.value = code;
 			return { success: false, code };
 		}
@@ -195,18 +191,29 @@ export const useUserStore = defineStore("user", () => {
 			return { success: false, code };
 		} catch (err) {
 			console.error("[user store] Registration failed:", err);
-			const code = extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			const code =
+				extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
 			authError.value = code;
 			return { success: false, code };
 		}
 	};
 
-	const logout = async () => {
-		if (import.meta.client) {
-			await $fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+	const logout = async (): Promise<AuthResponse> => {
+		if (!import.meta.client) {
+			return { success: false, code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE };
 		}
-		profile.value = null;
-		authError.value = null;
+		try {
+			await $fetch("/api/auth/logout", { method: "POST" });
+			profile.value = null;
+			authError.value = null;
+			return { success: true };
+		} catch (err) {
+			console.error("[user store] Logout failed:", err);
+			const code =
+				extractErrorCode(err) ?? AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+			authError.value = code;
+			return { success: false, code };
+		}
 	};
 
 	const setTheme = (value: "dark" | "light" | "system") => {
@@ -219,10 +226,6 @@ export const useUserStore = defineStore("user", () => {
 
 	const toggleNotifications = () => {
 		notifications.value = !notifications.value;
-	};
-
-	const setProfile = (value: UserProfile) => {
-		profile.value = value;
 	};
 
 	return {
@@ -240,7 +243,6 @@ export const useUserStore = defineStore("user", () => {
 		setTheme,
 		setLanguage,
 		toggleNotifications,
-		setProfile,
 		login,
 		register,
 		logout,

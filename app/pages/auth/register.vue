@@ -8,7 +8,6 @@ useHead({ title: computed(() => `${t("auth.createAccount")} - StoxLyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();
-const route = useRoute();
 const name = ref("");
 const email = ref("");
 const password = ref("");

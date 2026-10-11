@@ -119,6 +119,13 @@ export default defineNuxtConfig({
 			"/**": {
 				headers: { "Cache-Control": "public, max-age=0, must-revalidate" },
 			},
+			// Authentication and account responses must never be cached
+			"/api/auth/**": {
+				headers: { "Cache-Control": "no-store" },
+			},
+			"/api/admin/**": {
+				headers: { "Cache-Control": "no-store" },
+			},
 			// Static assets can be cached long-term
 			"/_nuxt/**": {
 				headers: { "Cache-Control": "public, max-age=31536000, immutable" },

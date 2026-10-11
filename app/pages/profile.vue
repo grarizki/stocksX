@@ -9,9 +9,15 @@ useHead({ title: computed(() => `${t("nav.profile")} - StoxLyz`) });
 
 const localePath = useLocalePath();
 const userStore = useUserStore();
+const logoutError = ref("");
 
 async function handleLogout() {
-	await userStore.logout();
+	logoutError.value = "";
+	const result = await userStore.logout();
+	if (!result.success) {
+		logoutError.value = t("auth.SERVICE_UNAVAILABLE");
+		return;
+	}
 	await navigateTo(localePath("/auth/login"));
 }
 </script>
@@ -80,6 +86,7 @@ async function handleLogout() {
           <LogOut class="h-4 w-4" aria-hidden="true" />
           {{ $t('profile.logout') }}
         </Button>
+        <p v-if="logoutError" role="alert" class="text-sm text-destructive">{{ logoutError }}</p>
       </div>
     </template>
   </div>

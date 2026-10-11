@@ -1,70 +1,65 @@
-import type { H3Event } from 'h3'
-import { createError, getCookie } from 'h3'
-import { AUTH_ERROR_CODES } from '../../../shared/types/auth.error'
+import type { H3Event } from "h3";
+import { createError, getCookie } from "h3";
+import { AUTH_ERROR_CODES } from "../../../shared/types/auth.error";
 import {
-  getD1Database,
-  getSessionCookieName,
-  limitLogin,
-  verifyPasswordFixedHash,
-  generateSessionToken,
-  setSessionCookie,
-  getAccountByEmail,
-  insertSession,
-  revokeSession,
-  hashSessionToken,
-  projectUserProfile,
-  addNoStoreHeaders,
-  resolveRequestOrigin,
-  TRUSTED_ORIGIN,
-  DUMMY_PASSWORD_HASH,
-} from '../../utils/accounts'
+	addNoStoreHeaders,
+	DUMMY_PASSWORD_HASH,
+	enforceJsonBodyLimit,
+	enforceTrustedOrigin,
+	generateSessionToken,
+	getAccountByEmail,
+	getD1Database,
+	getSessionCookieName,
+	hashSessionToken,
+	insertSession,
+	limitLogin,
+	projectUserProfile,
+	readJsonBodyLimited,
+	revokeSession,
+	setSessionCookie,
+	verifyPasswordWithHash,
+} from "../../utils/accounts";
 
 export default defineEventHandler(async (event: H3Event) => {
-  const origin = resolveRequestOrigin(event)
-  if (origin !== TRUSTED_ORIGIN) {
-    throw createError({ statusCode: 403, data: { code: AUTH_ERROR_CODES.FORBIDDEN } })
-  }
+	addNoStoreHeaders(event);
+	enforceJsonBodyLimit(event);
+	enforceTrustedOrigin(event);
 
-  const body = await readBody<{ email: string; password: string }>(event)
-  if (!body || typeof body !== 'object') {
-    throw createError({ statusCode: 400, data: { code: AUTH_ERROR_CODES.INVALID_INPUT } })
-  }
+	const body = await readJsonBodyLimited(event);
+	if (typeof body.email !== "string" || typeof body.password !== "string") {
+		throw createError({
+			statusCode: 400,
+			data: { code: AUTH_ERROR_CODES.INVALID_INPUT },
+		});
+	}
 
-  const canonicalEmail = (body.email ?? '').trim().toLowerCase()
-  const password = body.password ?? ''
+	const canonicalEmail = body.email.trim().toLowerCase();
+	const password = body.password;
 
-  await limitLogin(event, canonicalEmail)
+	await limitLogin(event, canonicalEmail);
 
-  let db
-  try {
-    db = getD1Database()
-  } catch {
-    throw createError({ statusCode: 503, data: { code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE } })
-  }
+	const db = getD1Database(event);
 
-  const cookieName = getSessionCookieName(event)
-  if (cookieName) {
-    const priorToken = getCookie(event, cookieName)
-    if (priorToken) {
-      await revokeSession(db, await hashSessionToken(priorToken))
-    }
-  }
+	const account = await getAccountByEmail(db, canonicalEmail);
+	const passwordValid = await verifyPasswordWithHash(
+		password,
+		account?.password_hash ?? DUMMY_PASSWORD_HASH,
+	);
+	if (!account || !passwordValid) {
+		throw createError({
+			statusCode: 401,
+			data: { code: AUTH_ERROR_CODES.INVALID_CREDENTIALS },
+		});
+	}
 
-  const account = await getAccountByEmail(db, canonicalEmail)
-  if (!account) {
-    await verifyPasswordFixedHash(password, DUMMY_PASSWORD_HASH)
-    throw createError({ statusCode: 401, data: { code: AUTH_ERROR_CODES.INVALID_CREDENTIALS } })
-  }
+	const priorToken = getCookie(event, getSessionCookieName(event));
+	if (priorToken) {
+		await revokeSession(db, await hashSessionToken(priorToken));
+	}
 
-  const passwordValid = await verifyPasswordFixedHash(password, account.password_hash)
-  if (!passwordValid) {
-    throw createError({ statusCode: 401, data: { code: AUTH_ERROR_CODES.INVALID_CREDENTIALS } })
-  }
+	const sessionToken = await generateSessionToken();
+	await insertSession(db, account.id, sessionToken.hash);
+	setSessionCookie(event, sessionToken.raw);
 
-  const sessionToken = await generateSessionToken()
-  await insertSession(db, account.id, sessionToken.hash)
-  setSessionCookie(event, sessionToken.raw)
-
-  addNoStoreHeaders(event)
-  return { response: { user: projectUserProfile(account) } }
-})
+	return { user: projectUserProfile(account) };
+});
