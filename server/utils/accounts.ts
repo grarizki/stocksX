@@ -4,6 +4,7 @@ import {
 	createError,
 	getCookie,
 	getRequestHost,
+	getRequestProtocol,
 	readRawBody,
 	setCookie,
 	setResponseHeader,
@@ -29,8 +30,6 @@ const SALT_BYTES = 16;
 const HASH_BYTES = 32;
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const TRUSTED_ORIGIN =
-	process.env.TRUSTED_ORIGIN ?? "https://stocksx.nightdelaluna.workers.dev";
 
 interface PasswordPart {
 	version: number;
@@ -208,6 +207,15 @@ export async function hashPasswordRaw(
 	].join(":");
 }
 
+function areBytesEqual(left: Uint8Array, right: Uint8Array): boolean {
+	if (left.length !== right.length) return false;
+	let difference = 0;
+	for (let index = 0; index < left.length; index += 1) {
+		difference |= left[index] ^ right[index];
+	}
+	return difference === 0;
+}
+
 export async function verifyPasswordWithHash(
 	password: string,
 	storedHash: string,
@@ -242,7 +250,7 @@ export async function verifyPasswordWithHash(
 	const derivedBuffer = new Uint8Array(derivedKey);
 	const storedBuffer = Buffer.from(parsed.hashHex, "hex");
 	if (storedBuffer.length !== HASH_BYTES) return false;
-	return crypto.subtle.timingSafeEqual(derivedBuffer, storedBuffer);
+	return areBytesEqual(derivedBuffer, storedBuffer);
 }
 
 export const DUMMY_PASSWORD_HASH = `${HASH_VERSION}:${PBKDF2_ITERATIONS}:${"0".repeat(32)}:${"0".repeat(64)}`;
@@ -292,23 +300,59 @@ function isLocalRequest(event: H3Event): boolean {
 }
 
 function resolveRequestHostname(event: H3Event): string {
+	return resolveRequestUrl(event)?.hostname ?? getRequestHost(event);
+}
+
+function resolveRequestUrl(event: H3Event): URL | null {
 	const requestUrl = event.web?.request?.url;
-	if (typeof requestUrl === "string" && requestUrl.length > 0) {
-		try {
-			return new URL(requestUrl).hostname;
-		} catch {
-			// fall through to the raw host header
-		}
+	if (typeof requestUrl !== "string" || requestUrl.length === 0) return null;
+	try {
+		return new URL(requestUrl);
+	} catch {
+		return null;
 	}
-	return getRequestHost(event);
+}
+
+function resolveConfiguredOrigin(event: H3Event): string {
+	const fromBinding = readEnv(event)?.TRUSTED_ORIGIN;
+	if (typeof fromBinding === "string" && fromBinding.trim().length > 0) {
+		return fromBinding.trim();
+	}
+	return process.env.TRUSTED_ORIGIN?.trim() ?? "";
 }
 
 export function getSessionCookieName(event: H3Event): string {
 	return getCookieName(!isLocalRequest(event));
 }
 
+interface OriginCheckInput {
+	headerOrigin: string;
+	requestOrigin: string;
+	configuredOrigin: string;
+}
+
+export function isAcceptedOrigin({
+	headerOrigin,
+	requestOrigin,
+	configuredOrigin,
+}: OriginCheckInput): boolean {
+	if (headerOrigin.length === 0) return false;
+	if (headerOrigin === requestOrigin) return true;
+	return configuredOrigin.length > 0 && headerOrigin === configuredOrigin;
+}
+
+function resolveRequestOriginBase(event: H3Event): string {
+	return (
+		resolveRequestUrl(event)?.origin ??
+		`${getRequestProtocol(event, { xForwardedProto: true })}://${getRequestHost(event)}`
+	);
+}
+
 export function enforceTrustedOrigin(event: H3Event): void {
-	if (resolveRequestOrigin(event) !== TRUSTED_ORIGIN) {
+	const headerOrigin = resolveRequestOrigin(event);
+	const requestOrigin = resolveRequestOriginBase(event);
+	const configuredOrigin = resolveConfiguredOrigin(event);
+	if (!isAcceptedOrigin({ headerOrigin, requestOrigin, configuredOrigin })) {
 		throw createError({
 			statusCode: 403,
 			data: { code: AUTH_ERROR_CODES.FORBIDDEN },

@@ -10,6 +10,7 @@ declare global {
 		REGISTER_LIMITER: RateLimiterBinding;
 		LOGIN_LIMITER: RateLimiterBinding;
 		PASSWORD_PEPPER?: string;
+		TRUSTED_ORIGIN?: string;
 	}
 
 	interface CloudflareExecutionContext {

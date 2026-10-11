@@ -65,9 +65,10 @@ readable from the application.
 
 Application secrets are not committed. The `CLOUDFLARE_API_TOKEN` used by CI
 lives in GitHub Actions secrets. `TRUSTED_ORIGIN` is an optional non-secret
-override of the production origin. The Anthropic API key stays unprovisioned on
-Cloudflare: AI endpoints accept anonymous requests and will incur charges if the
-key is configured. Never place secrets in public runtime configuration or build
+extra origin accepted alongside the origin each request is served from; browser
+authentication mutations stay same-origin when it is unset. The Anthropic API
+key stays unprovisioned on Cloudflare: AI endpoints accept anonymous requests
+and will incur charges if the key is configured. Never place secrets in public runtime configuration or build
 variables.
 
 ## Reporting Scope
