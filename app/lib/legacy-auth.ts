@@ -1,4 +1,4 @@
-const LEGACY_COOKIE_NAMES = ["stoxlyz_token"];
+export const LEGACY_COOKIE_NAMES = ["stoxlyz_token"];
 const LEGACY_STORAGE_KEYS = [
 	"StoxLyz-auth-token",
 	"StoxLyz-user",
@@ -6,11 +6,7 @@ const LEGACY_STORAGE_KEYS = [
 ];
 const LEGACY_STORAGE_PREFIXES = ["firebase:authUser:"];
 
-export function purgeLegacyAuthState(): void {
-	for (const cookieName of LEGACY_COOKIE_NAMES) {
-		document.cookie = `${cookieName}=; path=/; max-age=0; samesite=lax`;
-	}
-
+export function purgeLegacyAuthStorage(): void {
 	const keysToRemove: string[] = [];
 	for (let index = 0; index < localStorage.length; index++) {
 		const key = localStorage.key(index);
