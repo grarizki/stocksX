@@ -207,6 +207,8 @@ export async function hashPasswordRaw(
 	].join(":");
 }
 
+// Node's WebCrypto lacks crypto.subtle.timingSafeEqual, so workerd and the dev
+// server both compare fixed-length digests through this loop.
 function areBytesEqual(left: Uint8Array, right: Uint8Array): boolean {
 	if (left.length !== right.length) return false;
 	let difference = 0;
@@ -331,7 +333,7 @@ interface OriginCheckInput {
 	configuredOrigin: string;
 }
 
-export function isAcceptedOrigin({
+export function isAcceptedRequestOrigin({
 	headerOrigin,
 	requestOrigin,
 	configuredOrigin,
@@ -341,6 +343,9 @@ export function isAcceptedOrigin({
 	return configuredOrigin.length > 0 && headerOrigin === configuredOrigin;
 }
 
+// The origin a request was served from, so any host that serves this app
+// (workers.dev, a custom domain, any local dev port) is trusted; TRUSTED_ORIGIN
+// only ever adds an extra origin on top of it.
 function resolveRequestOriginBase(event: H3Event): string {
 	return (
 		resolveRequestUrl(event)?.origin ??
@@ -352,7 +357,9 @@ export function enforceTrustedOrigin(event: H3Event): void {
 	const headerOrigin = resolveRequestOrigin(event);
 	const requestOrigin = resolveRequestOriginBase(event);
 	const configuredOrigin = resolveConfiguredOrigin(event);
-	if (!isAcceptedOrigin({ headerOrigin, requestOrigin, configuredOrigin })) {
+	if (
+		!isAcceptedRequestOrigin({ headerOrigin, requestOrigin, configuredOrigin })
+	) {
 		throw createError({
 			statusCode: 403,
 			data: { code: AUTH_ERROR_CODES.FORBIDDEN },
