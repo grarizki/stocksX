@@ -9,6 +9,7 @@ import {
 	generateSessionToken,
 	getAccountByEmail,
 	getD1Database,
+	getPasswordPepper,
 	getSessionCookieName,
 	hashSessionToken,
 	insertSession,
@@ -39,11 +40,13 @@ export default defineEventHandler(async (event: H3Event) => {
 	await limitLogin(event, canonicalEmail);
 
 	const db = getD1Database(event);
+	const pepper = getPasswordPepper(event);
 
 	const account = await getAccountByEmail(db, canonicalEmail);
 	const passwordValid = await verifyPasswordWithHash(
 		password,
 		account?.password_hash ?? DUMMY_PASSWORD_HASH,
+		pepper,
 	);
 	if (!account || !passwordValid) {
 		throw createError({

@@ -73,7 +73,20 @@ npm install
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:3000`.
+
+Account flows need two bindings. The D1 database is created by the migration
+command below, and password hashing needs a pepper of at least 32 characters.
+Copy `.env.example` to `.dev.vars` for `wrangler dev`, or pass the same values
+with `--var PASSWORD_PEPPER:<value>`:
+
+```bash
+npx wrangler d1 migrations apply DB --local
+printf 'PASSWORD_PEPPER=local-development-pepper-value-000000000000\n' > .dev.vars
+```
+
+Production uses a different pepper, provisioned as a Worker secret. Never reuse
+the development value in production.
 
 ### Available Scripts
 
@@ -208,7 +221,9 @@ Accounts and sessions are owned entirely by the Cloudflare deployment: Nitro API
 4. `POST /api/auth/logout` deletes the presented session row and clears the cookie. Replaying the old token fails; a logout without a session stays idempotent.
 
 ### Credential and Session Rules
-- Passwords are hashed in the Worker with PBKDF2-HMAC-SHA256, 600,000 iterations, a random 16-byte salt per account, and a 32-byte derived key. Unknown emails run the same verification path against a fixed dummy hash so both failure modes return one `INVALID_CREDENTIALS` response.
+- Passwords are hashed in the Worker with PBKDF2-HMAC-SHA256 at 100,000 iterations over `HMAC-SHA256(pepper, password)`, with a random 16-byte salt per account and a 32-byte derived key. Unknown emails run the same verification path against a fixed dummy hash, so both failure modes return one `INVALID_CREDENTIALS` response.
+- The iteration count is the platform maximum, not a preference: Cloudflare's runtime rejects PBKDF2 above 100,000 iterations for WebCrypto and `node:crypto` alike (`Pbkdf2 failed: iteration counts above 100000 are not supported`, a DoS guard in workerd that Workers customers cannot raise), and WASM compilation is disabled on Workers, so Argon2id and scrypt are unavailable too. The `PASSWORD_PEPPER` secret compensates by making a stolen D1 dump useless on its own, because the pre-hash input cannot be reconstructed without the Worker secret.
+- `PASSWORD_PEPPER` must be at least 32 characters and must be identical across every Worker instance serving the deployment. When it is missing or too short, registration and login fail closed with `503 SERVICE_UNAVAILABLE` instead of hashing without a pepper. Rotating it invalidates every stored password hash, so treat it as permanent: a rotation requires a password reset for all accounts.
 - Passwords are 15–128 Unicode code points (maximum 512 UTF-8 bytes). Names are non-empty and at most 100 characters. Emails are trimmed, lowercased, at most 254 characters, and unique by database constraint.
 - Session tokens are 32 random bytes. Only their SHA-256 digest, the account ID, and the seven-day expiry are stored in D1.
 - The production cookie is the host-only `__Host-stocksx_session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain`). Requests served over local HTTP (`localhost`/`127.0.0.1`) use the distinct `stocksx_session_dev` name so local development works over HTTP.
@@ -301,6 +316,9 @@ Current schema: `accounts`, `sessions`, and `ownership_records` (`migrations/000
 # Authenticate with the target Cloudflare account
 npx --yes wrangler@4.149.0 login
 
+# One-time: provision the password-hashing pepper (see Production Requirements)
+openssl rand -hex 32 | npx wrangler secret put PASSWORD_PEPPER
+
 # Apply migrations, then build the Worker and static assets and deploy
 npx wrangler d1 migrations apply DB --remote
 npm run deploy
@@ -312,7 +330,12 @@ npm run deploy
 
 ### Production Requirements
 
-- Password hashing runs 600,000 PBKDF2 iterations inside the Worker. Verify the deployed CPU allowance covers it before enabling accounts; do not lower the work factor to fit a plan limit. The integration suite exercises hashing under the current compatibility date and flags, and the deployed login/register path must be timed once after cutover.
+- Password hashing needs the `PASSWORD_PEPPER` secret. Provision it once per account before serving traffic; deploys never create or rotate it, and the auth endpoints stay at `503 SERVICE_UNAVAILABLE` until it exists:
+  ```bash
+  openssl rand -hex 32 | npx wrangler secret put PASSWORD_PEPPER
+  ```
+  Keep the value with your other production secrets. Losing it locks out every account; changing it invalidates every password hash. Store an operator copy outside Cloudflare, since Workers secrets cannot be read back.
+- Password hashing is bounded by the platform, not by the account's CPU allowance: PBKDF2 is capped at 100,000 iterations and WASM is disabled on Workers, which is why the deployment pairs the maximum iteration count with the pepper instead of the spec's 600,000-iteration PBKDF2 alone.
 - Rate-limit bindings require a Workers plan that supports them; registration and login degrade to unthrottled handling only if the bindings are absent.
 - `app/middleware/auth.global.ts` requires a server-verified session for dashboard and stock-detail screens. Unauthenticated visitors see the landing and authentication pages, and public market APIs stay reachable.
 - Ownership records are served from `ownership_records` in D1 and are empty until seeded; seed them with `npx wrangler d1 execute DB --remote --file <seed.sql>`.

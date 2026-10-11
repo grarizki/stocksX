@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
+import type { D1Database } from "@cloudflare/workers-types";
 import { build } from "esbuild";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -7,8 +8,53 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const WORKER_ENTRY = resolve(".output/server/index.mjs");
 const TRUSTED_ORIGIN = "https://stocksx.nightdelaluna.workers.dev";
 const PASSWORD = "correct-horse-battery-staple";
+const PASSWORD_PEPPER = "integration-suite-pepper-value-0001";
+const OTHER_PASSWORD_PEPPER = "integration-suite-pepper-value-0002";
+const D1_PERSIST_PATH = resolve(".wrangler/integration-d1");
+const SCHEMA_PATH = resolve("migrations/0001_initial_schema.sql");
 
 let miniflare: Miniflare;
+let workerScript = "";
+
+async function applySchema(db: D1Database): Promise<void> {
+	const schema = readFileSync(SCHEMA_PATH, "utf8");
+	for (const statement of schema.split(";")) {
+		const singleLine = statement.replace(/\s+/g, " ").trim();
+		if (singleLine.length > 0) await db.exec(singleLine);
+	}
+}
+
+function createMiniflare(pepper: string | null): Miniflare {
+	return new Miniflare(
+		convertV4MiniflareOptions({
+			d1Persist: D1_PERSIST_PATH,
+			workers: [
+				{
+					name: "stocksx",
+					modules: true,
+					script: workerScript,
+					compatibilityDate: "2025-07-15",
+					compatibilityFlags: ["nodejs_compat"],
+					bindings:
+						pepper === null
+							? { TRUSTED_ORIGIN }
+							: { TRUSTED_ORIGIN, PASSWORD_PEPPER: pepper },
+					d1Databases: { DB: "stocksx-integration" },
+					ratelimits: {
+						REGISTER_LIMITER: {
+							namespace_id: "99231",
+							simple: { limit: 5, period: 60 },
+						},
+						LOGIN_LIMITER: {
+							namespace_id: "99232",
+							simple: { limit: 10, period: 60 },
+						},
+					},
+				},
+			],
+		}),
+	);
+}
 
 interface FetchOptions {
 	origin?: string | null;
@@ -17,6 +63,7 @@ interface FetchOptions {
 	method?: string;
 	body?: unknown;
 	rawBody?: string;
+	instance?: Miniflare;
 }
 
 let ipCounter = 0;
@@ -40,11 +87,14 @@ async function request(
 	const body =
 		options.rawBody ??
 		(options.body === undefined ? undefined : JSON.stringify(options.body));
-	return miniflare.dispatchFetch(`${TRUSTED_ORIGIN}${path}`, {
-		method: options.method ?? (body === undefined ? "GET" : "POST"),
-		headers,
-		body,
-	});
+	return (options.instance ?? miniflare).dispatchFetch(
+		`${TRUSTED_ORIGIN}${path}`,
+		{
+			method: options.method ?? (body === undefined ? "GET" : "POST"),
+			headers,
+			body,
+		},
+	);
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -81,6 +131,7 @@ async function loginUser(
 }
 
 beforeAll(async () => {
+	rmSync(D1_PERSIST_PATH, { recursive: true, force: true });
 	expect(
 		readFileSync(WORKER_ENTRY, "utf8").length,
 		"run `npm run build` before the integration suite",
@@ -99,41 +150,11 @@ beforeAll(async () => {
 		logLevel: "silent",
 	});
 
-	miniflare = new Miniflare(
-		convertV4MiniflareOptions({
-			workers: [
-				{
-					name: "stocksx",
-					modules: true,
-					script: bundled.outputFiles[0].text,
-					compatibilityDate: "2025-07-15",
-					compatibilityFlags: ["nodejs_compat"],
-					bindings: { TRUSTED_ORIGIN },
-					d1Databases: { DB: "stocksx-integration" },
-					ratelimits: {
-						REGISTER_LIMITER: {
-							namespace_id: "99231",
-							simple: { limit: 5, period: 60 },
-						},
-						LOGIN_LIMITER: {
-							namespace_id: "99232",
-							simple: { limit: 10, period: 60 },
-						},
-					},
-				},
-			],
-		}),
-	);
+	workerScript = bundled.outputFiles[0].text;
+	miniflare = createMiniflare(PASSWORD_PEPPER);
 
 	const db = await miniflare.getD1Database("DB");
-	const schema = readFileSync(
-		resolve("migrations/0001_initial_schema.sql"),
-		"utf8",
-	);
-	for (const statement of schema.split(";")) {
-		const singleLine = statement.replace(/\s+/g, " ").trim();
-		if (singleLine.length > 0) await db.exec(singleLine);
-	}
+	await applySchema(db);
 	await db
 		.prepare(
 			`INSERT INTO ownership_records (share_code, investor_code, percentage, confidence, notes) VALUES (?, ?, ?, ?, ?)`,
@@ -372,6 +393,102 @@ describe("login and sessions", () => {
 		expect(
 			(await readJson<{ data: { code: string } }>(response)).data.code,
 		).toBe("ALREADY_AUTHENTICATED");
+	});
+});
+
+describe("password hashing", () => {
+	it("stores a peppered PBKDF2 record with a unique salt per account", async () => {
+		const first = await registerUser("pepper.first@example.com");
+		const second = await registerUser("pepper.second@example.com");
+		expect(first.status).toBe(201);
+		expect(second.status).toBe(201);
+
+		const db = await miniflare.getD1Database("DB");
+		const rows = await db
+			.prepare(
+				`SELECT email, password_hash FROM accounts WHERE email IN (?, ?) ORDER BY email`,
+			)
+			.bind("pepper.first@example.com", "pepper.second@example.com")
+			.all<{ email: string; password_hash: string }>();
+
+		expect(rows.results).toHaveLength(2);
+		for (const row of rows.results) {
+			expect(row.password_hash).toMatch(/^2:100000:[0-9a-f]{32}:[0-9a-f]{64}$/);
+			expect(row.password_hash).not.toContain(PASSWORD);
+		}
+		const [firstRecord, secondRecord] = rows.results;
+		expect(firstRecord?.password_hash).not.toBe(secondRecord?.password_hash);
+	});
+
+	it("refuses credentials when the pepper binding is absent", async () => {
+		const unpeppered = createMiniflare(null);
+		try {
+			const registration = await request("/api/auth/register", {
+				instance: unpeppered,
+				body: {
+					name: "No Pepper",
+					email: "no.pepper@example.com",
+					password: PASSWORD,
+				},
+			});
+			expect(registration.status).toBe(503);
+
+			const login = await request("/api/auth/login", {
+				instance: unpeppered,
+				body: { email: "pepper.first@example.com", password: PASSWORD },
+			});
+			expect(login.status).toBe(503);
+		} finally {
+			await unpeppered.dispose();
+		}
+	});
+
+	it("rejects credentials hashed under a different pepper", async () => {
+		const email = "pepper.other@example.com";
+		expect((await registerUser(email)).status).toBe(201);
+
+		const db = await miniflare.getD1Database("DB");
+		const record = await db
+			.prepare(
+				`SELECT name, password_hash, role, created_at FROM accounts WHERE email = ?`,
+			)
+			.bind(email)
+			.first<{
+				name: string;
+				password_hash: string;
+				role: string;
+				created_at: number;
+			}>();
+		expect(record?.password_hash).toMatch(/^2:100000:/);
+
+		const foreignPepper = createMiniflare(OTHER_PASSWORD_PEPPER);
+		try {
+			const foreignDb = await foreignPepper.getD1Database("DB");
+			await applySchema(foreignDb);
+			await foreignDb
+				.prepare(
+					`INSERT INTO accounts (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+				)
+				.bind(
+					crypto.randomUUID(),
+					record?.name ?? "Test Investor",
+					email,
+					record?.password_hash ?? "",
+					record?.role ?? "user",
+					record?.created_at ?? Date.now(),
+				)
+				.run();
+
+			const foreignLogin = await request("/api/auth/login", {
+				instance: foreignPepper,
+				body: { email, password: PASSWORD },
+			});
+			expect(foreignLogin.status).toBe(401);
+		} finally {
+			await foreignPepper.dispose();
+		}
+
+		expect((await loginUser(email)).status).toBe(200);
 	});
 });
 

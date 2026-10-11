@@ -14,9 +14,23 @@ in the advisory.
 ## Account and Session Model
 
 - Accounts live in Cloudflare D1 (`accounts`). Passwords are hashed in the Worker
-  with PBKDF2-HMAC-SHA256 at 600,000 iterations, a random 16-byte salt per
-  account, and a 32-byte derived key. Derived keys are compared with a
-  timing-safe primitive. Plaintext passwords are never stored or returned.
+  with PBKDF2-HMAC-SHA256 over `HMAC-SHA256(pepper, password)`, at 100,000
+  iterations, with a random 16-byte salt per account and a 32-byte derived key.
+  Derived keys are compared with a timing-safe primitive. Plaintext passwords
+  are never stored or returned.
+- The iteration count is the maximum the platform accepts: Cloudflare's runtime
+  rejects PBKDF2 above 100,000 iterations for both WebCrypto and `node:crypto`
+  (a workerd DoS guard, not a plan limit), and WASM code generation is disabled
+  on Workers, which rules out Argon2id and scrypt. The pepper is what restores
+  the lost margin: hashes are useless without the Worker secret, so a D1 dump
+  alone does not permit offline cracking.
+- `PASSWORD_PEPPER` is a Worker secret of at least 32 characters, identical
+  across every instance of the deployment, and never written to the repository.
+  When it is absent or too short, registration and login fail closed with `503`
+  rather than hashing an unpeppered password. Rotating it invalidates all stored
+  hashes; deletions or rotations therefore require a password reset for every
+  account, and an operator-held copy is the only way to recover the value, since
+  Workers secrets cannot be read back.
 - Sessions are opaque 32-byte random tokens. D1 stores only the SHA-256 digest,
   the account ID, and the seven-day expiry. There is no rolling extension.
 - The production session cookie is the host-only `__Host-stocksx_session`

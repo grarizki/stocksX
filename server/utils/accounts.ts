@@ -19,7 +19,12 @@ import {
 	type AuthErrorCode,
 } from "../../shared/types/auth.error";
 
-const PBKDF2_ITERATIONS = 600000;
+// Cloudflare's runtime rejects PBKDF2 above 100,000 iterations, so the
+// spec's 600,000 work factor is unreachable on Workers. The platform maximum
+// is combined with a server-side pepper to recover the lost margin.
+const PBKDF2_ITERATIONS = 100000;
+const HASH_VERSION = 2;
+const MIN_PEPPER_LENGTH = 32;
 const SALT_BYTES = 16;
 const HASH_BYTES = 32;
 const SESSION_TOKEN_BYTES = 32;
@@ -141,12 +146,45 @@ export function validatePassword(password: string): {
 	return { valid: true };
 }
 
-export async function hashPasswordRaw(password: string): Promise<string> {
+async function derivePepperedPassword(
+	password: string,
+	pepper: string,
+): Promise<Uint8Array> {
+	const pepperKey = await crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(pepper),
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["sign"],
+	);
+	const signature = await crypto.subtle.sign(
+		"HMAC",
+		pepperKey,
+		new TextEncoder().encode(password),
+	);
+	return new Uint8Array(signature);
+}
+
+export function getPasswordPepper(event: H3Event): string {
+	const pepper = readEnv(event)?.PASSWORD_PEPPER;
+	if (typeof pepper !== "string" || pepper.length < MIN_PEPPER_LENGTH) {
+		throw createError({
+			statusCode: 503,
+			data: { code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE },
+		});
+	}
+	return pepper;
+}
+
+export async function hashPasswordRaw(
+	password: string,
+	pepper: string,
+): Promise<string> {
 	const saltBuffer = new Uint8Array(SALT_BYTES);
 	crypto.getRandomValues(saltBuffer);
 	const keyMaterial = await crypto.subtle.importKey(
 		"raw",
-		new TextEncoder().encode(password),
+		await derivePepperedPassword(password, pepper),
 		"PBKDF2",
 		false,
 		["deriveBits"],
@@ -163,7 +201,7 @@ export async function hashPasswordRaw(password: string): Promise<string> {
 	);
 	const hashBuffer = new Uint8Array(derivedKey);
 	return [
-		1,
+		HASH_VERSION,
 		PBKDF2_ITERATIONS,
 		Buffer.from(saltBuffer).toString("hex"),
 		Buffer.from(hashBuffer).toString("hex"),
@@ -173,16 +211,20 @@ export async function hashPasswordRaw(password: string): Promise<string> {
 export async function verifyPasswordWithHash(
 	password: string,
 	storedHash: string,
+	pepper: string,
 ): Promise<boolean> {
 	const parsed = parsePasswordHash(storedHash);
 	if (!parsed) return false;
-	if (parsed.version !== 1 || parsed.iterations !== PBKDF2_ITERATIONS)
+	if (
+		parsed.version !== HASH_VERSION ||
+		parsed.iterations !== PBKDF2_ITERATIONS
+	)
 		return false;
 	const saltBuffer = Buffer.from(parsed.saltHex, "hex");
 	if (saltBuffer.length !== SALT_BYTES) return false;
 	const keyMaterial = await crypto.subtle.importKey(
 		"raw",
-		new TextEncoder().encode(password),
+		await derivePepperedPassword(password, pepper),
 		"PBKDF2",
 		false,
 		["deriveBits"],
@@ -203,7 +245,7 @@ export async function verifyPasswordWithHash(
 	return crypto.subtle.timingSafeEqual(derivedBuffer, storedBuffer);
 }
 
-export const DUMMY_PASSWORD_HASH = `1:600000:${"0".repeat(32)}:${"0".repeat(64)}`;
+export const DUMMY_PASSWORD_HASH = `${HASH_VERSION}:${PBKDF2_ITERATIONS}:${"0".repeat(32)}:${"0".repeat(64)}`;
 
 export async function generateSessionToken(): Promise<SessionTokenData> {
 	const rawBytes = new Uint8Array(SESSION_TOKEN_BYTES);
@@ -416,8 +458,7 @@ export async function getAccountByEmail(
 	const stmt = db.prepare(
 		`SELECT id, name, email, role, password_hash, created_at FROM accounts WHERE email = ? LIMIT 1`,
 	);
-	const result = await stmt.bind(canonicalEmail).first();
-	return result;
+	return runDbQuery(() => stmt.bind(canonicalEmail).first());
 }
 
 export async function insertSession(
@@ -427,12 +468,10 @@ export async function insertSession(
 ): Promise<number> {
 	const now = Date.now();
 	const expiresAt = now + SESSION_TTL_MS;
-	await db
-		.prepare(
-			`INSERT INTO sessions (token_hash, account_id, created_at, expires_at) VALUES (?, ?, ?, ?)`,
-		)
-		.bind(tokenHash, accountId, now, expiresAt)
-		.run();
+	const stmt = db.prepare(
+		`INSERT INTO sessions (token_hash, account_id, created_at, expires_at) VALUES (?, ?, ?, ?)`,
+	);
+	await runDbQuery(() => stmt.bind(tokenHash, accountId, now, expiresAt).run());
 	return expiresAt;
 }
 
@@ -443,7 +482,7 @@ async function resolveSessionByTokenHash(
 	const stmt = db.prepare(
 		`SELECT a.id, a.name, a.email, a.role, s.expires_at FROM sessions s JOIN accounts a ON s.account_id = a.id WHERE s.token_hash = ? AND s.expires_at > ? LIMIT 1`,
 	);
-	const row = await stmt.bind(tokenHash, Date.now()).first();
+	const row = await runDbQuery(() => stmt.bind(tokenHash, Date.now()).first());
 	if (!row) return null;
 	return {
 		user: projectUserProfile(
@@ -457,10 +496,8 @@ export async function revokeSession(
 	db: D1Database,
 	tokenHash: string,
 ): Promise<void> {
-	await db
-		.prepare(`DELETE FROM sessions WHERE token_hash = ?`)
-		.bind(tokenHash)
-		.run();
+	const stmt = db.prepare(`DELETE FROM sessions WHERE token_hash = ?`);
+	await runDbQuery(() => stmt.bind(tokenHash).run());
 }
 
 export async function queryAdminAccounts(
@@ -526,7 +563,7 @@ export async function queryOwnershipByStockCode(
 	const stmt = db.prepare(
 		`SELECT share_code, investor_code, percentage, confidence, notes FROM ownership_records WHERE share_code = ?`,
 	);
-	const rows = await stmt.bind(stockCode).all<OwnershipRow>();
+	const rows = await runDbQuery(() => stmt.bind(stockCode).all<OwnershipRow>());
 	return rows.results;
 }
 
@@ -572,6 +609,17 @@ export async function requireAdmin(
 		});
 	}
 	return account;
+}
+
+async function runDbQuery<T>(operation: () => Promise<T>): Promise<T> {
+	try {
+		return await operation();
+	} catch {
+		throw createError({
+			statusCode: 503,
+			data: { code: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE },
+		});
+	}
 }
 
 const MAX_JSON_BODY_BYTES = 8192;

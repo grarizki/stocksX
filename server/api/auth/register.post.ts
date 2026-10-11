@@ -6,6 +6,7 @@ import {
 	enforceJsonBodyLimit,
 	enforceTrustedOrigin,
 	getD1Database,
+	getPasswordPepper,
 	hasActiveSession,
 	hashPasswordRaw,
 	insertAccount,
@@ -50,7 +51,10 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const passwordHash = await hashPasswordRaw(password);
+	const passwordHash = await hashPasswordRaw(
+		password,
+		getPasswordPepper(event),
+	);
 	const account = await createAccountRow(event, { name, email, passwordHash });
 
 	setResponseStatus(event, 201);

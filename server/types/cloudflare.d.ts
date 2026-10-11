@@ -9,6 +9,7 @@ declare global {
 		DB: D1Database;
 		REGISTER_LIMITER: RateLimiterBinding;
 		LOGIN_LIMITER: RateLimiterBinding;
+		PASSWORD_PEPPER?: string;
 	}
 
 	interface CloudflareExecutionContext {
